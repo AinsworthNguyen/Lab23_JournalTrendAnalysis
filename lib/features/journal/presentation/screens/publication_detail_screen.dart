@@ -5,6 +5,7 @@ import '../../../../injection_container.dart';
 import '../../domain/entities/paper.dart';
 import '../../domain/usecases/get_publication_details_usecase.dart';
 import '../../../../core/firebase/firebase_analytics_service.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class PublicationDetailScreen extends StatefulWidget {
   final String paperId;
@@ -127,8 +128,8 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
                         decoration: BoxDecoration(
                           color: paper.isOpenAccess
-                              ? Colors.green.withOpacity(0.12)
-                              : Colors.grey.withOpacity(0.12),
+                              ? Colors.green.withValues(alpha: 0.12)
+                              : Colors.grey.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6.0),
                         ),
                         child: Row(
@@ -156,7 +157,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                       Icon(Icons.star, size: 16.0, color: theme.colorScheme.primary),
                       const SizedBox(width: 4.0),
                       Text(
-                        'journal.citations'.tr() + ': ${NumberFormat.decimalPattern().format(paper.citationCount)}',
+                        '${'journal.citations'.tr()}: ${NumberFormat.decimalPattern().format(paper.citationCount)}',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -178,10 +179,10 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                   // Journal name & Year info
                   Card(
                     elevation: 0,
-                    color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
-                      side: BorderSide(color: theme.dividerColor.withOpacity(0.05)),
+                      side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.05)),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -189,7 +190,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.menu_book, size: 20.0, color: theme.colorScheme.onBackground.withOpacity(0.6)),
+                              Icon(Icons.menu_book, size: 20.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                               const SizedBox(width: 12.0),
                               Expanded(
                                 child: Text(
@@ -204,7 +205,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                           const Divider(height: 24.0),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today, size: 20.0, color: theme.colorScheme.onBackground.withOpacity(0.6)),
+                              Icon(Icons.calendar_today, size: 20.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                               const SizedBox(width: 12.0),
                               Text(
                                 'journal.published_in'.tr(namedArgs: {'year': paper.publicationYear.toString()}),
@@ -230,7 +231,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                     Text(
                       'No authors listed.',
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onBackground.withOpacity(0.8),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                         height: 1.4,
                       ),
                     )
@@ -244,7 +245,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                           return Text(
                             paper.authors.join(', '),
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.onBackground.withOpacity(0.8),
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                               height: 1.4,
                             ),
                           );
@@ -257,7 +258,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                 TextSpan(
                                   text: paper.authors.join(', '),
                                   style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: theme.colorScheme.onBackground.withOpacity(0.8),
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                                     height: 1.4,
                                   ),
                                 ),
@@ -293,7 +294,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                 TextSpan(
                                   text: paper.authors.take(3).join(', '),
                                   style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: theme.colorScheme.onBackground.withOpacity(0.8),
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                                     height: 1.4,
                                   ),
                                 ),
@@ -339,7 +340,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                     paper.abstractText ?? 'journal.abstract_not_available'.tr(),
                     textAlign: TextAlign.justify,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onBackground.withOpacity(0.8),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                       height: 1.5,
                     ),
                   ),
@@ -361,7 +362,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                       ),
                     ),
                   const SizedBox(height: 20.0),
-                ],
+                ].animate(interval: 50.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0, curve: Curves.easeOut),
               ),
             );
           },

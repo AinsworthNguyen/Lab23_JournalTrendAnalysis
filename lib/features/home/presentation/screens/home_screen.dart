@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../injection_container.dart';
 import '../blocs/dashboard_bloc.dart';
 import '../blocs/dashboard_event.dart';
@@ -100,72 +101,79 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                 : 'dashboard.never_updated'.tr();
 
             return SafeArea(
-              child: Stack(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  RefreshIndicator(
-                    onRefresh: () async {
-                      context.read<DashboardBloc>().add(SyncDashboard());
-                    },
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 12.0),
-                          // Header Profile Section
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'dashboard.welcome'.tr(namedArgs: {'name': state.name}),
-                                      style: theme.textTheme.headlineSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 12.0),
+                        // Header Profile Section
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'dashboard.welcome'.tr(namedArgs: {'name': state.name}),
+                                    style: theme.textTheme.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    const SizedBox(height: 4.0),
-                                    Text(
-                                      'dashboard.sub_header'.tr(namedArgs: {'interest': state.interest}),
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onBackground.withOpacity(0.7),
-                                      ),
+                                  ),
+                                  const SizedBox(height: 4.0),
+                                  Text(
+                                    'dashboard.sub_header'.tr(namedArgs: {'interest': state.interest}),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                     ),
-                                    const SizedBox(height: 4.0),
-                                    Text(
-                                      'dashboard.last_updated'.tr(namedArgs: {'time': formattedTime}),
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onBackground.withOpacity(0.5),
-                                      ),
+                                  ),
+                                  const SizedBox(height: 4.0),
+                                  Text(
+                                    'dashboard.last_updated'.tr(namedArgs: {'time': formattedTime}),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              // Refresh / Sync button
-                              IconButton.filledTonal(
-                                onPressed: state.isSyncing
-                                    ? null
-                                    : () {
-                                        context.read<DashboardBloc>().add(SyncDashboard());
-                                      },
-                                icon: state.isSyncing
-                                    ? const SizedBox(
-                                        width: 18.0,
-                                        height: 18.0,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      )
-                                    : const Icon(Icons.sync),
-                                tooltip: 'dashboard.btn_refresh'.tr(),
+                            ),
+                            // Refresh / Sync button
+                            IconButton.filledTonal(
+                              onPressed: state.isSyncing
+                                  ? null
+                                  : () {
+                                      context.read<DashboardBloc>().add(SyncDashboard());
+                                    },
+                              icon: state.isSyncing
+                                  ? const SizedBox(
+                                      width: 18.0,
+                                      height: 18.0,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.sync),
+                              tooltip: 'dashboard.btn_refresh'.tr(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24.0),
+
+                        // Search Bar
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: theme.shadowColor.withValues(alpha: 0.08),
+                                blurRadius: 24,
+                                offset: const Offset(0, 8),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 24.0),
-
-                          // Search Bar
-                          TextField(
+                          child: TextField(
                             controller: _searchController,
                             focusNode: _searchFocusNode,
                             decoration: InputDecoration(
@@ -182,17 +190,36 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                   : null,
                             ),
                           ),
-                          const SizedBox(height: 24.0),
+                        ),
+                        const SizedBox(height: 24.0),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        RefreshIndicator(
+                          onRefresh: () async {
+                            context.read<DashboardBloc>().add(SyncDashboard());
+                          },
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
 
                           if (!_isSearching) ...[
                             // Bento Grid Dashboard Metrics (Only 2 cards now)
-                            GridView.count(
+                            GridView(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16.0,
-                              mainAxisSpacing: 16.0,
-                              childAspectRatio: 1.15,
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16.0,
+                                mainAxisSpacing: 16.0,
+                                mainAxisExtent: 150.0,
+                              ),
                               children: [
                                 _buildMetricCard(
                                   context,
@@ -229,26 +256,28 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                     child: Text(
                                       'No publications found.',
                                       style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onBackground.withOpacity(0.5),
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
                                   )
                                 else ...[
-                                  Column(
-                                    children: state.papers.take(_visiblePapersCount).map((paper) {
-                                      return Card(
-                                        margin: const EdgeInsets.only(bottom: 12.0),
-                                        elevation: 0,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12.0),
-                                          side: BorderSide(color: theme.dividerColor.withOpacity(0.08)),
-                                        ),
-                                        child: InkWell(
-                                          borderRadius: BorderRadius.circular(12.0),
-                                          onTap: () {
-                                            context.push('/journal/publication/${paper.id}');
-                                          },
+                                    Column(
+                                      children: state.papers.take(_visiblePapersCount).toList().asMap().entries.map((entry) {
+                                        final index = entry.key;
+                                        final paper = entry.value;
+                                        return Card(
+                                          margin: const EdgeInsets.only(bottom: 12.0),
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(16.0),
+                                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.08)),
+                                          ),
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(16.0),
+                                            onTap: () {
+                                              context.push('/journal/publication/${paper.id}');
+                                            },
                                           child: Padding(
                                             padding: const EdgeInsets.all(14.0),
                                             child: Column(
@@ -261,8 +290,8 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                                       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                                                       decoration: BoxDecoration(
                                                         color: paper.isOpenAccess
-                                                            ? Colors.green.withOpacity(0.12)
-                                                            : Colors.grey.withOpacity(0.12),
+                                                            ? Colors.green.withValues(alpha: 0.12)
+                                                            : Colors.grey.withValues(alpha: 0.12),
                                                         borderRadius: BorderRadius.circular(6.0),
                                                       ),
                                                       child: Row(
@@ -318,7 +347,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                                         maxLines: 1,
                                                         overflow: TextOverflow.ellipsis,
                                                         style: theme.textTheme.bodySmall?.copyWith(
-                                                          color: theme.colorScheme.onBackground.withOpacity(0.6),
+                                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                                         ),
                                                       ),
                                                     ),
@@ -327,7 +356,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                                       paper.publicationYear.toString(),
                                                       style: theme.textTheme.bodySmall?.copyWith(
                                                         fontWeight: FontWeight.bold,
-                                                        color: theme.colorScheme.primary.withOpacity(0.8),
+                                                        color: theme.colorScheme.primary.withValues(alpha: 0.8),
                                                       ),
                                                     ),
                                                   ],
@@ -336,7 +365,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                             ),
                                           ),
                                         ),
-                                      );
+                                      ).animate(delay: (index * 50).ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOut);
                                     }).toList(),
                                   ),
                                   if (state.papers.length > _visiblePapersCount)
@@ -371,7 +400,6 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                   // Search Suggestions Overlay
                   if (_isSearching)
                     Positioned.fill(
-                      top: 104.0,
                       child: Container(
                         color: theme.scaffoldBackgroundColor,
                         child: BlocBuilder<SearchCubit, SearchState>(
@@ -409,9 +437,9 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                               if (searchState.history.isEmpty) {
                                 return Center(
                                   child: Text(
-                                    'dashboard.recent_searches'.tr() + ' is empty',
+                                    "${'dashboard.recent_searches'.tr()} is empty",
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onBackground.withOpacity(0.5),
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                     ),
                                   ),
                                 );
@@ -466,7 +494,10 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                     ),
                 ],
               ),
-            );
+            ),
+          ],
+        ),
+      );
           }
 
           return const SizedBox.shrink();
@@ -488,7 +519,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
-        side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -499,7 +530,14 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(icon, color: color, size: 24.0),
+                Container(
+                  padding: const EdgeInsets.all(10.0),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 26.0),
+                ),
               ],
             ),
             const SizedBox(height: 8.0),
@@ -520,7 +558,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                   Text(
                     title,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onBackground.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -531,5 +569,5 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
           ],
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1), curve: Curves.easeOutBack);
   }}

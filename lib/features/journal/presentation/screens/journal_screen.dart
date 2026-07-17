@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../injection_container.dart';
 import '../blocs/publications_cubit.dart';
 
@@ -127,7 +128,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                       child: Text(
                         'No publications found.',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onBackground.withOpacity(0.5),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                       ),
                     );
@@ -158,7 +159,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14.0),
-                          side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                          side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                         ),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(14.0),
@@ -177,8 +178,8 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                                       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                                       decoration: BoxDecoration(
                                         color: paper.isOpenAccess
-                                            ? Colors.green.withOpacity(0.12)
-                                            : Colors.grey.withOpacity(0.12),
+                                            ? Colors.green.withValues(alpha: 0.12)
+                                            : Colors.grey.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(6.0),
                                       ),
                                       child: Row(
@@ -229,7 +230,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                                 Text(
                                   _formatAuthors(paper.authors),
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onBackground.withOpacity(0.7),
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -242,7 +243,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                                       child: Text(
                                         paper.journalName ?? 'No journal info',
                                         style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onBackground.withOpacity(0.5),
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -251,7 +252,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                                     Text(
                                       'journal.published_in'.tr(namedArgs: {'year': paper.publicationYear.toString()}),
                                       style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onBackground.withOpacity(0.5),
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                       ),
                                     ),
                                   ],
@@ -260,7 +261,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                             ),
                           ),
                         ),
-                      );
+                      ).animate(delay: (index * 40).ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOut);
                     },
                   );
                 },

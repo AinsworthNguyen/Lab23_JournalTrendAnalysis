@@ -10,6 +10,7 @@ class AppTheme {
     required FontWeight fontWeight,
     required Color color,
     double? height,
+    double? letterSpacing,
   }) {
     final base = TextStyle(
       fontFamily: 'Outfit',
@@ -17,14 +18,15 @@ class AppTheme {
       fontWeight: fontWeight,
       color: color,
       height: height,
+      letterSpacing: letterSpacing,
     );
     try {
-      if (WidgetsBinding.instance == null) return base;
       return GoogleFonts.outfit(
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: color,
         height: height,
+        letterSpacing: letterSpacing,
       );
     } catch (_) {
       return base;
@@ -36,6 +38,7 @@ class AppTheme {
     required FontWeight fontWeight,
     required Color color,
     double? height,
+    double? letterSpacing,
   }) {
     final base = TextStyle(
       fontFamily: 'Inter',
@@ -43,14 +46,15 @@ class AppTheme {
       fontWeight: fontWeight,
       color: color,
       height: height,
+      letterSpacing: letterSpacing,
     );
     try {
-      if (WidgetsBinding.instance == null) return base;
       return GoogleFonts.inter(
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: color,
         height: height,
+        letterSpacing: letterSpacing,
       );
     } catch (_) {
       return base;
@@ -75,17 +79,20 @@ class AppTheme {
           fontSize: 32.0,
           fontWeight: FontWeight.w700,
           color: AppColors.textMain,
+          letterSpacing: -1.0,
         ),
         displayMedium: _outfit(
           fontSize: 28.0,
           fontWeight: FontWeight.w700,
           color: AppColors.textMain,
+          letterSpacing: -0.8,
           height: 1.2,
         ),
         displaySmall: _outfit(
           fontSize: 24.0,
           fontWeight: FontWeight.w600,
           color: AppColors.textMain,
+          letterSpacing: -0.5,
         ),
         headlineMedium: _outfit(
           fontSize: 20.0,
@@ -100,10 +107,10 @@ class AppTheme {
           height: 1.4,
         ),
         bodyLarge: _inter(
-          fontSize: 14.0,
+          fontSize: 15.0,
           fontWeight: FontWeight.w400,
           color: AppColors.textMain,
-          height: 1.5,
+          height: 1.6,
         ),
         bodyMedium: _inter(
           fontSize: 12.0,
@@ -116,8 +123,8 @@ class AppTheme {
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-          side: const BorderSide(color: AppColors.border, width: 1.0),
+          borderRadius: BorderRadius.circular(20.0),
+          side: BorderSide(color: AppColors.border.withValues(alpha: 0.3), width: 1.0),
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -217,8 +224,8 @@ class AppTheme {
         color: AppColors.surfaceLight,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-          side: const BorderSide(color: AppColors.borderLight, width: 1.0),
+          borderRadius: BorderRadius.circular(20.0),
+          side: BorderSide(color: AppColors.borderLight.withValues(alpha: 0.3), width: 1.0),
         ),
       ),
       appBarTheme: AppBarTheme(

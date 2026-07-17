@@ -10,12 +10,16 @@ import 'injection_container.dart';
 import 'core/firebase/firebase_messaging_service.dart';
 import 'core/firebase/firebase_remote_config_service.dart';
 
+import 'firebase_options.dart';
+
 void main() async {
   // Ensure framework services are active
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase core services
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Initialize easy localization
   await EasyLocalization.ensureInitialized();

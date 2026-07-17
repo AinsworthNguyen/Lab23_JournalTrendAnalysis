@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../injection_container.dart';
 import '../../../personalization/domain/usecases/get_user_preferences_usecase.dart';
 import '../../domain/entities/author.dart';
@@ -151,8 +152,8 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
             });
 
             // Prevent duplicate or reflexive edges using our addedEdges set
-            final edgeKey = '${authorA}_${authorB}';
-            final reverseEdgeKey = '${authorB}_${authorA}';
+            final edgeKey = '${authorA}_$authorB';
+            final reverseEdgeKey = '${authorB}_$authorA';
             if (!addedEdges.contains(edgeKey) && !addedEdges.contains(reverseEdgeKey)) {
               _collaborationGraph.addEdge(nodeA, nodeB);
               addedEdges.add(edgeKey);
@@ -173,8 +174,8 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
         final nodeA = nodeMap[authorA];
         final nodeB = nodeMap[authorB];
         if (nodeA != null && nodeB != null) {
-          final edgeKey = '${authorA}_${authorB}';
-          final reverseEdgeKey = '${authorB}_${authorA}';
+          final edgeKey = '${authorA}_$authorB';
+          final reverseEdgeKey = '${authorB}_$authorA';
           if (!addedEdges.contains(edgeKey) && !addedEdges.contains(reverseEdgeKey)) {
             _collaborationGraph.addEdge(nodeA, nodeB);
             addedEdges.add(edgeKey);
@@ -188,8 +189,8 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
         final nodeA = nodeMap[authorA];
         final nodeB = nodeMap[authorB];
         if (nodeA != null && nodeB != null) {
-          final edgeKey = '${authorA}_${authorB}';
-          final reverseEdgeKey = '${authorB}_${authorA}';
+          final edgeKey = '${authorA}_$authorB';
+          final reverseEdgeKey = '${authorB}_$authorA';
           if (!addedEdges.contains(edgeKey) && !addedEdges.contains(reverseEdgeKey)) {
             _collaborationGraph.addEdge(nodeA, nodeB);
             addedEdges.add(edgeKey);
@@ -306,7 +307,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
-          side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+          side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -338,7 +339,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                     child: Text(
                       'Insufficient historical data to render trend line.',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onBackground.withOpacity(0.5),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
@@ -351,8 +352,8 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                       borderData: FlBorderData(
                         show: true,
                         border: Border(
-                          bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
-                          left: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                          bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                          left: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                         ),
                       ),
                       minX: minX,
@@ -432,7 +433,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                           dotData: const FlDotData(show: true),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: theme.colorScheme.primary.withOpacity(0.12),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.12),
                           ),
                         ),
                       ],
@@ -443,7 +444,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
           ),
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOut);
   }
 
   Widget _buildKeywordsTab() {
@@ -482,7 +483,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
-                side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -502,7 +503,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16.0),
-              side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -526,7 +527,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: CircleAvatar(
-                            backgroundColor: Colors.green.withOpacity(0.12),
+                            backgroundColor: Colors.green.withValues(alpha: 0.12),
                             child: const Icon(Icons.trending_up, color: Colors.green, size: 18),
                           ),
                           title: Text(k.displayName, style: const TextStyle(fontWeight: FontWeight.w500)),
@@ -534,7 +535,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                           trailing: Text(
                             '${k.worksCount} works',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onBackground.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         );
@@ -542,7 +543,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                     ),
                 ],
               ),
-            ),
+            ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideX(begin: 0.05, end: 0),
           ),
         ],
       ),
@@ -557,7 +558,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
         child: Text(
           'No author records cached.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onBackground.withOpacity(0.5),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
       );
@@ -566,9 +567,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
     // Prepare Scatter Plot parameters
     double maxX = 10;
     double maxY = 10;
-    final List<ScatterSpot> spots = _topAuthors.asMap().entries.map<ScatterSpot>((entry) {
-      final index = entry.key;
-      final author = entry.value;
+    final List<ScatterSpot> spots = _topAuthors.map<ScatterSpot>((author) {
       return ScatterSpot(
         author.worksCount.toDouble(),
         author.citedByCount.toDouble(),
@@ -608,12 +607,12 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
-                  side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                  side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                    backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
                     child: Text(
                       author.displayName.isNotEmpty ? author.displayName[0] : 'A',
                       style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
@@ -630,7 +629,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                       Text(
                         author.lastKnownInstitution ?? 'Independent Researcher',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onBackground.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -638,14 +637,14 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                       const SizedBox(height: 4.0),
                       Row(
                         children: [
-                          Icon(Icons.article_outlined, size: 12.0, color: theme.colorScheme.onBackground.withOpacity(0.4)),
+                          Icon(Icons.article_outlined, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                           const SizedBox(width: 4.0),
                           Text(
                             'Works: ${NumberFormat.decimalPattern().format(author.worksCount)}',
                             style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.0),
                           ),
                           const SizedBox(width: 12.0),
-                          Icon(Icons.star_border, size: 12.0, color: theme.colorScheme.onBackground.withOpacity(0.4)),
+                          Icon(Icons.star_border, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                           const SizedBox(width: 4.0),
                           Text(
                             'Citations: ${NumberFormat.decimalPattern().format(author.citedByCount)}',
@@ -667,7 +666,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16.0),
-              side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -682,7 +681,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                   const SizedBox(height: 8.0),
                   Text(
                     'Citations (Y) vs Publications (X) for Top Researchers',
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.6)),
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24.0),
@@ -699,8 +698,8 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                         borderData: FlBorderData(
                           show: true,
                           border: Border(
-                            bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
-                            left: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                            bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                            left: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                           ),
                         ),
                         titlesData: FlTitlesData(
@@ -774,7 +773,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
-        side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -789,18 +788,18 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
             const SizedBox(height: 8.0),
             Text(
               'Interactive co-authorship map showing collaborative links between top researchers.',
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.6)),
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16.0),
             SizedBox(
               height: 450,
               child: Card(
-                color: theme.colorScheme.surface.withOpacity(0.4),
+                color: theme.colorScheme.surface.withValues(alpha: 0.4),
                 clipBehavior: Clip.antiAlias,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: theme.dividerColor.withOpacity(0.05)),
+                  side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.05)),
                 ),
                 child: Stack(
                   children: [
@@ -813,7 +812,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                         graph: _collaborationGraph,
                         algorithm: _graphAlgorithm,
                         paint: Paint()
-                          ..color = theme.colorScheme.primary.withOpacity(0.35)
+                          ..color = theme.colorScheme.primary.withValues(alpha: 0.35)
                           ..strokeWidth = 2.0
                           ..style = PaintingStyle.stroke,
                         builder: (Node node) {
@@ -824,12 +823,12 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                               color: theme.colorScheme.surface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: theme.colorScheme.primary.withOpacity(0.5),
+                                color: theme.colorScheme.primary.withValues(alpha: 0.5),
                                 width: 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 )
@@ -852,7 +851,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surface.withOpacity(0.85),
+                          color: theme.colorScheme.surface.withValues(alpha: 0.85),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -916,7 +915,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
-                side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -944,7 +943,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                 child: Text(
                   'No journal records cached.',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onBackground.withOpacity(0.5),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
               ),
@@ -961,12 +960,12 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
-                    side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                    side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                     leading: CircleAvatar(
-                      backgroundColor: theme.colorScheme.secondary.withOpacity(0.1),
+                      backgroundColor: theme.colorScheme.secondary.withValues(alpha: 0.1),
                       child: Text(
                         journal.displayName.isNotEmpty ? journal.displayName[0] : 'J',
                         style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.secondary),
@@ -983,7 +982,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                         Text(
                           journal.publisher ?? 'Unknown Publisher',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onBackground.withOpacity(0.6),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -991,14 +990,14 @@ class _KeywordsScreenState extends State<KeywordsScreen> with SingleTickerProvid
                         const SizedBox(height: 4.0),
                         Row(
                           children: [
-                            Icon(Icons.article_outlined, size: 12.0, color: theme.colorScheme.onBackground.withOpacity(0.4)),
+                            Icon(Icons.article_outlined, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                             const SizedBox(width: 4.0),
                             Text(
                               'Works: ${NumberFormat.decimalPattern().format(journal.worksCount)}',
                               style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.0),
                             ),
                             const SizedBox(width: 12.0),
-                            Icon(Icons.star_border, size: 12.0, color: theme.colorScheme.onBackground.withOpacity(0.4)),
+                            Icon(Icons.star_border, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                             const SizedBox(width: 4.0),
                             Text(
                               'Citations: ${NumberFormat.decimalPattern().format(journal.citedByCount)}',
@@ -1090,7 +1089,7 @@ class HorizontalBarChart extends StatelessWidget {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  barColor.withOpacity(0.6),
+                                  barColor.withValues(alpha: 0.6),
                                   barColor,
                                 ],
                               ),

@@ -117,7 +117,7 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                     Text(
                       'setup.subtitle'.tr(),
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onBackground.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -173,16 +173,19 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                     const SizedBox(height: 12.0),
 
                     // Suggestions Grid/List
-                    Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12.0),
-                        border: Border.all(
-                          color: theme.dividerColor.withOpacity(0.1),
+                    Material(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12.0),
+                      clipBehavior: Clip.hardEdge,
+                      child: Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12.0),
+                          border: Border.all(
+                            color: theme.dividerColor.withValues(alpha: 0.1),
+                          ),
                         ),
-                      ),
-                      child: ListView.builder(
+                        child: ListView.builder(
                         itemCount: _filteredConcepts.length,
                         itemBuilder: (context, index) {
                           final concept = _filteredConcepts[index];
@@ -207,6 +210,7 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                           );
                         },
                       ),
+                    ),
                     ),
                     const SizedBox(height: 48.0),
 

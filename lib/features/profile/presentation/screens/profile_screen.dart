@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../injection_container.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../../../core/firebase/firebase_remote_config_service.dart';
@@ -288,6 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                         name: 'dashboard_report.pdf',
                                                       );
                                                     } else {
+                                                      if (!context.mounted) return;
                                                       ScaffoldMessenger.of(context).showSnackBar(
                                                         const SnackBar(content: Text('Local PDF file not found')),
                                                       );
@@ -305,6 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     );
                                                   }
                                                 } catch (e) {
+                                                  if (!context.mounted) return;
                                                   ScaffoldMessenger.of(context).showSnackBar(
                                                     SnackBar(content: Text('Error opening PDF: $e')),
                                                   );
@@ -534,6 +537,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               trailing: DropdownButton<ThemeMode>(
                                 value: currentThemeMode,
                                 underline: const SizedBox.shrink(),
+                                focusColor: Colors.transparent,
+                                borderRadius: BorderRadius.circular(12.0),
                                 onChanged: (ThemeMode? newMode) {
                                   if (newMode != null) {
                                     context.read<ThemeCubit>().setTheme(newMode);
@@ -566,6 +571,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           trailing: DropdownButton<Locale>(
                             value: context.locale,
                             underline: const SizedBox.shrink(),
+                            focusColor: Colors.transparent,
+                            borderRadius: BorderRadius.circular(12.0),
                             onChanged: (Locale? newLocale) {
                               if (newLocale != null) {
                                 context.setLocale(newLocale);
@@ -656,7 +663,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                      ],
+                      ].animate(interval: 50.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
                     ),
                   ),
                 ),

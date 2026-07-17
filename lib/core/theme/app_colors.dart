@@ -24,4 +24,9 @@ class AppColors {
   static const Color textMainLight = Color(0xFF0F172A);
   static const Color textSecondaryLight = Color(0xFF475569);
   static const Color borderLight = Color(0xFFE2E8F0);
+
+  // Glow / Gradients Accents
+  static const Color glowIndigo = Color(0x336366F1); // 20% opacity primary
+  static const Color glowEmerald = Color(0x3310B981);
+  static const Color glowRose = Color(0x33F43F5E);
 }

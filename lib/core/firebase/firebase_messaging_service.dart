@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,11 +21,15 @@ class FirebaseMessagingService implements IFirebaseMessagingService {
 
   @override
   Future<void> initialize() async {
-    await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    try {
+      await _fcm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    } catch (e) {
+      debugPrint('[WARNING] FCM requestPermission failed: $e');
+    }
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       _messageStreamController.add(message);
@@ -36,9 +41,13 @@ class FirebaseMessagingService implements IFirebaseMessagingService {
 
     // Listen to authentication state changes to dynamically save token under the active user
     FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-      final token = await _fcm.getToken();
-      if (token != null) {
-        await _saveTokenToFirestore(token);
+      try {
+        final token = await _fcm.getToken();
+        if (token != null) {
+          await _saveTokenToFirestore(token);
+        }
+      } catch (e) {
+        debugPrint('[WARNING] FCM getToken failed: $e');
       }
     });
   }
@@ -68,12 +77,12 @@ class FirebaseMessagingService implements IFirebaseMessagingService {
           .doc(token)
           .set({
         'token': token,
-        'platform': Platform.operatingSystem,
+        'platform': kIsWeb ? 'web' : Platform.operatingSystem,
         'lastUpdated': FieldValue.serverTimestamp(),
       });
-      print('[INFO] FCM Token successfully saved to Firestore for user: $userId');
+      debugPrint('[INFO] FCM Token successfully saved to Firestore for user: $userId');
     } catch (e) {
-      print('[WARNING] Failed to save FCM Token to Firestore: $e');
+      debugPrint('[WARNING] Failed to save FCM Token to Firestore: $e');
     }
   }
 
