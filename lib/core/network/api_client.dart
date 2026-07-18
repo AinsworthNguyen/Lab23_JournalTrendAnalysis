@@ -16,7 +16,6 @@ class ApiClient {
       receiveTimeout: const Duration(seconds: 8),
       headers: {
         'Accept': 'application/json',
-        'api-key': _openAlexApiKey,
         // Participating in OpenAlex Polite Pool (Mobile/Desktop only, Web is blocked by browsers)
         if (!kIsWeb) 'User-Agent': ApiConstants.userAgent,
       },
@@ -56,6 +55,9 @@ class ApiClient {
       final params = Map<String, dynamic>.from(queryParameters ?? {});
       if (!params.containsKey('mailto')) {
         params['mailto'] = 'academic-analytics@fptu.edu.vn';
+      }
+      if (!params.containsKey('api_key')) {
+        params['api_key'] = _openAlexApiKey;
       }
       final response = await _dio.get(
         path,
