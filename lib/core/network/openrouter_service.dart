@@ -28,7 +28,7 @@ class OpenRouterService {
           receiveTimeout: const Duration(seconds: 15),
         ),
         data: {
-          'model': 'google/gemini-2.0-flash-exp:free',
+          'model': 'openrouter/free',
           'messages': [
             {
               'role': 'user',
