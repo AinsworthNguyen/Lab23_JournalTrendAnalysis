@@ -91,7 +91,7 @@ class KeywordRepositoryImpl implements KeywordRepository {
       try {
         final publicationTrends = await _remoteDataSource.getPublicationTrends(conceptId);
         
-        if (publicationTrends.length >= 2) {
+        if (publicationTrends.isNotEmpty) {
           await _localDataSource.cachePublicationTrends(conceptId, publicationTrends);
           return Right(publicationTrends);
         }
@@ -100,12 +100,12 @@ class KeywordRepositoryImpl implements KeywordRepository {
 
     try {
       final localTrends = await _localDataSource.getPublicationTrends(conceptId);
-      if (localTrends.length >= 2) {
+      if (localTrends.isNotEmpty) {
         return Right(localTrends);
       }
 
       final extracted = await _extractPubTrendsFromCache(conceptId);
-      if (extracted.length >= 2) {
+      if (extracted.isNotEmpty) {
         await _localDataSource.cachePublicationTrends(conceptId, extracted);
         return Right(extracted);
       }
@@ -123,7 +123,7 @@ class KeywordRepositoryImpl implements KeywordRepository {
         final conceptData = await _remoteDataSource.getConceptTrends(conceptId);
         final countsByYear = conceptData['counts_by_year'] as List<dynamic>? ?? [];
 
-        if (countsByYear.length >= 2) {
+        if (countsByYear.isNotEmpty) {
           final citationTrends = countsByYear.map((item) {
             final map = item as Map<String, dynamic>;
             return CitationTrendModel(
@@ -140,12 +140,12 @@ class KeywordRepositoryImpl implements KeywordRepository {
 
     try {
       final localTrends = await _localDataSource.getCitationTrends(conceptId);
-      if (localTrends.length >= 2) {
+      if (localTrends.isNotEmpty) {
         return Right(localTrends);
       }
 
       final extracted = await _extractCitTrendsFromCache(conceptId);
-      if (extracted.length >= 2) {
+      if (extracted.isNotEmpty) {
         await _localDataSource.cacheCitationTrends(conceptId, extracted);
         return Right(extracted);
       }

@@ -189,6 +189,24 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                     )
                                   : null,
                             ),
+                            onSubmitted: (value) {
+                              final searchState = context.read<SearchCubit>().state;
+                              if (searchState is SearchSuggestionsLoaded && searchState.results.isNotEmpty) {
+                                final firstItem = searchState.results.first;
+                                _searchController.clear();
+                                _searchFocusNode.unfocus();
+                                getIt<IFirebaseAnalyticsService>().logSearchTopic(firstItem['name']!);
+                                context.read<DashboardBloc>().add(
+                                      SelectConceptEvent(
+                                        conceptId: firstItem['id']!,
+                                        conceptName: firstItem['name']!,
+                                      ),
+                                    );
+                                context.read<SearchCubit>().selectQuery(firstItem['name']!);
+                              } else {
+                                _searchFocusNode.unfocus();
+                              }
+                            },
                           ),
                         ),
                         const SizedBox(height: 24.0),
@@ -210,7 +228,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                               children: [
 
                           if (!_isSearching) ...[
-                            // Bento Grid Dashboard Metrics (Only 2 cards now)
+                            // Bento Grid Dashboard Metrics (All 6 cards)
                             GridView(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -231,8 +249,36 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                 _buildMetricCard(
                                   context,
                                   title: 'dashboard.metrics.avg_citations'.tr(),
-                                  value: NumberFormat.decimalPattern().format(state.totalCitations),
-                                  icon: Icons.star_border,
+                                  value: state.avgCitations.toStringAsFixed(1),
+                                  icon: Icons.analytics_outlined,
+                                  color: Colors.green,
+                                ),
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.active_year'.tr(),
+                                  value: state.activeYear.toString(),
+                                  icon: Icons.calendar_today_outlined,
+                                  color: Colors.purple,
+                                ),
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.top_author'.tr(),
+                                  value: state.topAuthor.isNotEmpty ? state.topAuthor : 'N/A',
+                                  icon: Icons.person_outline,
+                                  color: Colors.teal,
+                                ),
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.top_journal'.tr(),
+                                  value: state.topJournal.isNotEmpty ? state.topJournal : 'N/A',
+                                  icon: Icons.book_outlined,
+                                  color: Colors.orange,
+                                ),
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.most_influential'.tr(),
+                                  value: state.mostInfluentialPaper.isNotEmpty ? state.mostInfluentialPaper : 'N/A',
+                                  icon: Icons.format_quote,
                                   color: Colors.amber,
                                 ),
                               ],
@@ -318,7 +364,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                                     ),
                                                     const Spacer(),
                                                     // Citation Count
-                                                    Icon(Icons.star, size: 13.0, color: theme.colorScheme.primary),
+                                                    Icon(Icons.format_quote, size: 13.0, color: theme.colorScheme.primary),
                                                     const SizedBox(width: 4.0),
                                                     Text(
                                                       NumberFormat.decimalPattern().format(paper.citationCount),

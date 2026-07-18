@@ -21,8 +21,9 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
 
   @override
   Future<List<AuthorModel>> getTopAuthors(String conceptId) async {
+    final filter = conceptId.startsWith('T') ? 'topics.id:$conceptId' : 'concepts.id:$conceptId';
     final queryParams = <String, dynamic>{
-      'filter': 'concepts.id:$conceptId',
+      'filter': filter,
       'group_by': 'authorships.author.id',
     };
     final response = await _apiClient.get('/works', queryParameters: queryParams);
@@ -34,7 +35,7 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
       final fullId = map['key'] as String? ?? '';
       final displayName = map['key_display_name'] as String? ?? '';
       
-      // Skip obvious organization names to keep it clean
+      // Skip obvious organization names and placeholders like "et al." to keep it clean
       final lowerName = displayName.toLowerCase();
       if (lowerName.contains('assignee') ||
           lowerName.contains('association') ||
@@ -45,7 +46,8 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
           lowerName.contains('collaborator') ||
           lowerName.contains('collaboration') ||
           lowerName.contains('office') ||
-          lowerName.contains('group')) {
+          lowerName.contains('group') ||
+          lowerName.contains('et al')) {
         continue;
       }
       
@@ -115,38 +117,95 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
     return AuthorModel.fromJson(response as Map<String, dynamic>);
   }
 
+  String _getFieldIdFromConceptId(String conceptId) {
+    switch (conceptId) {
+      case 'C41008148': // Computer Science
+      case 'C154945302': // AI
+      case 'C119857082': // ML
+      case 'C2522767166': // Data Science
+        return '17';
+      case 'C33923547': // Mathematics
+        return '26';
+      case 'C121332964': // Physics
+        return '31';
+      case 'C185592680': // Chemistry
+        return '16';
+      case 'C86803240': // Biology
+        return '11';
+      case 'C71924100': // Medicine
+        return '27';
+      default:
+        return '17'; // Fallback to CS
+    }
+  }
+
   @override
   Future<List<KeywordModel>> getTopKeywords(String conceptId) async {
-    final queryParams = <String, dynamic>{
-      'filter': 'ancestors.id:$conceptId',
-      'sort': 'works_count:desc',
-      'per_page': 15,
-    };
-    final response = await _apiClient.get('/concepts', queryParameters: queryParams);
-    final results = response['results'] as List<dynamic>? ?? [];
-    return results
-        .map((json) => KeywordModel.fromJson(json as Map<String, dynamic>))
-        .toList();
+    try {
+      final fieldId = _getFieldIdFromConceptId(conceptId);
+      final response = await _apiClient.get('/topics', queryParameters: {
+        'filter': 'field.id:$fieldId',
+        'per_page': 15,
+      });
+      final results = response['results'] as List<dynamic>? ?? [];
+      return results.map((json) {
+        final map = json as Map<String, dynamic>;
+        final fullId = map['id'] as String? ?? '';
+        final cleanedId = fullId.split('/').last;
+        return KeywordModel(
+          id: cleanedId,
+          displayName: map['display_name'] as String? ?? 'Unknown Topic',
+          level: 2,
+          worksCount: map['works_count'] as int? ?? 0,
+        );
+      }).toList();
+    } catch (_) {}
+    return [];
   }
 
   @override
   Future<List<KeywordModel>> getEmergingKeywords(String conceptId) async {
-    final queryParams = <String, dynamic>{
-      'filter': 'ancestors.id:$conceptId,level:3',
-      'sort': 'works_count:desc',
-      'per_page': 10,
-    };
-    final response = await _apiClient.get('/concepts', queryParameters: queryParams);
-    final results = response['results'] as List<dynamic>? ?? [];
-    return results
-        .map((json) => KeywordModel.fromJson(json as Map<String, dynamic>))
-        .toList();
+    try {
+      final fieldId = _getFieldIdFromConceptId(conceptId);
+      final response = await _apiClient.get('/topics', queryParameters: {
+        'filter': 'field.id:$fieldId',
+        'per_page': 25,
+      });
+      final results = response['results'] as List<dynamic>? ?? [];
+      if (results.length > 10) {
+        return results.skip(10).take(10).map((json) {
+          final map = json as Map<String, dynamic>;
+          final fullId = map['id'] as String? ?? '';
+          final cleanedId = fullId.split('/').last;
+          return KeywordModel(
+            id: cleanedId,
+            displayName: map['display_name'] as String? ?? 'Unknown Topic',
+            level: 3,
+            worksCount: map['works_count'] as int? ?? 0,
+          );
+        }).toList();
+      } else {
+        return results.map((json) {
+          final map = json as Map<String, dynamic>;
+          final fullId = map['id'] as String? ?? '';
+          final cleanedId = fullId.split('/').last;
+          return KeywordModel(
+            id: cleanedId,
+            displayName: map['display_name'] as String? ?? 'Unknown Topic',
+            level: 3,
+            worksCount: map['works_count'] as int? ?? 0,
+          );
+        }).toList();
+      }
+    } catch (_) {}
+    return [];
   }
 
   @override
   Future<List<PublicationTrendModel>> getPublicationTrends(String conceptId) async {
+    final filter = conceptId.startsWith('T') ? 'topics.id:$conceptId' : 'concepts.id:$conceptId';
     final queryParams = <String, dynamic>{
-      'filter': 'concepts.id:$conceptId',
+      'filter': filter,
       'group_by': 'publication_year',
     };
     final response = await _apiClient.get('/works', queryParameters: queryParams);
@@ -162,7 +221,8 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
 
   @override
   Future<Map<String, dynamic>> getConceptTrends(String conceptId) async {
-    final response = await _apiClient.get('/concepts/$conceptId');
+    final endpoint = conceptId.startsWith('T') ? '/topics/$conceptId' : '/concepts/$conceptId';
+    final response = await _apiClient.get(endpoint);
     return response as Map<String, dynamic>;
   }
 }

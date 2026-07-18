@@ -10,6 +10,7 @@ import '../../features/journal/presentation/screens/journal_screen.dart';
 import '../../features/journal/presentation/screens/publication_detail_screen.dart';
 import '../../features/journal/presentation/screens/journal_detail_screen.dart';
 import '../../features/keywords/presentation/screens/keywords_screen.dart';
+import '../../features/keywords/presentation/screens/keyword_detail_screen.dart';
 import '../../features/author/presentation/screens/author_detail_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../constants/prefs_keys.dart';
@@ -125,6 +126,15 @@ final GoRouter appRouter = GoRouter(
                     return AuthorDetailScreen(authorId: aid);
                   },
                 ),
+                GoRoute(
+                  path: 'detail/:kid',
+                  parentNavigatorKey: rootNavigatorKey,
+                  builder: (context, state) {
+                    final kid = state.pathParameters['kid'] ?? '';
+                    final name = state.uri.queryParameters['name'] ?? '';
+                    return KeywordDetailScreen(keywordId: kid, keywordName: name);
+                  },
+                ),
               ],
             ),
           ],
@@ -178,7 +188,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.trending_up_outlined),
             activeIcon: Icon(Icons.trending_up),
-            label: 'Keywords',
+            label: 'Topics',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

@@ -13,7 +13,7 @@ class SearchTopicsUseCase implements UseCase<List<Map<String, String>>, String> 
   @override
   Future<Either<Failure, List<Map<String, String>>>> call(String params) async {
     try {
-      final response = await _apiClient.get('/concepts', queryParameters: {
+      final response = await _apiClient.get('/topics', queryParameters: {
         'search': params,
         'per_page': 10,
       });

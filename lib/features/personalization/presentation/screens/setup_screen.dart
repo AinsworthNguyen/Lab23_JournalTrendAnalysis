@@ -274,6 +274,39 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                               ),
                             ),
                     ),
+                    const SizedBox(height: 12.0),
+                    TextButton(
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              final authService = getIt<IFirebaseAuthService>();
+                              final currentUser = authService.currentUser;
+                              final email = currentUser?.email ?? '';
+                              final photoUrl = currentUser?.photoURL ?? '';
+
+                              // Default/Guest profile values
+                              final guestPrefs = UserPreferences(
+                                fullName: 'Guest Researcher',
+                                email: email,
+                                photoUrl: photoUrl,
+                                interestConceptId: 'C41008148', // Computer Science
+                                interestConceptName: 'Computer Science',
+                              );
+
+                              context.read<PersonalizationBloc>().add(SavePreferencesEvent(guestPrefs));
+                            },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                      ),
+                      child: Text(
+                        'setup.button_skip'.tr(),
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

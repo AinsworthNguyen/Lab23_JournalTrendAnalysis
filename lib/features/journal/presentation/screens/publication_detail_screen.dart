@@ -154,7 +154,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                         ),
                       ),
                       const SizedBox(width: 12.0),
-                      Icon(Icons.star, size: 16.0, color: theme.colorScheme.primary),
+                      Icon(Icons.format_quote, size: 16.0, color: theme.colorScheme.primary),
                       const SizedBox(width: 4.0),
                       Text(
                         '${'journal.citations'.tr()}: ${NumberFormat.decimalPattern().format(paper.citationCount)}',

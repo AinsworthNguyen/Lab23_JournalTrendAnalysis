@@ -8,6 +8,7 @@
     "interest_hint": "Search and select a primary topic",
     "button_generate": "Generate Random Researcher Name",
     "button_save": "Save & Continue",
+    "button_skip": "Skip for now",
     "name_error": "Please enter or generate a name",
     "interest_error": "Please select a research interest"
   },
@@ -23,7 +24,8 @@
     "search_hint": "Search research topics...",
     "metrics": {
       "total_publications": "Total Publications",
-      "avg_citations": "Total Citations",
+      "avg_citations": "Average Citations",
+      "total_citations": "Total Citations",
       "active_year": "Most Active Year",
       "top_journal": "Top Journal",
       "top_author": "Top Author",
@@ -45,9 +47,9 @@
     "view_doi": "Open Original Link (DOI)"
   },
   "keywords": {
-    "title": "Keyword & Author Trends",
-    "top_keywords": "Top Keywords",
-    "emerging_keywords": "Emerging Keywords (Growth Rate)",
+    "title": "Topic & Author Trends",
+    "top_keywords": "Top Topics",
+    "emerging_keywords": "Emerging Topics (Growth Rate)",
     "topic_evolution": "Topic Evolution",
     "author_productivity": "Author Productivity vs Impact",
     "author_collaboration": "Author Collaboration Network",

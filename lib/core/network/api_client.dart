@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../constants/api_constants.dart';
 import '../error/exceptions.dart';
@@ -9,12 +10,12 @@ class ApiClient {
   ApiClient({Dio? dio}) : _dio = dio ?? Dio() {
     _dio.options = BaseOptions(
       baseUrl: ApiConstants.baseUrl,
-      connectTimeout: const Duration(seconds: 40),
-      receiveTimeout: const Duration(seconds: 40),
+      connectTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 8),
       headers: {
         'Accept': 'application/json',
-        // Participating in OpenAlex Polite Pool
-        'User-Agent': ApiConstants.userAgent,
+        // Participating in OpenAlex Polite Pool (Mobile/Desktop only, Web is blocked by browsers)
+        if (!kIsWeb) 'User-Agent': ApiConstants.userAgent,
       },
     );
 
@@ -46,22 +47,38 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    int retryCount = 0,
   }) async {
     try {
+      final params = Map<String, dynamic>.from(queryParameters ?? {});
+      if (!params.containsKey('mailto')) {
+        params['mailto'] = 'academic-analytics@fptu.edu.vn';
+      }
       final response = await _dio.get(
         path,
-        queryParameters: queryParameters,
+        queryParameters: params,
         options: options,
         cancelToken: cancelToken,
       );
       return response.data;
     } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 429 && retryCount < 3) {
+        // Wait and retry with backoff
+        await Future.delayed(Duration(milliseconds: 1000 * (retryCount + 1)));
+        return get(
+          path,
+          queryParameters: queryParameters,
+          options: options,
+          cancelToken: cancelToken,
+          retryCount: retryCount + 1,
+        );
+      }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
         throw NetworkException('Connection timed out');
       }
-      final status = e.response?.statusCode;
       if (status == 429) {
         throw ServerException('Rate limited by OpenAlex. Please wait.');
       }

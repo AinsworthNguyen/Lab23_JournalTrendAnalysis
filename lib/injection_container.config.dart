@@ -55,6 +55,7 @@ import 'features/journal/domain/usecases/get_publication_details_usecase.dart'
     as _i795;
 import 'features/journal/domain/usecases/get_publications_usecase.dart'
     as _i740;
+import 'features/journal/presentation/blocs/journals_cubit.dart' as _i83;
 import 'features/journal/presentation/blocs/publications_cubit.dart' as _i141;
 import 'features/keywords/data/datasources/keywords_local_data_source.dart'
     as _i1029;
@@ -246,6 +247,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i197.GetAuthorDetailsUseCase(gh<_i795.AuthorRepository>()));
     gh.lazySingleton<_i460.GetTopAuthorsUseCase>(
         () => _i460.GetTopAuthorsUseCase(gh<_i795.AuthorRepository>()));
+    gh.factory<_i83.JournalsCubit>(() => _i83.JournalsCubit(
+          getJournalRanking: gh<_i70.GetJournalRankingUseCase>(),
+          getUserPreferences: gh<_i417.GetUserPreferencesUseCase>(),
+        ));
     gh.factory<_i129.DashboardBloc>(() => _i129.DashboardBloc(
           getUserPreferences: gh<_i417.GetUserPreferencesUseCase>(),
           saveUserPreferences: gh<_i473.SaveUserPreferencesUseCase>(),

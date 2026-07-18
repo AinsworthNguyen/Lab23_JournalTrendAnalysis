@@ -8,6 +8,7 @@
     "interest_hint": "Tìm kiếm và chọn một chủ đề chính",
     "button_generate": "Tạo ngẫu nhiên tên Nhà nghiên cứu",
     "button_save": "Lưu & Tiếp tục",
+    "button_skip": "Bỏ qua thiết lập",
     "name_error": "Vui lòng nhập hoặc tạo ngẫu nhiên tên",
     "interest_error": "Vui lòng chọn một chủ đề nghiên cứu"
   },
@@ -23,7 +24,8 @@
     "search_hint": "Tìm kiếm chủ đề nghiên cứu...",
     "metrics": {
       "total_publications": "Tổng số bài báo",
-      "avg_citations": "Tổng số trích dẫn",
+      "avg_citations": "Trích dẫn trung bình",
+      "total_citations": "Tổng số trích dẫn",
       "active_year": "Năm hoạt động nhất",
       "top_journal": "Tạp chí hàng đầu",
       "top_author": "Tác giả nổi bật",
@@ -45,9 +47,9 @@
     "view_doi": "Mở liên kết gốc (DOI)"
   },
   "keywords": {
-    "title": "Xu hướng Từ khóa & Tác giả",
-    "top_keywords": "Từ khóa hàng đầu",
-    "emerging_keywords": "Từ khóa mới nổi (Tỷ lệ tăng trưởng)",
+    "title": "Xu hướng Chủ đề & Tác giả",
+    "top_keywords": "Chủ đề hàng đầu",
+    "emerging_keywords": "Chủ đề mới nổi (Tỷ lệ tăng trưởng)",
     "topic_evolution": "Sự phát triển chủ đề",
     "author_productivity": "Năng suất & Ảnh hưởng tác giả",
     "author_collaboration": "Mạng lưới hợp tác tác giả",

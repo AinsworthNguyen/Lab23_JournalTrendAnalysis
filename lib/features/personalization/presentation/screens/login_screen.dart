@@ -49,16 +49,40 @@ class LoginScreen extends StatelessWidget {
               child: SafeArea(
                 child: Center(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Logo Icon or Brand representation
-                        Icon(
-                          Icons.insights_rounded,
-                          size: 80.0,
-                          color: theme.colorScheme.primary,
+                        // Glow Emblem logo container
+                        Center(
+                          child: Container(
+                            width: 100.0,
+                            height: 100.0,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF6C63FF),
+                                  Color(0xFF3F3D56),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(28.0),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
+                                  blurRadius: 16.0,
+                                  offset: const Offset(0, 8.0),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.auto_stories,
+                              size: 44.0,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 24.0),
                         
@@ -136,19 +160,19 @@ class LoginScreen extends StatelessWidget {
                                           ),
                                         )
                                       : const Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.login),
-                                            SizedBox(width: 12.0),
-                                            Text(
-                                              'Sign in with Google',
-                                              style: TextStyle(
-                                                fontSize: 16.0,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                           mainAxisAlignment: MainAxisAlignment.center,
+                                           children: [
+                                             GoogleLogoIcon(),
+                                             SizedBox(width: 12.0),
+                                             Text(
+                                               'Sign in with Google',
+                                               style: TextStyle(
+                                                 fontSize: 16.0,
+                                                 fontWeight: FontWeight.bold,
+                                               ),
+                                             ),
+                                           ],
+                                         ),
                                 ),
                                 const SizedBox(height: 16.0),
                                 OutlinedButton(
@@ -191,6 +215,34 @@ class LoginScreen extends StatelessWidget {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class GoogleLogoIcon extends StatelessWidget {
+  final double size;
+  const GoogleLogoIcon({super.key, this.size = 22.0});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          'G',
+          style: TextStyle(
+            color: const Color(0xFF4285F4),
+            fontSize: size * 0.68,
+            fontWeight: FontWeight.w900,
+            fontFamily: 'Google Sans',
+          ),
         ),
       ),
     );
