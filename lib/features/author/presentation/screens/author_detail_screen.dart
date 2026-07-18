@@ -55,7 +55,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
       List<Paper> authorPapers = [];
       try {
         final response = await getIt<ApiClient>().get('/works', queryParameters: {
-          'filter': 'authorships.author.id:${widget.authorId},primary_location.source.type:journal|conference',
+          'filter': 'authorships.author.id:${widget.authorId},primary_location.source.type:journal|conference,publication_year:<2026',
           'sort': 'publication_year:desc',
           'per_page': 10,
         });

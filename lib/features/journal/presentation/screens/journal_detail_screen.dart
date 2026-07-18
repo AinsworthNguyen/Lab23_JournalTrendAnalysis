@@ -54,7 +54,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
       List<Paper> journalPapers = [];
       try {
         final response = await getIt<ApiClient>().get('/works', queryParameters: {
-          'filter': 'primary_location.source.id:${widget.journalId}',
+          'filter': 'primary_location.source.id:${widget.journalId},publication_year:<2026',
           'per_page': 10,
         });
         final results = response['results'] as List<dynamic>? ?? [];

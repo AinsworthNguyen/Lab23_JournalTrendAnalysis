@@ -29,8 +29,8 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
     String? searchQuery,
   }) async {
     final filter = conceptId.startsWith('T')
-        ? 'topics.id:$conceptId,primary_location.source.type:journal|conference'
-        : 'concepts.id:$conceptId,primary_location.source.type:journal|conference';
+        ? 'topics.id:$conceptId,primary_location.source.type:journal|conference,publication_year:<2026'
+        : 'concepts.id:$conceptId,primary_location.source.type:journal|conference,publication_year:<2026';
     final queryParams = <String, dynamic>{
       'filter': filter,
       'page': page,
@@ -127,7 +127,9 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
   @override
   Future<List<JournalModel>> getTopJournals(String conceptId) async {
     try {
-      final filter = conceptId.startsWith('T') ? 'topics.id:$conceptId' : 'concepts.id:$conceptId';
+      final filter = conceptId.startsWith('T')
+          ? 'topics.id:$conceptId,publication_year:<2026'
+          : 'concepts.id:$conceptId,publication_year:<2026';
       final queryParams = <String, dynamic>{
         'filter': filter,
         'group_by': 'primary_location.source.id',
@@ -221,7 +223,9 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
   @override
   Future<String> getTopJournalName(String conceptId) async {
     try {
-      final filter = conceptId.startsWith('T') ? 'topics.id:$conceptId' : 'concepts.id:$conceptId';
+      final filter = conceptId.startsWith('T')
+          ? 'topics.id:$conceptId,publication_year:<2026'
+          : 'concepts.id:$conceptId,publication_year:<2026';
       final queryParams = <String, dynamic>{
         'filter': '$filter,primary_location.source.type:journal|conference',
         'group_by': 'primary_location.source.id',
@@ -260,7 +264,9 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
   @override
   Future<PaperModel?> getMostInfluentialPaper(String conceptId) async {
     try {
-      final filter = conceptId.startsWith('T') ? 'topics.id:$conceptId' : 'concepts.id:$conceptId';
+      final filter = conceptId.startsWith('T')
+          ? 'topics.id:$conceptId,publication_year:<2026'
+          : 'concepts.id:$conceptId,publication_year:<2026';
       final queryParams = <String, dynamic>{
         'filter': '$filter,primary_location.source.type:journal|conference',
         'sort': 'cited_by_count:desc',

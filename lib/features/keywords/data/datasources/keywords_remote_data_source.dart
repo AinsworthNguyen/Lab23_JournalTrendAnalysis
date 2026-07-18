@@ -21,7 +21,9 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
 
   @override
   Future<List<AuthorModel>> getTopAuthors(String conceptId) async {
-    final filter = conceptId.startsWith('T') ? 'topics.id:$conceptId' : 'concepts.id:$conceptId';
+    final filter = conceptId.startsWith('T')
+        ? 'topics.id:$conceptId,publication_year:<2026'
+        : 'concepts.id:$conceptId,publication_year:<2026';
     final queryParams = <String, dynamic>{
       'filter': filter,
       'group_by': 'authorships.author.id',
@@ -203,7 +205,9 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
 
   @override
   Future<List<PublicationTrendModel>> getPublicationTrends(String conceptId) async {
-    final filter = conceptId.startsWith('T') ? 'topics.id:$conceptId' : 'concepts.id:$conceptId';
+    final filter = conceptId.startsWith('T')
+        ? 'topics.id:$conceptId,publication_year:<2026'
+        : 'concepts.id:$conceptId,publication_year:<2026';
     final queryParams = <String, dynamic>{
       'filter': filter,
       'group_by': 'publication_year',
