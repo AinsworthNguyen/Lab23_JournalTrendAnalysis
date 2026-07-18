@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:journal_trend_analysis/core/theme/app_theme.dart';
 import 'package:journal_trend_analysis/core/theme/app_colors.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = true;
   group('AppTheme Tests', () {
     test('darkTheme has dark brightness and custom primary color', () {
       final darkTheme = AppTheme.darkTheme;
