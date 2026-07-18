@@ -404,11 +404,13 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                     size: 20.0,
                                   ),
                                   const SizedBox(width: 8.0),
-                                  Text(
-                                    isVi ? 'Tóm tắt & Dịch thuật AI (Gemini)' : 'AI Summary & Translation (Gemini)',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: theme.colorScheme.primary,
+                                  Expanded(
+                                    child: Text(
+                                      isVi ? 'Tóm tắt & Dịch thuật AI (Gemini)' : 'AI Summary & Translation (Gemini)',
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.primary,
+                                      ),
                                     ),
                                   ),
                                   if (_aiResponse != null && !_isAiLoading) ...[
