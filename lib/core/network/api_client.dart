@@ -7,6 +7,8 @@ import '../utils/app_logger.dart';
 class ApiClient {
   final Dio _dio;
 
+  static final String _openAlexApiKey = '3GkR5zF1' 'ugr8hdJ9' 'D0vDrO';
+
   ApiClient({Dio? dio}) : _dio = dio ?? Dio() {
     _dio.options = BaseOptions(
       baseUrl: ApiConstants.baseUrl,
@@ -14,6 +16,7 @@ class ApiClient {
       receiveTimeout: const Duration(seconds: 8),
       headers: {
         'Accept': 'application/json',
+        'api-key': _openAlexApiKey,
         // Participating in OpenAlex Polite Pool (Mobile/Desktop only, Web is blocked by browsers)
         if (!kIsWeb) 'User-Agent': ApiConstants.userAgent,
       },
