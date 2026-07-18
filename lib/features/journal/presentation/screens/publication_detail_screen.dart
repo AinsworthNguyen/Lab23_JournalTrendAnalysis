@@ -22,7 +22,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
   String? _errorMessage;
   bool _isAuthorsExpanded = false;
   bool _isAiLoading = false;
-  String? _aiResponse;
+  Map<String, dynamic>? _aiResponse;
 
   void _getAiInsights() async {
     if (_paper == null || _paper!.abstractText == null) return;
@@ -463,7 +463,68 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                   ],
                                 ),
                               ] else if (_aiResponse != null) ...[
-                                MarkdownText(text: _aiResponse!),
+                                const Text(
+                                  'Tóm tắt nội dung chính:',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14.0,
+                                  ),
+                                ),
+                                const SizedBox(height: 10.0),
+                                ...(_aiResponse!['bullets'] as List<dynamic>? ?? []).map((bullet) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(left: 4.0, bottom: 10.0),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(
+                                          Icons.check_circle_outline,
+                                          size: 18.0,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 10.0),
+                                        Expanded(
+                                          child: Text(
+                                            bullet.toString(),
+                                            style: theme.textTheme.bodyMedium?.copyWith(
+                                              height: 1.4,
+                                              color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 8.0),
+                                if (_aiResponse!['contribution'] != null) ...[
+                                  const Text(
+                                    'Đóng góp khoa học chính:',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14.0,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  Container(
+                                    padding: const EdgeInsets.all(12.0),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      border: Border.all(
+                                        color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _aiResponse!['contribution'].toString(),
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontStyle: FontStyle.italic,
+                                        height: 1.4,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           ),
@@ -493,117 +554,6 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class MarkdownText extends StatelessWidget {
-  final String text;
-  const MarkdownText({super.key, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final lines = text.split('\n');
-    final List<Widget> children = [];
-
-    for (final line in lines) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty) {
-        children.add(const SizedBox(height: 6.0));
-        continue;
-      }
-
-      // Check for Heading
-      if (trimmed.startsWith('###')) {
-        final content = trimmed.substring(3).trim();
-        children.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 14.0, bottom: 6.0),
-            child: Text(
-              content,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ),
-        );
-        continue;
-      }
-      
-      // Check for Bullet point
-      if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
-        final content = trimmed.substring(1).trim();
-        children.add(
-          Padding(
-            padding: const EdgeInsets.only(left: 12.0, bottom: 6.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '• ',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                Expanded(
-                  child: _buildRichText(content, theme),
-                ),
-              ],
-            ),
-          ),
-        );
-        continue;
-      }
-
-      // Regular text (might contain bold)
-      children.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6.0),
-          child: _buildRichText(trimmed, theme),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: children,
-    );
-  }
-
-  Widget _buildRichText(String rawText, ThemeData theme) {
-    final List<InlineSpan> spans = [];
-    final regExp = RegExp(r'\*\*(.*?)\*\*');
-    int start = 0;
-
-    for (final match in regExp.allMatches(rawText)) {
-      if (match.start > start) {
-        spans.add(TextSpan(text: rawText.substring(start, match.start)));
-      }
-      spans.add(
-        TextSpan(
-          text: match.group(1),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      );
-      start = match.end;
-    }
-
-    if (start < rawText.length) {
-      spans.add(TextSpan(text: rawText.substring(start)));
-    }
-
-    return Text.rich(
-      TextSpan(
-        children: spans,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          height: 1.5,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
         ),
       ),
     );
