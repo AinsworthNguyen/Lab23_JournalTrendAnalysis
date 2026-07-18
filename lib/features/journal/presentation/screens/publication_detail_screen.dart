@@ -6,6 +6,7 @@ import '../../domain/entities/paper.dart';
 import '../../domain/usecases/get_publication_details_usecase.dart';
 import '../../../../core/firebase/firebase_analytics_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/network/openrouter_service.dart';
 
 class PublicationDetailScreen extends StatefulWidget {
   final String paperId;
@@ -20,6 +21,26 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   bool _isAuthorsExpanded = false;
+  bool _isAiLoading = false;
+  String? _aiResponse;
+
+  void _getAiInsights() async {
+    if (_paper == null || _paper!.abstractText == null) return;
+    setState(() {
+      _isAiLoading = true;
+      _aiResponse = null;
+    });
+
+    final openRouter = OpenRouterService();
+    final result = await openRouter.summarizeAbstract(_paper!.abstractText!);
+
+    if (mounted) {
+      setState(() {
+        _isAiLoading = false;
+        _aiResponse = result;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -73,6 +94,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isVi = EasyLocalization.of(context)?.locale.languageCode == 'vi';
 
     return Scaffold(
       appBar: AppBar(
@@ -344,6 +366,115 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                       height: 1.5,
                     ),
                   ),
+                  if (paper.abstractText != null && paper.abstractText!.isNotEmpty) ...[
+                    const SizedBox(height: 24.0),
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                        side: BorderSide(
+                          color: _aiResponse != null
+                              ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                              : theme.colorScheme.outlineVariant,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16.0),
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.colorScheme.surface,
+                              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.auto_awesome,
+                                    color: theme.colorScheme.primary,
+                                    size: 20.0,
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                  Text(
+                                    isVi ? 'Tóm tắt & Dịch thuật AI (Gemini)' : 'AI Summary & Translation (Gemini)',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  if (_aiResponse != null && !_isAiLoading) ...[
+                                    const Spacer(),
+                                    IconButton(
+                                      icon: const Icon(Icons.refresh, size: 18.0),
+                                      onPressed: _getAiInsights,
+                                      tooltip: isVi ? 'Tải lại' : 'Refresh',
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 12.0),
+                              if (_aiResponse == null && !_isAiLoading) ...[
+                                Text(
+                                  isVi
+                                      ? 'Sử dụng mô hình AI Gemini để dịch thuật và tóm tắt nhanh bài báo khoa học này thành các ý chính tiếng Việt.'
+                                      : 'Use Gemini AI model to quickly summarize and translate this scientific abstract into key Vietnamese insights.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                                const SizedBox(height: 16.0),
+                                ElevatedButton.icon(
+                                  onPressed: _getAiInsights,
+                                  icon: const Icon(Icons.bolt),
+                                  label: Text(isVi ? 'Tạo tóm tắt AI' : 'Generate AI Summary'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: theme.colorScheme.primary,
+                                    foregroundColor: theme.colorScheme.onPrimary,
+                                    padding: const EdgeInsets.symmetric(vertical: 14.0),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                    ),
+                                  ),
+                                ),
+                              ] else if (_isAiLoading) ...[
+                                Column(
+                                  children: [
+                                    const SizedBox(height: 16.0),
+                                    CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                                    ),
+                                    const SizedBox(height: 16.0),
+                                    Text(
+                                      isVi ? 'AI đang phân tích tóm tắt bài viết...' : 'AI is generating academic insights...',
+                                      style: const TextStyle(fontStyle: FontStyle.italic),
+                                    ),
+                                    const SizedBox(height: 8.0),
+                                  ],
+                                ),
+                              ] else if (_aiResponse != null) ...[
+                                Text(
+                                  _aiResponse!,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    height: 1.5,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 36.0),
 
                   // DOI Link Button
