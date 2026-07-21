@@ -519,6 +519,118 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                   FlSpot(5, (journal.citedByCount * 0.40).clamp(500, 250000)),
                 ],
               ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0),
+              const SizedBox(height: 24.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Top 5 Cited Publications',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+                ],
+              ),
+              const SizedBox(height: 12.0),
+              Builder(
+                builder: (context) {
+                  final sortedPapers = [..._initialPapers]..sort((a, b) => b.citationCount.compareTo(a.citationCount));
+                  final top5 = sortedPapers.take(5).toList();
+
+                  if (top5.isEmpty) {
+                    return Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Center(
+                          child: Text('No publication data available.'),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: top5.length,
+                    itemBuilder: (context, index) {
+                      final paper = top5[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12.0),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          leading: CircleAvatar(
+                            backgroundColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                            child: Text(
+                              '#${index + 1}',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            paper.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Row(
+                              children: [
+                                if (paper.isOpenAccess) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(4.0),
+                                    ),
+                                    child: const Text(
+                                      'OA',
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                ],
+                                Icon(Icons.calendar_today_outlined, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                                const SizedBox(width: 4.0),
+                                Text(
+                                  paper.publicationYear.toString(),
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                                const SizedBox(width: 16.0),
+                                Icon(Icons.format_quote, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                                const SizedBox(width: 4.0),
+                                Text(
+                                  '${paper.citationCount}',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                          onTap: () {
+                            context.push('/journal/publication/${paper.id}');
+                          },
+                        ),
+                      ).animate(delay: (100 + index * 30).ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
+                    },
+                  );
+                },
+              ),
             ] else ...[
               // Top Publications Title & Search Header
               Row(
