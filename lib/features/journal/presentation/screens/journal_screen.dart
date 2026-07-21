@@ -20,8 +20,27 @@ class JournalScreen extends StatelessWidget {
   }
 }
 
-class JournalScreenContent extends StatelessWidget {
+class JournalScreenContent extends StatefulWidget {
   const JournalScreenContent({super.key});
+
+  @override
+  State<JournalScreenContent> createState() => _JournalScreenContentState();
+}
+
+class _JournalScreenContentState extends State<JournalScreenContent> {
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> _launchUrl(BuildContext context, String url) async {
     final uri = Uri.parse(url);
@@ -54,11 +73,11 @@ class JournalScreenContent extends StatelessWidget {
       body: SafeArea(
         child: BlocBuilder<JournalsCubit, JournalsState>(
           builder: (context, state) {
-            if (state.isLoading) {
+            if (state.isLoading && state.journals.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (state.errorMessage != null) {
+            if (state.errorMessage != null && state.journals.isEmpty) {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -112,11 +131,36 @@ class JournalScreenContent extends StatelessWidget {
                   children: [
                     // Search & Filter Header
                     TextField(
-                      onChanged: (q) => context.read<JournalsCubit>().searchSources(q),
+                      controller: _searchController,
+                      onChanged: (q) {
+                        setState(() {});
+                        context.read<JournalsCubit>().searchSources(q);
+                      },
                       style: theme.textTheme.bodyMedium,
                       decoration: InputDecoration(
                         hintText: 'Search Conferences (NeurIPS, CVPR...) or Journals...',
                         prefixIcon: const Icon(Icons.search, size: 20),
+                        suffixIcon: state.isSearching
+                            ? UnconstrainedBox(
+                                child: SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              )
+                            : (_searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear, size: 18),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {});
+                                      context.read<JournalsCubit>().searchSources('');
+                                    },
+                                  )
+                                : null),
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

@@ -11,6 +11,7 @@ class JournalsState {
   final List<Journal> journals;
   final List<Journal> filteredJournals;
   final bool isLoading;
+  final bool isSearching;
   final String? errorMessage;
   final String selectedTypeFilter; // 'all', 'journal', 'conference'
   final String searchQuery;
@@ -19,6 +20,7 @@ class JournalsState {
     required this.journals,
     required this.filteredJournals,
     required this.isLoading,
+    this.isSearching = false,
     this.errorMessage,
     this.selectedTypeFilter = 'all',
     this.searchQuery = '',
@@ -29,6 +31,7 @@ class JournalsState {
       journals: [],
       filteredJournals: [],
       isLoading: false,
+      isSearching: false,
       selectedTypeFilter: 'all',
       searchQuery: '',
     );
@@ -38,6 +41,7 @@ class JournalsState {
     List<Journal>? journals,
     List<Journal>? filteredJournals,
     bool? isLoading,
+    bool? isSearching,
     String? errorMessage,
     String? selectedTypeFilter,
     String? searchQuery,
@@ -46,6 +50,7 @@ class JournalsState {
       journals: journals ?? this.journals,
       filteredJournals: filteredJournals ?? this.filteredJournals,
       isLoading: isLoading ?? this.isLoading,
+      isSearching: isSearching ?? this.isSearching,
       errorMessage: errorMessage,
       selectedTypeFilter: selectedTypeFilter ?? this.selectedTypeFilter,
       searchQuery: searchQuery ?? this.searchQuery,
@@ -104,30 +109,35 @@ class JournalsCubit extends Cubit<JournalsState> {
 
   void searchSources(String query, {Duration debounceDuration = const Duration(milliseconds: 600)}) {
     _debounceTimer?.cancel();
-    emit(state.copyWith(searchQuery: query));
+    
+    // Instantly filter local journals so user sees immediate results while typing
+    final localFiltered = _applyFilters(state.journals, state.selectedTypeFilter, query);
+    emit(state.copyWith(
+      searchQuery: query,
+      filteredJournals: localFiltered,
+      isSearching: false,
+    ));
 
     if (query.trim().isEmpty) {
-      emit(state.copyWith(
-        filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, ''),
-      ));
       return;
     }
 
     _debounceTimer = Timer(debounceDuration, () async {
-      emit(state.copyWith(isLoading: true));
+      emit(state.copyWith(isSearching: true));
       final typeParam = state.selectedTypeFilter == 'all' ? null : state.selectedTypeFilter;
       final result = await _journalRepository.searchSources(query, type: typeParam);
       result.fold(
         (failure) {
           emit(state.copyWith(
-            isLoading: false,
+            isSearching: false,
             filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, query),
           ));
         },
         (searchResult) {
+          final mergedResults = searchResult.isNotEmpty ? searchResult : state.journals;
           emit(state.copyWith(
-            isLoading: false,
-            filteredJournals: _applyFilters(searchResult, state.selectedTypeFilter, query),
+            isSearching: false,
+            filteredJournals: _applyFilters(mergedResults, state.selectedTypeFilter, query),
           ));
         },
       );
