@@ -111,7 +111,7 @@ class JournalsCubit extends Cubit<JournalsState> {
     _debounceTimer?.cancel();
     
     // Instantly filter local journals so user sees immediate results while typing
-    final localFiltered = _applyFilters(state.journals, state.selectedTypeFilter, query);
+    final localFiltered = _applyFilters(state.journals, state.selectedTypeFilter, query, isSearchResult: false);
     emit(state.copyWith(
       searchQuery: query,
       filteredJournals: localFiltered,
@@ -130,25 +130,36 @@ class JournalsCubit extends Cubit<JournalsState> {
         (failure) {
           emit(state.copyWith(
             isSearching: false,
-            filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, query),
+            filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, query, isSearchResult: false),
           ));
         },
         (searchResult) {
-          final mergedResults = searchResult.isNotEmpty ? searchResult : state.journals;
-          emit(state.copyWith(
-            isSearching: false,
-            filteredJournals: _applyFilters(mergedResults, state.selectedTypeFilter, query),
-          ));
+          if (searchResult.isNotEmpty) {
+            emit(state.copyWith(
+              isSearching: false,
+              filteredJournals: _applyFilters(searchResult, state.selectedTypeFilter, query, isSearchResult: true),
+            ));
+          } else {
+            emit(state.copyWith(
+              isSearching: false,
+              filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, query, isSearchResult: false),
+            ));
+          }
         },
       );
     });
   }
 
-  List<Journal> _applyFilters(List<Journal> list, String filter, String query) {
+  List<Journal> _applyFilters(List<Journal> list, String filter, String query, {bool isSearchResult = false}) {
     return list.where((j) {
       final matchesType = filter == 'all' ||
           (filter == 'conference' && j.isConference) ||
           (filter == 'journal' && !j.isConference);
+      
+      if (isSearchResult) {
+        return matchesType;
+      }
+
       final matchesQuery = query.isEmpty ||
           j.displayName.toLowerCase().contains(query.toLowerCase());
       return matchesType && matchesQuery;
