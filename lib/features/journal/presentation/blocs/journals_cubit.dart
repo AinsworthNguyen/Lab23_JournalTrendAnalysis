@@ -150,19 +150,49 @@ class JournalsCubit extends Cubit<JournalsState> {
     });
   }
 
+  static const Map<String, List<String>> _acronymKeywords = {
+    'neurips': ['neural information processing systems', 'neurips', 'nips'],
+    'nips': ['neural information processing systems', 'neurips', 'nips'],
+    'cvpr': ['computer vision and pattern recognition', 'cvpr'],
+    'icml': ['machine learning', 'icml'],
+    'iccv': ['computer vision', 'iccv'],
+    'eccv': ['computer vision', 'eccv'],
+    'aaai': ['artificial intelligence', 'aaai'],
+    'ijcai': ['artificial intelligence', 'ijcai'],
+    'iclr': ['learning representations', 'iclr'],
+    'kdd': ['knowledge discovery', 'kdd'],
+    'acl': ['computational linguistics', 'acl'],
+    'emnlp': ['empirical methods', 'emnlp'],
+  };
+
   List<Journal> _applyFilters(List<Journal> list, String filter, String query, {bool isSearchResult = false}) {
     return list.where((j) {
       final matchesType = filter == 'all' ||
           (filter == 'conference' && j.isConference) ||
           (filter == 'journal' && !j.isConference);
       
-      if (isSearchResult) {
-        return matchesType;
+      if (!matchesType) return false;
+      if (isSearchResult || query.trim().isEmpty) return true;
+
+      final lowerQuery = query.toLowerCase().trim();
+      final lowerName = j.displayName.toLowerCase();
+
+      // Direct substring match
+      if (lowerName.contains(lowerQuery)) return true;
+
+      // Acronym / alias prefix matching (e.g. 'neuri', 'neurip' for 'neurips')
+      for (final entry in _acronymKeywords.entries) {
+        final acronym = entry.key;
+        if (acronym.startsWith(lowerQuery) || lowerQuery.startsWith(acronym)) {
+          for (final kw in entry.value) {
+            if (lowerName.contains(kw)) {
+              return true;
+            }
+          }
+        }
       }
 
-      final matchesQuery = query.isEmpty ||
-          j.displayName.toLowerCase().contains(query.toLowerCase());
-      return matchesType && matchesQuery;
+      return false;
     }).toList();
   }
 
