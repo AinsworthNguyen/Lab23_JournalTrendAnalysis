@@ -48,12 +48,13 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
   Future<void> _applyChanges() async {
     setState(() => _isSaving = true);
     try {
-      // Fetch and activate to refresh client cache
+      await _remoteConfig.setInt('max_journals_limit', _maxJournalsLimit.toInt());
+      await _remoteConfig.setInt('max_keywords_limit', _maxKeywordsLimit.toInt());
       await _remoteConfig.fetchAndActivate();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Configuration applied. Effective in ~5 minutes.'),
+            content: Text('Configuration applied successfully!'),
             backgroundColor: Color(0xFF10B981),
             behavior: SnackBarBehavior.floating,
           ),

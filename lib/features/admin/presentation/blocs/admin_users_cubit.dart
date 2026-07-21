@@ -100,6 +100,7 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
 
   Future<void> seedData() async {
     await _userService.seedSampleData();
+    startWatching();
   }
 
   List<AdminUserModel> _applyFilter(
