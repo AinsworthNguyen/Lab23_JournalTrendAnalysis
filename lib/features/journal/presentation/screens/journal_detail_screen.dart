@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -23,14 +24,27 @@ class JournalDetailScreen extends StatefulWidget {
 
 class _JournalDetailScreenState extends State<JournalDetailScreen> {
   bool _isLoading = true;
+  bool _isSearchingPapers = false;
   String? _errorMessage;
   Journal? _journal;
   List<Paper> _papers = [];
+  List<Paper> _initialPapers = [];
+
+  late final TextEditingController _paperSearchController;
+  Timer? _paperDebounceTimer;
 
   @override
   void initState() {
     super.initState();
+    _paperSearchController = TextEditingController();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _paperDebounceTimer?.cancel();
+    _paperSearchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -64,7 +78,6 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
             .map((json) => PaperModel.fromJson(json as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        // Safe fallback for papers fetch
         debugPrint('Failed to load papers for journal: $e');
       }
 
@@ -72,6 +85,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
         setState(() {
           _journal = journalDetail;
           _papers = journalPapers;
+          _initialPapers = journalPapers;
           _isLoading = false;
         });
       }
@@ -83,6 +97,51 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
         });
       }
     }
+  }
+
+  void _searchPapersInJournal(String query) {
+    _paperDebounceTimer?.cancel();
+    final q = query.trim();
+
+    if (q.isEmpty) {
+      setState(() {
+        _papers = _initialPapers;
+        _isSearchingPapers = false;
+      });
+      return;
+    }
+
+    _paperDebounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      if (!mounted) return;
+      setState(() {
+        _isSearchingPapers = true;
+      });
+
+      try {
+        final response = await getIt<ApiClient>().get('/works', queryParameters: {
+          'filter': 'primary_location.source.id:${widget.journalId},publication_year:<2026',
+          'search': q,
+          'per_page': 15,
+        });
+        final results = response['results'] as List<dynamic>? ?? [];
+        final searched = results
+            .map((json) => PaperModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+
+        if (mounted) {
+          setState(() {
+            _papers = searched.isNotEmpty ? searched : _initialPapers.where((p) => p.title.toLowerCase().contains(q.toLowerCase())).toList();
+            _isSearchingPapers = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isSearchingPapers = false;
+          });
+        }
+      }
+    });
   }
 
   Future<void> _launchUrl(String url) async {
@@ -100,6 +159,13 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
         );
       }
     }
+  }
+
+  void _openWebpage(Journal journal) {
+    final targetUrl = (journal.homepageUrl != null && journal.homepageUrl!.isNotEmpty)
+        ? journal.homepageUrl!
+        : 'https://openalex.org/sources/${journal.id}';
+    _launchUrl(targetUrl);
   }
 
   @override
@@ -160,7 +226,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Info Card
+            // Header Info Card with Webpage Link Button
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -169,36 +235,72 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
-                child: Column(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      journal.displayName,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8.0),
-                    Text(
-                      journal.publisher ?? 'Independent Publisher',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    if (journal.homepageUrl != null && journal.homepageUrl!.isNotEmpty) ...[
-                      const SizedBox(height: 16.0),
-                      ElevatedButton.icon(
-                        onPressed: () => _launchUrl(journal.homepageUrl!),
-                        icon: const Icon(Icons.language),
-                        label: const Text('Visit Homepage'),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 44),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6.0),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      journal.isConference ? Icons.slideshow : Icons.menu_book,
+                                      size: 13,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      journal.isConference ? 'Conference' : 'Journal',
+                                      style: TextStyle(
+                                        color: theme.colorScheme.primary,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 8.0),
+                          Text(
+                            journal.displayName,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8.0),
+                          Text(
+                            journal.publisher ?? 'Independent Publisher',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12.0),
+                    Tooltip(
+                      message: 'Visit Official Webpage',
+                      child: Material(
+                        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                        shape: const CircleBorder(),
+                        child: IconButton(
+                          icon: Icon(Icons.language, color: theme.colorScheme.primary, size: 24),
+                          onPressed: () => _openWebpage(journal),
                         ),
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
@@ -297,15 +399,125 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
             ),
             const SizedBox(height: 24.0),
 
-            // Top Publications Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: Text(
-                'Top Publications',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
+            // Top Publications Title & Search Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Top Publications',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${_papers.length} items',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12.0),
+
+            // Search Papers Bar
+            TextField(
+              controller: _paperSearchController,
+              onChanged: (q) {
+                setState(() {});
+                _searchPapersInJournal(q);
+              },
+              style: theme.textTheme.bodyMedium,
+              decoration: InputDecoration(
+                hintText: 'Search papers in ${journal.displayName}...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _isSearchingPapers
+                    ? UnconstrainedBox(
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      )
+                    : (_paperSearchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _paperSearchController.clear();
+                              setState(() {});
+                              _searchPapersInJournal('');
+                            },
+                          )
+                        : null),
+                filled: true,
+                fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+
+            // Auto-Completion Topic Chips for Paper Search
+            Builder(
+              builder: (context) {
+                final queryText = _paperSearchController.text.toLowerCase().trim();
+                const paperSuggestions = [
+                  'Transformer',
+                  'Attention',
+                  'Diffusion',
+                  'LLM',
+                  'Neural Network',
+                  'Deep Learning',
+                  'Reinforcement Learning',
+                  'Computer Vision',
+                ];
+
+                final matched = paperSuggestions.where((s) {
+                  return queryText.isEmpty || s.toLowerCase().contains(queryText);
+                }).toList();
+
+                if (matched.isEmpty) return const SizedBox.shrink();
+
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: matched.map((kw) {
+                        final isSelected = _paperSearchController.text == kw;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ActionChip(
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor: isSelected ? theme.colorScheme.primaryContainer : null,
+                            avatar: Icon(
+                              Icons.auto_awesome,
+                              size: 12,
+                              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
+                            label: Text(
+                              kw,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 11,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            onPressed: () {
+                              _paperSearchController.text = kw;
+                              setState(() {});
+                              _searchPapersInJournal(kw);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16.0),
 
             // Publications List
             if (_papers.isEmpty)
