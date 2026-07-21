@@ -527,22 +527,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 8.0),
                           Card(
                             elevation: 0,
-                            color: const Color(0xFF1C1A0E),
+                            color: const Color(0xFF24180B),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.0),
-                              side: const BorderSide(color: Color(0xFF44380B)),
+                              side: const BorderSide(color: Color(0xFF5C330A)),
                             ),
                             child: ListTile(
-                              leading: const Icon(Icons.admin_panel_settings, color: Color(0xFFF59E0B)),
+                              leading: const Icon(Icons.space_dashboard_rounded, color: Color(0xFFFB923C)),
                               title: const Text(
                                 'Admin Dashboard',
-                                style: TextStyle(color: Color(0xFFF59E0B), fontWeight: FontWeight.bold),
+                                style: TextStyle(color: Color(0xFFFB923C), fontWeight: FontWeight.bold),
                               ),
                               subtitle: const Text(
                                 'Quản lý người dùng, thống kê hệ thống & Remote Config',
                                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                               ),
-                              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFFF59E0B)),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFFFB923C)),
                               onTap: () => context.go('/admin/dashboard'),
                             ),
                           ),

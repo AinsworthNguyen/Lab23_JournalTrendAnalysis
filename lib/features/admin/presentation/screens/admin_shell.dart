@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 
-const Color _adminAccent = Color(0xFFF59E0B);
+const Color _adminAccent = Color(0xFFFB923C); // Soft Orange (Cam nhạt)
 
 class AdminShell extends StatefulWidget {
   final Widget child;
@@ -38,7 +38,7 @@ class _AdminShellState extends State<AdminShell> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _AdminAppBar(),
+      appBar: const _AdminAppBar(),
       body: widget.child,
       bottomNavigationBar: _AdminBottomNav(
         currentIndex: _currentIndex,
@@ -63,58 +63,74 @@ class _AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: AppColors.background,
       elevation: 0,
       scrolledUnderElevation: 0,
-      leadingWidth: 0,
-      leading: const SizedBox.shrink(),
+      titleSpacing: 16,
       title: Row(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _adminAccent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _adminAccent.withValues(alpha: 0.4)),
+              color: _adminAccent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _adminAccent.withValues(alpha: 0.3)),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.admin_panel_settings, color: _adminAccent, size: 14),
-                const SizedBox(width: 4),
-                Text(
-                  'ADMIN',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: _adminAccent,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                    letterSpacing: 1.0,
-                  ),
-                ),
-              ],
+            child: const Icon(Icons.insights_rounded, color: _adminAccent, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Journal Trend',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: _adminAccent.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: _adminAccent.withValues(alpha: 0.4)),
+            ),
             child: Text(
-              'Dashboard',
-              style: Theme.of(context).textTheme.titleMedium,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+              'ADMIN',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: _adminAccent,
+                fontWeight: FontWeight.w800,
+                fontSize: 10,
+                letterSpacing: 0.8,
+              ),
             ),
           ),
         ],
       ),
       actions: [
-        TextButton.icon(
-          onPressed: () => context.go('/home'),
-          icon: const Icon(Icons.exit_to_app, size: 16, color: AppColors.textSecondary),
-          label: Text(
-            'Thoát',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-              fontSize: 12,
+        InkWell(
+          onTap: () => context.go('/home'),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.arrow_back_rounded, size: 14, color: AppColors.textSecondary),
+                const SizedBox(width: 4),
+                Text(
+                  'Về App',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 16),
       ],
     );
   }

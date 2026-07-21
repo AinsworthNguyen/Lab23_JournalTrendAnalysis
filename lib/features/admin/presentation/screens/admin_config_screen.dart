@@ -3,7 +3,7 @@ import '../../../../core/firebase/firebase_remote_config_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart';
 
-const Color _adminAccent = Color(0xFFF59E0B);
+const Color _adminAccent = Color(0xFFFB923C); // Soft Orange (Cam nhạt)
 
 class AdminConfigScreen extends StatefulWidget {
   const AdminConfigScreen({super.key});

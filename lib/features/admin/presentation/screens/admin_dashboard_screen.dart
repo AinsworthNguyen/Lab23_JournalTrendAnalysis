@@ -6,9 +6,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart';
 import '../blocs/admin_analytics_cubit.dart';
 
-const Color _adminAccent = Color(0xFFF59E0B);
-const Color _adminSurface = Color(0xFF1C1A0E);
-const Color _adminBorder = Color(0xFF44380B);
+const Color _adminAccent = Color(0xFFFB923C); // Soft Orange (Cam nhạt)
+const Color _adminSurface = Color(0xFF24180B);
+const Color _adminBorder = Color(0xFF5C330A);
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -121,22 +121,23 @@ class _AdminDashboardView extends StatelessWidget {
                   if (state is AdminAnalyticsLoaded) {
                     statusText = state.summary.lastUpdated != null
                         ? 'Cập nhật ${_formatTime(state.summary.lastUpdated!)}'
-                        : 'Cập nhật: Mới nhất';
+                        : 'Mới nhất';
                   } else if (state is AdminAnalyticsError) {
                     statusText = 'Ngoại tuyến';
                   }
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.background.withValues(alpha: 0.6),
+                      color: _adminAccent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                      border: Border.all(color: _adminAccent.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       statusText,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: _adminAccent,
                         fontSize: 11,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   );
@@ -151,28 +152,31 @@ class _AdminDashboardView extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: _adminAccent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: _adminAccent.withValues(alpha: 0.3)),
                 ),
-                child: const Icon(Icons.shield_outlined, color: _adminAccent, size: 28),
+                child: const Icon(Icons.space_dashboard_rounded, color: _adminAccent, size: 26),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$greeting, Admin',
+                      '$greeting, Administrator',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
+                        fontSize: 13,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Admin Control Center',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: const Color(0xFFFED7AA),
                         fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
+                        fontSize: 20,
+                        letterSpacing: -0.3,
                       ),
                     ),
                   ],

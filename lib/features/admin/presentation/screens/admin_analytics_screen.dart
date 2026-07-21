@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart';
 import '../blocs/admin_analytics_cubit.dart';
 
-const Color _adminAccent = Color(0xFFF59E0B);
+const Color _adminAccent = Color(0xFFFB923C); // Soft Orange (Cam nhạt)
 
 class AdminAnalyticsScreen extends StatelessWidget {
   const AdminAnalyticsScreen({super.key});
