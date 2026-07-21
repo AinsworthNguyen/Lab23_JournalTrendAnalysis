@@ -53,7 +53,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đã áp dụng cấu hình. Có hiệu lực sau ~5 phút.'),
+            content: Text('Configuration applied. Effective in ~5 minutes.'),
             backgroundColor: Color(0xFF10B981),
             behavior: SnackBarBehavior.floating,
           ),
@@ -63,7 +63,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: $e'),
+            content: Text('Error: $e'),
             backgroundColor: AppColors.highlight,
             behavior: SnackBarBehavior.floating,
           ),
@@ -81,10 +81,10 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // Header
-          Text('Cấu hình hệ thống', style: Theme.of(context).textTheme.displaySmall),
+          Text('System Configuration', style: Theme.of(context).textTheme.displaySmall),
           const SizedBox(height: 4),
           Text(
-            'Thay đổi Remote Config cho toàn bộ ứng dụng',
+            'Manage Remote Config parameters for the application',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
@@ -94,14 +94,14 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
           const SizedBox(height: 24),
 
           // Config section: Display Limits
-          _buildSectionHeader(context, 'Giới hạn hiển thị'),
+          _buildSectionHeader(context, 'Display Limits'),
           const SizedBox(height: 16),
 
           _buildSliderConfig(
             context,
             key: 'max_journals_limit',
-            label: 'Số tạp chí hiển thị tối đa',
-            description: 'Giới hạn số lượng tạp chí trên màn hình Home',
+            label: 'Maximum Displayed Journals',
+            description: 'Limit on the number of top journals on Home',
             value: _maxJournalsLimit,
             min: _minJournals,
             max: _maxJournals,
@@ -112,8 +112,8 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
           _buildSliderConfig(
             context,
             key: 'max_keywords_limit',
-            label: 'Số từ khóa hiển thị tối đa',
-            description: 'Giới hạn số từ khóa trending hiển thị cho người dùng',
+            label: 'Maximum Displayed Keywords',
+            description: 'Limit on trending research topics shown to users',
             value: _maxKeywordsLimit,
             min: _minKeywords,
             max: _maxKeywords,
@@ -133,7 +133,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                     )
                   : const Icon(Icons.check_circle_outline, size: 20),
-              label: Text(_isSaving ? 'Đang áp dụng...' : 'Áp dụng thay đổi'),
+              label: Text(_isSaving ? 'Applying...' : 'Apply Changes'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _adminAccent,
                 foregroundColor: Colors.black,
@@ -150,7 +150,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
           // Reset hint
           Center(
             child: Text(
-              'Thay đổi sẽ có hiệu lực sau tối đa 5 phút',
+              'Changes will take effect within 5 minutes',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
                 fontSize: 11,
@@ -183,14 +183,14 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Về Remote Config',
+                  'About Remote Config',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(color: _adminAccent),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Các thay đổi này được áp dụng qua Firebase Remote Config. '
-                  'Người dùng sẽ nhận cấu hình mới trong lần khởi động tiếp theo '
-                  'hoặc sau khoảng 5 phút.',
+                  'These settings are deployed via Firebase Remote Config. '
+                  'Users will fetch updated parameters on their next launch '
+                  'or within 5 minutes.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textSecondary,
                   ),

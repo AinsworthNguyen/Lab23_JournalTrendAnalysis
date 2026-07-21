@@ -101,6 +101,7 @@ class _AdminUsersView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Search bar
           TextField(

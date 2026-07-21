@@ -79,14 +79,14 @@ class _AdminAnalyticsView extends StatelessWidget {
           children: [
             Icon(Icons.error_outline, color: AppColors.highlight, size: 64),
             const SizedBox(height: 16),
-            Text('Không tải được thống kê', style: Theme.of(context).textTheme.titleMedium),
+            Text('Failed to load analytics', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => context.read<AdminAnalyticsCubit>().loadSummary(),
               icon: const Icon(Icons.refresh),
-              label: const Text('Thử lại'),
+              label: const Text('Retry'),
               style: ElevatedButton.styleFrom(backgroundColor: _adminAccent, foregroundColor: Colors.black),
             ),
           ],
@@ -101,10 +101,10 @@ class _AdminAnalyticsView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text('Thống kê hệ thống', style: Theme.of(context).textTheme.displaySmall),
+        Text('System Analytics', style: Theme.of(context).textTheme.displaySmall),
         const SizedBox(height: 4),
         Text(
-          'Dữ liệu tổng hợp từ Firebase',
+          'Aggregated metrics from Firebase',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 24),
@@ -112,8 +112,8 @@ class _AdminAnalyticsView extends StatelessWidget {
         // Chart 1: User stats bar chart
         _buildChartCard(
           context,
-          title: 'Tổng quan người dùng',
-          subtitle: 'Số lượng user theo trạng thái',
+          title: 'User Overview',
+          subtitle: 'User counts by activity status',
           chart: _buildUserStatsBarChart(context, summary),
           height: 200,
         ),
@@ -122,8 +122,8 @@ class _AdminAnalyticsView extends StatelessWidget {
         // Chart 2: Activity stats bar chart
         _buildChartCard(
           context,
-          title: 'Hoạt động hệ thống',
-          subtitle: 'Lượt xem và xuất PDF',
+          title: 'System Activity',
+          subtitle: 'Page views & PDF report exports',
           chart: _buildActivityBarChart(context, summary),
           height: 200,
         ),
@@ -139,7 +139,7 @@ class _AdminAnalyticsView extends StatelessWidget {
         if (summary.lastUpdated != null)
           Center(
             child: Text(
-              'Cập nhật lần cuối: ${_formatDateTime(summary.lastUpdated!)}',
+              'Last updated: ${_formatDateTime(summary.lastUpdated!)}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
           ),
@@ -187,7 +187,7 @@ class _AdminAnalyticsView extends StatelessWidget {
       BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: summary.activeUsersThisWeek.toDouble(), color: AppColors.secondary, width: 40, borderRadius: const BorderRadius.only(topLeft: Radius.circular(6), topRight: Radius.circular(6)))]),
     ];
     final maxY = [summary.totalUsers, summary.activeUsersThisWeek].reduce((a, b) => a > b ? a : b).toDouble();
-    final labels = ['Tổng users', 'Hoạt động\ntuần này'];
+    final labels = ['Total Users', 'Active\nThis Week'];
 
     return BarChart(
       BarChartData(
@@ -244,7 +244,7 @@ class _AdminAnalyticsView extends StatelessWidget {
       BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: summary.totalPdfExports.toDouble(), color: AppColors.highlight, width: 40, borderRadius: const BorderRadius.only(topLeft: Radius.circular(6), topRight: Radius.circular(6)))]),
     ];
     final maxY = [summary.totalViews, summary.totalPdfExports].reduce((a, b) => a > b ? a : b).toDouble();
-    final labels = ['Lượt xem', 'Xuất PDF'];
+    final labels = ['Views', 'PDF Exports'];
 
     return BarChart(
       BarChartData(
@@ -302,17 +302,17 @@ class _AdminAnalyticsView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Top bài báo được xem nhiều nhất', style: Theme.of(context).textTheme.titleMedium),
+          Text('Top Most Viewed Publications', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
-            'Tính từ dữ liệu hệ thống',
+            'Ranked by total user view count',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
           ...pubs.take(5).toList().asMap().entries.map((e) {
             final i = e.key;
             final pub = e.value;
-            return _buildPubRankItem(context, rank: i + 1, title: pub['title'] as String? ?? 'Không có tiêu đề', views: pub['viewCount'] as int? ?? 0);
+            return _buildPubRankItem(context, rank: i + 1, title: pub['title'] as String? ?? 'No title available', views: pub['viewCount'] as int? ?? 0);
           }),
         ],
       ),
@@ -346,7 +346,7 @@ class _AdminAnalyticsView extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Tooltip(
-            message: '$views lượt xem',
+            message: '$views views',
             child: Text(
               _formatCount(views),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
