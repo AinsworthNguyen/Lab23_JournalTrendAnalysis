@@ -138,7 +138,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                       },
                       style: theme.textTheme.bodyMedium,
                       decoration: InputDecoration(
-                        hintText: 'Search Conferences (NeurIPS, CVPR...) or Journals...',
+                        hintText: 'Search (IEEE, ACM, Nature, CVPR, NeurIPS...)',
                         prefixIcon: const Icon(Icons.search, size: 20),
                         suffixIcon: state.isSearching
                             ? UnconstrainedBox(
@@ -169,6 +169,63 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                           borderSide: BorderSide.none,
                         ),
                       ),
+                    ),
+                    
+                    // Auto-completion search suggestions helper
+                    Builder(
+                      builder: (context) {
+                        final queryText = _searchController.text.toLowerCase().trim();
+                        if (queryText.isEmpty) return const SizedBox.shrink();
+
+                        const suggestionsList = [
+                          {'acronym': 'NeurIPS', 'name': 'Neural Info Processing'},
+                          {'acronym': 'CVPR', 'name': 'Computer Vision'},
+                          {'acronym': 'ICML', 'name': 'Machine Learning'},
+                          {'acronym': 'ICLR', 'name': 'Learning Representations'},
+                          {'acronym': 'Nature', 'name': 'Nature Journal'},
+                          {'acronym': 'IEEE', 'name': 'IEEE Transactions'},
+                        ];
+
+                        final matchedSuggestions = suggestionsList.where((item) {
+                          final acronymLower = item['acronym']!.toLowerCase();
+                          final nameLower = item['name']!.toLowerCase();
+                          return acronymLower.startsWith(queryText) || nameLower.contains(queryText);
+                        }).toList();
+
+                        if (matchedSuggestions.isEmpty) return const SizedBox.shrink();
+
+                        // Do not show suggestions if the query matches the exact acronym
+                        if (matchedSuggestions.length == 1 && matchedSuggestions.first['acronym']!.toLowerCase() == queryText) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: matchedSuggestions.map((item) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: ActionChip(
+                                    visualDensity: VisualDensity.compact,
+                                    avatar: Icon(Icons.auto_awesome, size: 12, color: theme.colorScheme.primary),
+                                    label: Text(
+                                      '${item['acronym']} (${item['name']})',
+                                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                                    ),
+                                    onPressed: () {
+                                      _searchController.text = item['acronym']!;
+                                      setState(() {});
+                                      context.read<JournalsCubit>().searchSources(item['acronym']!);
+                                    },
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 12.0),
 

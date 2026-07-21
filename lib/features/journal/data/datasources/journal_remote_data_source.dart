@@ -219,8 +219,22 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
   @override
   Future<List<JournalModel>> searchSources(String query, {String? type}) async {
     try {
+      final searchAcronymMap = {
+        'neurips': 'Neural Information Processing Systems',
+        'nips': 'Neural Information Processing Systems',
+        'cvpr': 'Computer Vision and Pattern Recognition',
+        'icml': 'International Conference on Machine Learning',
+        'iccv': 'International Conference on Computer Vision',
+        'eccv': 'European Conference on Computer Vision',
+        'aaai': 'AAAI Conference on Artificial Intelligence',
+        'ijcai': 'International Joint Conference on Artificial Intelligence',
+        'iclr': 'International Conference on Learning Representations',
+      };
+      final lower = query.toLowerCase().trim();
+      final searchTerm = searchAcronymMap[lower] ?? query;
+
       final queryParams = <String, dynamic>{
-        'search': query,
+        'search': searchTerm,
         'per_page': 30,
         'filter': 'type:journal|conference|book series',
       };
