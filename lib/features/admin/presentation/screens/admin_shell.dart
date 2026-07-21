@@ -68,7 +68,7 @@ class _AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: _adminAccent.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
@@ -77,38 +77,44 @@ class _AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.admin_panel_settings, color: _adminAccent, size: 16),
-                const SizedBox(width: 6),
+                Icon(Icons.admin_panel_settings, color: _adminAccent, size: 14),
+                const SizedBox(width: 4),
                 Text(
                   'ADMIN',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: _adminAccent,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
+                    fontSize: 11,
+                    letterSpacing: 1.0,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Text(
-            'Journal Trend Admin',
-            style: Theme.of(context).textTheme.titleMedium,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Dashboard',
+              style: Theme.of(context).textTheme.titleMedium,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ],
       ),
       actions: [
         TextButton.icon(
           onPressed: () => context.go('/home'),
-          icon: const Icon(Icons.arrow_back_ios_new, size: 14, color: AppColors.textSecondary),
+          icon: const Icon(Icons.exit_to_app, size: 16, color: AppColors.textSecondary),
           label: Text(
-            'Về ứng dụng',
+            'Thoát',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppColors.textSecondary,
+              fontSize: 12,
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
       ],
     );
   }

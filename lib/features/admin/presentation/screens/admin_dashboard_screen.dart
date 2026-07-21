@@ -108,7 +108,7 @@ class _AdminDashboardView extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 1.3,
+          childAspectRatio: 1.1,
           children: [
             _buildStatCard(context, icon: Icons.people, label: 'Tổng người dùng',       value: _formatCount(summary.totalUsers),          trend: null),
             _buildStatCard(context, icon: Icons.person_pin, label: 'Hoạt động tuần này', value: _formatCount(summary.activeUsersThisWeek),  trend: null),
@@ -172,7 +172,7 @@ class _AdminDashboardView extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 1.3,
+      childAspectRatio: 1.1,
       children: List.generate(4, (_) => Container(
         decoration: BoxDecoration(
           color: _adminSurface,
