@@ -43,18 +43,18 @@ class _AdminUsersView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Quản lý người dùng', style: Theme.of(context).textTheme.displaySmall),
+          Text('User Management', style: Theme.of(context).textTheme.displaySmall),
           const SizedBox(height: 12),
           BlocBuilder<AdminUsersCubit, AdminUsersState>(
             builder: (context, state) {
               if (state is! AdminUsersLoaded) return const SizedBox.shrink();
               return Row(
                 children: [
-                  _buildStatChip(context, state.totalCount.toString(), 'Tổng', AppColors.textSecondary),
+                  _buildStatChip(context, state.totalCount.toString(), 'Total', AppColors.textSecondary),
                   const SizedBox(width: 8),
-                  _buildStatChip(context, state.activeCount.toString(), 'Hoạt động', AppColors.secondary),
+                  _buildStatChip(context, state.activeCount.toString(), 'Active', AppColors.secondary),
                   const SizedBox(width: 8),
-                  _buildStatChip(context, state.blockedCount.toString(), 'Bị khóa', AppColors.highlight),
+                  _buildStatChip(context, state.blockedCount.toString(), 'Blocked', AppColors.highlight),
                   const SizedBox(width: 8),
                   _buildStatChip(context, state.adminCount.toString(), 'Admin', _adminAccent),
                 ],
@@ -107,7 +107,7 @@ class _AdminUsersView extends StatelessWidget {
             onChanged: (q) => context.read<AdminUsersCubit>().search(q),
             style: const TextStyle(color: AppColors.textMain),
             decoration: InputDecoration(
-              hintText: 'Tìm theo tên hoặc email...',
+              hintText: 'Search by name or email...',
               hintStyle: const TextStyle(color: AppColors.textSecondary),
               prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary, size: 20),
               filled: true,
@@ -136,13 +136,13 @@ class _AdminUsersView extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildFilterChip(context, 'all',     'Tất cả',         current),
+                    _buildFilterChip(context, 'all',     'All',     current),
                     const SizedBox(width: 8),
-                    _buildFilterChip(context, 'active',  'Đang hoạt động', current),
+                    _buildFilterChip(context, 'active',  'Active',  current),
                     const SizedBox(width: 8),
-                    _buildFilterChip(context, 'blocked', 'Bị khóa',        current),
+                    _buildFilterChip(context, 'blocked', 'Blocked', current),
                     const SizedBox(width: 8),
-                    _buildFilterChip(context, 'admin',   'Admin',           current),
+                    _buildFilterChip(context, 'admin',   'Admin',   current),
                   ],
                 ),
               );
@@ -193,7 +193,7 @@ class _AdminUsersView extends StatelessWidget {
               children: [
                 Icon(Icons.error_outline, color: AppColors.highlight, size: 48),
                 const SizedBox(height: 12),
-                Text('Không tải được danh sách', style: Theme.of(context).textTheme.titleMedium),
+                Text('Failed to load user list', style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
           );
@@ -207,9 +207,9 @@ class _AdminUsersView extends StatelessWidget {
               children: [
                 Icon(Icons.person_search, size: 64, color: AppColors.textSecondary),
                 const SizedBox(height: 16),
-                Text('Không tìm thấy người dùng', style: Theme.of(context).textTheme.titleMedium),
+                Text('No users found', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
-                Text('Thử thay đổi từ khóa hoặc bộ lọc', style: Theme.of(context).textTheme.bodyMedium),
+                Text('Try changing keywords or filters', style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
           );
@@ -312,7 +312,7 @@ class _AdminUsersView extends StatelessWidget {
                 child: Row(children: [
                   const Icon(Icons.info_outline, size: 18, color: AppColors.textSecondary),
                   const SizedBox(width: 8),
-                  Text('Xem chi tiết', style: Theme.of(context).textTheme.bodyMedium),
+                  Text('View Details', style: Theme.of(context).textTheme.bodyMedium),
                 ]),
               ),
               PopupMenuItem(
@@ -325,7 +325,7 @@ class _AdminUsersView extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isBlocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản',
+                    isBlocked ? 'Unblock Account' : 'Block Account',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: isBlocked ? AppColors.secondary : AppColors.highlight,
                     ),
@@ -341,12 +341,12 @@ class _AdminUsersView extends StatelessWidget {
 
   Widget _buildStatusBadge(BuildContext context, {required bool isBlocked, required bool isAdmin}) {
     if (isBlocked) {
-      return _badge(context, 'Bị khóa', AppColors.highlight);
+      return _badge(context, 'Blocked', AppColors.highlight);
     }
     if (isAdmin) {
       return _badge(context, 'Admin', _adminAccent);
     }
-    return _badge(context, 'Hoạt động', AppColors.secondary);
+    return _badge(context, 'Active', AppColors.secondary);
   }
 
   Widget _badge(BuildContext context, String label, Color color) {
@@ -397,14 +397,14 @@ class _AdminUsersView extends StatelessWidget {
               )),
             ),
             const SizedBox(height: 20),
-            Text('Chi tiết người dùng', style: Theme.of(context).textTheme.headlineMedium),
+            Text('User Details', style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 16),
-            _detailRow(context, 'Họ tên', user.fullName),
+            _detailRow(context, 'Full Name', user.fullName),
             _detailRow(context, 'Email', user.email),
             _detailRow(context, 'Role', user.role),
-            _detailRow(context, 'Trạng thái', user.isBlocked ? 'Bị khóa' : 'Hoạt động'),
-            _detailRow(context, 'Lượt xem', user.viewCount.toString()),
-            _detailRow(context, 'Xuất PDF', user.pdfExportCount.toString()),
+            _detailRow(context, 'Status', user.isBlocked ? 'Blocked' : 'Active'),
+            _detailRow(context, 'Article Views', user.viewCount.toString()),
+            _detailRow(context, 'PDF Exports', user.pdfExportCount.toString()),
             const SizedBox(height: 8),
           ],
         ),
@@ -439,16 +439,16 @@ class _AdminUsersView extends StatelessWidget {
         title: Row(children: [
           Icon(Icons.lock_outline, color: AppColors.highlight, size: 22),
           const SizedBox(width: 8),
-          Text('Khóa tài khoản', style: Theme.of(context).textTheme.titleMedium),
+          Text('Block Account', style: Theme.of(context).textTheme.titleMedium),
         ]),
         content: Text(
-          'Bạn có chắc muốn khóa tài khoản của "${user.fullName}"?\n\nNgười dùng sẽ bị đăng xuất và không thể đăng nhập lại.',
+          'Are you sure you want to block the account of "${user.fullName}"?\n\nThe user will be logged out and cannot sign in again.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Hủy', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.highlight, foregroundColor: Colors.white),
@@ -457,13 +457,13 @@ class _AdminUsersView extends StatelessWidget {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Đã khóa tài khoản ${user.fullName}'),
+                  content: Text('Blocked account ${user.fullName}'),
                   backgroundColor: AppColors.highlight,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
             },
-            child: const Text('Khóa tài khoản'),
+            child: const Text('Block Account'),
           ),
         ],
       ),
@@ -480,16 +480,16 @@ class _AdminUsersView extends StatelessWidget {
         title: Row(children: [
           Icon(Icons.lock_open, color: AppColors.secondary, size: 22),
           const SizedBox(width: 8),
-          Text('Mở khóa tài khoản', style: Theme.of(context).textTheme.titleMedium),
+          Text('Unblock Account', style: Theme.of(context).textTheme.titleMedium),
         ]),
         content: Text(
-          'Bạn có chắc muốn mở khóa tài khoản của "${user.fullName}"?',
+          'Are you sure you want to unblock the account of "${user.fullName}"?',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Hủy', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary, foregroundColor: Colors.white),
@@ -498,13 +498,13 @@ class _AdminUsersView extends StatelessWidget {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Đã mở khóa tài khoản ${user.fullName}'),
+                  content: Text('Unblocked account ${user.fullName}'),
                   backgroundColor: AppColors.secondary,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
             },
-            child: const Text('Mở khóa'),
+            child: const Text('Unblock'),
           ),
         ],
       ),

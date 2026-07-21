@@ -82,7 +82,7 @@ class JournalRepositoryImpl implements JournalRepository {
         return Left(ServerFailure(e.toString()));
       }
     } else {
-      return const Left(NetworkFailure('Không có kết nối mạng'));
+      return const Left(NetworkFailure('No internet connection available'));
     }
   }
 }

@@ -115,7 +115,7 @@ class JournalScreenContent extends StatelessWidget {
                       onChanged: (q) => context.read<JournalsCubit>().searchSources(q),
                       style: theme.textTheme.bodyMedium,
                       decoration: InputDecoration(
-                        hintText: 'Tìm kiếm Hội nghị (NeurIPS, CVPR...) hoặc Tạp chí...',
+                        hintText: 'Search Conferences (NeurIPS, CVPR...) or Journals...',
                         prefixIcon: const Icon(Icons.search, size: 20),
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
@@ -133,11 +133,11 @@ class JournalScreenContent extends StatelessWidget {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _buildFilterChip(context, 'all', 'Tất cả', state.selectedTypeFilter),
+                          _buildFilterChip(context, 'all', 'All', state.selectedTypeFilter),
                           const SizedBox(width: 8),
-                          _buildFilterChip(context, 'journal', 'Tạp chí (Journals)', state.selectedTypeFilter),
+                          _buildFilterChip(context, 'journal', 'Journals', state.selectedTypeFilter),
                           const SizedBox(width: 8),
-                          _buildFilterChip(context, 'conference', 'Hội nghị (Conferences)', state.selectedTypeFilter),
+                          _buildFilterChip(context, 'conference', 'Conferences', state.selectedTypeFilter),
                         ],
                       ),
                     ),
@@ -177,7 +177,7 @@ class JournalScreenContent extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${displayList.length} kết quả',
+                            '${displayList.length} results',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                             ),
@@ -194,7 +194,7 @@ class JournalScreenContent extends StatelessWidget {
                             children: [
                               Icon(Icons.search_off, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                               const SizedBox(height: 12),
-                              Text('Không tìm thấy hội nghị hoặc tạp chí phù hợp', style: theme.textTheme.bodyMedium),
+                              Text('No matching conferences or journals found', style: theme.textTheme.bodyMedium),
                             ],
                           ),
                         ),
@@ -288,7 +288,7 @@ class JournalScreenContent extends StatelessWidget {
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
-                                                    journal.isConference ? 'Hội nghị' : 'Tạp chí',
+                                                    journal.isConference ? 'Conference' : 'Journal',
                                                     style: TextStyle(
                                                       fontSize: 10,
                                                       fontWeight: FontWeight.w600,

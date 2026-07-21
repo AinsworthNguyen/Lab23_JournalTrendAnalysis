@@ -63,9 +63,9 @@ class ResearchTrendLineChart extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _legendItem(context, 'Bài báo', AppColors.primary),
+                  _legendItem(context, 'Publications', AppColors.primary),
                   const SizedBox(width: 12),
-                  _legendItem(context, 'Trích dẫn', AppColors.secondary),
+                  _legendItem(context, 'Citations', AppColors.secondary),
                 ],
               ),
             ],
@@ -129,7 +129,7 @@ class ResearchTrendLineChart extends StatelessWidget {
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
                         final isPub = spot.barIndex == 0;
-                        final label = isPub ? 'Bài báo' : 'Trích dẫn';
+                        final label = isPub ? 'Publications' : 'Citations';
                         return LineTooltipItem(
                           '$label: ${spot.y.toInt()}',
                           TextStyle(

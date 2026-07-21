@@ -539,7 +539,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 style: TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.bold),
                               ),
                               subtitle: const Text(
-                                'Quản lý người dùng, thống kê hệ thống & Remote Config',
+                                'User management, system statistics & Remote Config',
                                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                               ),
                               trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF38BDF8)),

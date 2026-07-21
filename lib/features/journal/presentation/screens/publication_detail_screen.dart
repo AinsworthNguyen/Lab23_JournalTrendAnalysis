@@ -222,7 +222,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Tầm Ảnh Hưởng Nghiên Cứu (Citation Impact)',
+                                'Research Citation Impact',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.primary,
@@ -231,10 +231,10 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 paper.citationCount > 500
-                                    ? 'Bài báo thuộc Top 1% trích dẫn cao nhất ngành'
+                                    ? 'Top 1% most cited publication in field'
                                     : paper.citationCount > 100
-                                        ? 'Bài báo đạt mức độ ảnh hưởng rất cao'
-                                        : 'Đang có đà tăng trưởng trích dẫn ổn định',
+                                        ? 'High-impact publication'
+                                        : 'Steady citation growth momentum',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                 ),
@@ -477,7 +477,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                 Text(
                                   isVi
                                       ? 'Sử dụng mô hình AI Gemini để dịch thuật và tóm tắt nhanh bài báo khoa học này thành các ý chính tiếng Việt.'
-                                      : 'Use Gemini AI model to quickly summarize and translate this scientific abstract into key Vietnamese insights.',
+                                      : 'Use Gemini AI model to generate concise key research insights from this abstract.',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                   ),
@@ -512,9 +512,9 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                   ],
                                 ),
                               ] else if (_aiResponse != null) ...[
-                                const Text(
-                                  'Tóm tắt nội dung chính:',
-                                  style: TextStyle(
+                                Text(
+                                  isVi ? 'Tóm tắt nội dung chính:' : 'Key Summary Insights:',
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14.0,
                                   ),
@@ -547,9 +547,9 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                 }),
                                 const SizedBox(height: 8.0),
                                 if (_aiResponse!['contribution'] != null) ...[
-                                  const Text(
-                                    'Đóng góp khoa học chính:',
-                                    style: TextStyle(
+                                  Text(
+                                    isVi ? 'Đóng góp khoa học chính:' : 'Main Scientific Contribution:',
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14.0,
                                     ),

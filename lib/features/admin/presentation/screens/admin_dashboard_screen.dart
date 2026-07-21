@@ -54,7 +54,7 @@ class _AdminDashboardView extends StatelessWidget {
   Widget _buildGreetingHeader(BuildContext context) {
     final now = DateTime.now();
     final hour = now.hour;
-    final greeting = hour < 12 ? 'Chào buổi sáng' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
+    final greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -117,13 +117,13 @@ class _AdminDashboardView extends StatelessWidget {
               ),
               BlocBuilder<AdminAnalyticsCubit, AdminAnalyticsState>(
                 builder: (context, state) {
-                  String statusText = 'Đang đồng bộ...';
+                  String statusText = 'Syncing...';
                   if (state is AdminAnalyticsLoaded) {
                     statusText = state.summary.lastUpdated != null
-                        ? 'Cập nhật ${_formatTime(state.summary.lastUpdated!)}'
-                        : 'Mới nhất';
+                        ? 'Updated ${_formatTime(state.summary.lastUpdated!)}'
+                        : 'Latest';
                   } else if (state is AdminAnalyticsError) {
-                    statusText = 'Ngoại tuyến';
+                    statusText = 'Offline';
                   }
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -211,10 +211,10 @@ class _AdminDashboardView extends StatelessWidget {
           crossAxisSpacing: 12,
           childAspectRatio: 1.1,
           children: [
-            _buildStatCard(context, icon: Icons.people, label: 'Tổng người dùng',       value: _formatCount(summary.totalUsers),          trend: null),
-            _buildStatCard(context, icon: Icons.person_pin, label: 'Hoạt động tuần này', value: _formatCount(summary.activeUsersThisWeek),  trend: null),
-            _buildStatCard(context, icon: Icons.visibility, label: 'Lượt xem bài báo',   value: _formatCount(summary.totalViews),           trend: null),
-            _buildStatCard(context, icon: Icons.picture_as_pdf, label: 'Lượt xuất PDF',  value: _formatCount(summary.totalPdfExports),      trend: null),
+            _buildStatCard(context, icon: Icons.people, label: 'Total Users',       value: _formatCount(summary.totalUsers),          trend: null),
+            _buildStatCard(context, icon: Icons.person_pin, label: 'Active This Week', value: _formatCount(summary.activeUsersThisWeek),  trend: null),
+            _buildStatCard(context, icon: Icons.visibility, label: 'Publication Views',   value: _formatCount(summary.totalViews),           trend: null),
+            _buildStatCard(context, icon: Icons.picture_as_pdf, label: 'PDF Exports',  value: _formatCount(summary.totalPdfExports),      trend: null),
           ],
         );
       },
@@ -290,7 +290,7 @@ class _AdminDashboardView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Thao tác nhanh', style: Theme.of(context).textTheme.titleMedium),
+        Text('Quick Actions', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -298,7 +298,7 @@ class _AdminDashboardView extends StatelessWidget {
               child: _buildActionButton(
                 context,
                 icon: Icons.group,
-                label: 'Quản lý Users',
+                label: 'User Management',
                 onTap: () => context.go('/admin/users'),
               ),
             ),
@@ -307,7 +307,7 @@ class _AdminDashboardView extends StatelessWidget {
               child: _buildActionButton(
                 context,
                 icon: Icons.settings,
-                label: 'Cấu hình hệ thống',
+                label: 'System Config',
                 onTap: () => context.go('/admin/config'),
               ),
             ),
@@ -368,15 +368,15 @@ class _AdminDashboardView extends StatelessWidget {
               Icon(Icons.info_outline, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 8),
               Text(
-                'Lưu ý hệ thống',
+                'System Notes',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ],
           ),
           const SizedBox(height: 12),
-          _buildInfoRow(context, 'Thống kê được tính từ Firestore', Icons.cloud),
-          _buildInfoRow(context, 'Remote Config có hiệu lực sau ~5 phút', Icons.timer),
-          _buildInfoRow(context, 'Hành động khóa user là tức thì', Icons.lock),
+          _buildInfoRow(context, 'Analytics are computed via Firestore', Icons.cloud),
+          _buildInfoRow(context, 'Remote Config syncs every ~5 minutes', Icons.timer),
+          _buildInfoRow(context, 'User block action takes effect immediately', Icons.lock),
         ],
       ),
     );

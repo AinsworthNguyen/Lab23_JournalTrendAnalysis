@@ -107,7 +107,7 @@ class _AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          tooltip: 'Về ứng dụng',
+          tooltip: 'Back to App',
           onPressed: () => context.go('/home'),
           icon: const Icon(Icons.exit_to_app_rounded, color: AppColors.textSecondary, size: 20),
         ),

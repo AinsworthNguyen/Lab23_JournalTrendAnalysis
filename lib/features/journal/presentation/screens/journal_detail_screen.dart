@@ -275,8 +275,8 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
 
             // 5-Year Citation & Publication Trend Chart
             ResearchTrendLineChart(
-              title: 'Xu hướng Trích dẫn & Bài báo (5 năm)',
-              subtitle: journal.isConference ? 'Tăng trưởng chỉ số Hội nghị' : 'Tăng trưởng chỉ số Tạp chí',
+              title: '5-Year Citation & Publication Trend',
+              subtitle: journal.isConference ? 'Conference Metric Growth' : 'Journal Metric Growth',
               years: const ['2020', '2021', '2022', '2023', '2024', '2025'],
               publicationSpots: [
                 FlSpot(0, (journal.worksCount * 0.08).clamp(10, 5000)),

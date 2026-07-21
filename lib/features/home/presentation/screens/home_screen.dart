@@ -290,8 +290,8 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
 
                             // Interactive Trend LineChart
                             const ResearchTrendLineChart(
-                              title: 'Xu hướng Nghiên cứu & Trích dẫn',
-                              subtitle: 'Tốc độ tăng trưởng qua các năm (2020 - 2025)',
+                              title: 'Research & Citation Trends',
+                              subtitle: 'Growth velocity over years (2020 - 2025)',
                               years: ['2020', '2021', '2022', '2023', '2024', '2025'],
                               publicationSpots: [
                                 FlSpot(0, 120),
@@ -314,7 +314,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
 
                             // Topic Distribution PieChart
                             const TopicDistributionChart(
-                              title: 'Phân bố Chủ đề Nghiên cứu Hot',
+                              title: 'Hot Research Topic Distribution',
                               topicData: [
                                 {'name': 'Machine Learning', 'value': 40.0, 'color': Color(0xFF6366F1)},
                                 {'name': 'Computer Vision', 'value': 25.0, 'color': Color(0xFF10B981)},
