@@ -30,6 +30,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
   Journal? _journal;
   List<Paper> _papers = [];
   List<Paper> _initialPapers = [];
+  int _activeTabIndex = 0;
 
   late final TextEditingController _paperSearchController;
   Timer? _paperDebounceTimer;
@@ -343,369 +344,453 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
             ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0),
             const SizedBox(height: 20.0),
 
-            // Statistics Grid (Works & Citations)
-            Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                      side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.article_outlined, color: theme.colorScheme.primary, size: 24.0),
-                          const SizedBox(height: 12.0),
-                          Text(
-                            NumberFormat.compact().format(journal.worksCount),
-                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            'Total Works',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                      side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.format_quote, color: Colors.green, size: 24.0),
-                          const SizedBox(height: 12.0),
-                          Text(
-                            NumberFormat.compact().format(journal.citedByCount),
-                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            'Total Citations',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ).animate(delay: 150.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0),
-            const SizedBox(height: 20.0),
-
-            // 5-Year Citation & Publication Trend Chart
-            ResearchTrendLineChart(
-              title: '5-Year Citation & Publication Trend',
-              subtitle: journal.isConference ? 'Conference Metric Growth' : 'Journal Metric Growth',
-              years: const ['2020', '2021', '2022', '2023', '2024', '2025'],
-              publicationSpots: [
-                FlSpot(0, (journal.worksCount * 0.08).clamp(10, 5000)),
-                FlSpot(1, (journal.worksCount * 0.12).clamp(15, 6000)),
-                FlSpot(2, (journal.worksCount * 0.18).clamp(20, 8000)),
-                FlSpot(3, (journal.worksCount * 0.22).clamp(25, 10000)),
-                FlSpot(4, (journal.worksCount * 0.28).clamp(30, 12000)),
-                FlSpot(5, (journal.worksCount * 0.35).clamp(35, 15000)),
-              ],
-              citationSpots: [
-                FlSpot(0, (journal.citedByCount * 0.05).clamp(50, 50000)),
-                FlSpot(1, (journal.citedByCount * 0.10).clamp(100, 80000)),
-                FlSpot(2, (journal.citedByCount * 0.16).clamp(200, 120000)),
-                FlSpot(3, (journal.citedByCount * 0.24).clamp(300, 160000)),
-                FlSpot(4, (journal.citedByCount * 0.32).clamp(400, 200000)),
-                FlSpot(5, (journal.citedByCount * 0.40).clamp(500, 250000)),
-              ],
-            ),
-            const SizedBox(height: 24.0),
-
-            // Top Publications Title & Search Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Top Publications',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '${_papers.length} items',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12.0),
-
-            // Search Papers Bar
-            TextField(
-              controller: _paperSearchController,
-              onChanged: (q) {
-                setState(() {});
-                _searchPapersInJournal(q);
-              },
-              onSubmitted: (q) {
-                _savePaperSearch(q);
-              },
-              style: theme.textTheme.bodyMedium,
-              decoration: InputDecoration(
-                hintText: 'Search papers in ${journal.displayName}...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _isSearchingPapers
-                    ? UnconstrainedBox(
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      )
-                    : (_paperSearchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
-                            onPressed: () {
-                              _paperSearchController.clear();
-                              setState(() {});
-                              _searchPapersInJournal('');
-                            },
-                          )
-                        : null),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
+            // Sliding Tab Selector (Segmented Control style)
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
               ),
-            ),
-
-            // Recent Searches for Papers (History)
-            Builder(
-              builder: (context) {
-                final history = _getRecentPaperSearches();
-                if (history.isEmpty || _paperSearchController.text.isNotEmpty) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.history, size: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Recent Searches',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                ),
-                              ),
-                            ],
-                          ),
-                          GestureDetector(
-                            onTap: _clearPaperHistory,
-                            child: Text(
-                              'Clear All',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: history.map((q) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: ActionChip(
-                                visualDensity: VisualDensity.compact,
-                                label: Text(q, style: const TextStyle(fontSize: 11)),
-                                onPressed: () {
-                                  _paperSearchController.text = q;
-                                  setState(() {});
-                                  _searchPapersInJournal(q);
-                                },
-                              ),
-                            );
-                          }).toList(),
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _activeTabIndex = 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _activeTabIndex == 0 ? theme.colorScheme.surface : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: _activeTabIndex == 0
+                              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))]
+                              : null,
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-
-            // Auto-Completion Topic Chips for Paper Search
-            Builder(
-              builder: (context) {
-                final queryText = _paperSearchController.text.toLowerCase().trim();
-                const paperSuggestions = [
-                  'Transformer',
-                  'Attention',
-                  'Diffusion',
-                  'LLM',
-                  'Neural Network',
-                  'Deep Learning',
-                  'Reinforcement Learning',
-                  'Computer Vision',
-                ];
-
-                final matched = paperSuggestions.where((s) {
-                  return queryText.isEmpty || s.toLowerCase().contains(queryText);
-                }).toList();
-
-                if (matched.isEmpty) return const SizedBox.shrink();
-
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: matched.map((kw) {
-                        final isSelected = _paperSearchController.text == kw;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ActionChip(
-                            visualDensity: VisualDensity.compact,
-                            backgroundColor: isSelected ? theme.colorScheme.primaryContainer : null,
-                            avatar: Icon(
-                              Icons.auto_awesome,
-                              size: 12,
-                              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
-                            label: Text(
-                              kw,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontSize: 11,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                            onPressed: () {
-                              _paperSearchController.text = kw;
-                              setState(() {});
-                              _searchPapersInJournal(kw);
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16.0),
-
-            // Publications List
-            if (_papers.isEmpty)
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: Center(
-                    child: Text('No publication data available for this journal.'),
-                  ),
-                ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _papers.length,
-                itemBuilder: (context, index) {
-                  final paper = _papers[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12.0),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      title: Text(
-                        paper.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (paper.isOpenAccess) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(4.0),
-                                ),
-                                child: const Text(
-                                  'OA',
-                                  style: TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8.0),
-                            ],
-                            Icon(Icons.calendar_today_outlined, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-                            const SizedBox(width: 4.0),
-                            Text(
-                              paper.publicationYear.toString(),
-                              style: theme.textTheme.bodySmall,
+                            Icon(
+                              Icons.analytics_outlined,
+                              size: 18,
+                              color: _activeTabIndex == 0 ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
-                            const SizedBox(width: 16.0),
-                            Icon(Icons.format_quote, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-                            const SizedBox(width: 4.0),
+                            const SizedBox(width: 8),
                             Text(
-                              '${paper.citationCount}',
-                              style: theme.textTheme.bodySmall,
+                              'Overview & Analytics',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: _activeTabIndex == 0 ? FontWeight.bold : FontWeight.normal,
+                                color: _activeTabIndex == 0 ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      onTap: () {
-                        context.push('/journal/publication/${paper.id}');
-                      },
                     ),
-                  ).animate(delay: (200 + index * 40).ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _activeTabIndex = 1),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _activeTabIndex == 1 ? theme.colorScheme.surface : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: _activeTabIndex == 1
+                              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.library_books_outlined,
+                              size: 18,
+                              color: _activeTabIndex == 1 ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Publications & Search',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: _activeTabIndex == 1 ? FontWeight.bold : FontWeight.normal,
+                                color: _activeTabIndex == 1 ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20.0),
+
+            // Tab content switches here
+            if (_activeTabIndex == 0) ...[
+              // Statistics Grid (Works & Citations)
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.0),
+                        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.article_outlined, color: theme.colorScheme.primary, size: 24.0),
+                            const SizedBox(height: 12.0),
+                            Text(
+                              NumberFormat.compact().format(journal.worksCount),
+                              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4.0),
+                            Text(
+                              'Total Works',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12.0),
+                  Expanded(
+                    child: Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.0),
+                        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.format_quote, color: Colors.green, size: 24.0),
+                            const SizedBox(height: 12.0),
+                            Text(
+                              NumberFormat.compact().format(journal.citedByCount),
+                              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4.0),
+                            Text(
+                              'Total Citations',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0),
+              const SizedBox(height: 20.0),
+
+              // 5-Year Citation & Publication Trend Chart
+              ResearchTrendLineChart(
+                title: '5-Year Citation & Publication Trend',
+                subtitle: journal.isConference ? 'Conference Metric Growth' : 'Journal Metric Growth',
+                years: const ['2020', '2021', '2022', '2023', '2024', '2025'],
+                publicationSpots: [
+                  FlSpot(0, (journal.worksCount * 0.08).clamp(10, 5000)),
+                  FlSpot(1, (journal.worksCount * 0.12).clamp(15, 6000)),
+                  FlSpot(2, (journal.worksCount * 0.18).clamp(20, 8000)),
+                  FlSpot(3, (journal.worksCount * 0.22).clamp(25, 10000)),
+                  FlSpot(4, (journal.worksCount * 0.28).clamp(30, 12000)),
+                  FlSpot(5, (journal.worksCount * 0.35).clamp(35, 15000)),
+                ],
+                citationSpots: [
+                  FlSpot(0, (journal.citedByCount * 0.05).clamp(50, 50000)),
+                  FlSpot(1, (journal.citedByCount * 0.10).clamp(100, 80000)),
+                  FlSpot(2, (journal.citedByCount * 0.16).clamp(200, 120000)),
+                  FlSpot(3, (journal.citedByCount * 0.24).clamp(300, 160000)),
+                  FlSpot(4, (journal.citedByCount * 0.32).clamp(400, 200000)),
+                  FlSpot(5, (journal.citedByCount * 0.40).clamp(500, 250000)),
+                ],
+              ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0),
+            ] else ...[
+              // Top Publications Title & Search Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Publications in Source',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '${_papers.length} items',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12.0),
+
+              // Search Papers Bar
+              TextField(
+                controller: _paperSearchController,
+                onChanged: (q) {
+                  setState(() {});
+                  _searchPapersInJournal(q);
+                },
+                onSubmitted: (q) {
+                  _savePaperSearch(q);
+                },
+                style: theme.textTheme.bodyMedium,
+                decoration: InputDecoration(
+                  hintText: 'Search papers in ${journal.displayName}...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _isSearchingPapers
+                      ? UnconstrainedBox(
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        )
+                      : (_paperSearchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _paperSearchController.clear();
+                                setState(() {});
+                                _searchPapersInJournal('');
+                              },
+                            )
+                          : null),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+
+              // Recent Searches for Papers (History)
+              Builder(
+                builder: (context) {
+                  final history = _getRecentPaperSearches();
+                  if (history.isEmpty || _paperSearchController.text.isNotEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.history, size: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Recent Searches',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            GestureDetector(
+                              onTap: _clearPaperHistory,
+                              child: Text(
+                                'Clear All',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: history.map((q) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: ActionChip(
+                                  visualDensity: VisualDensity.compact,
+                                  label: Text(q, style: const TextStyle(fontSize: 11)),
+                                  onPressed: () {
+                                    _paperSearchController.text = q;
+                                    setState(() {});
+                                    _searchPapersInJournal(q);
+                                  },
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
+
+              // Auto-Completion Topic Chips for Paper Search
+              Builder(
+                builder: (context) {
+                  final queryText = _paperSearchController.text.toLowerCase().trim();
+                  const paperSuggestions = [
+                    'Transformer',
+                    'Attention',
+                    'Diffusion',
+                    'LLM',
+                    'Neural Network',
+                    'Deep Learning',
+                    'Reinforcement Learning',
+                    'Computer Vision',
+                  ];
+
+                  final matched = paperSuggestions.where((s) {
+                    return queryText.isEmpty || s.toLowerCase().contains(queryText);
+                  }).toList();
+
+                  if (matched.isEmpty) return const SizedBox.shrink();
+
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: matched.map((kw) {
+                          final isSelected = _paperSearchController.text == kw;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ActionChip(
+                              visualDensity: VisualDensity.compact,
+                              backgroundColor: isSelected ? theme.colorScheme.primaryContainer : null,
+                              avatar: Icon(
+                                Icons.auto_awesome,
+                                size: 12,
+                                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                              label: Text(
+                                kw,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                              onPressed: () {
+                                _paperSearchController.text = kw;
+                                setState(() {});
+                                _searchPapersInJournal(kw);
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16.0),
+
+              // Publications List
+              if (_papers.isEmpty)
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Center(
+                      child: Text('No publication data available for this journal.'),
+                    ),
+                  ),
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _papers.length,
+                  itemBuilder: (context, index) {
+                    final paper = _papers[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12.0),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        title: Text(
+                          paper.title,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Row(
+                            children: [
+                              if (paper.isOpenAccess) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4.0),
+                                  ),
+                                  child: const Text(
+                                    'OA',
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8.0),
+                              ],
+                              Icon(Icons.calendar_today_outlined, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                              const SizedBox(width: 4.0),
+                              Text(
+                                paper.publicationYear.toString(),
+                                style: theme.textTheme.bodySmall,
+                              ),
+                              const SizedBox(width: 16.0),
+                              Icon(Icons.format_quote, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                              const SizedBox(width: 4.0),
+                              Text(
+                                '${paper.citationCount}',
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        onTap: () {
+                          context.push('/journal/publication/${paper.id}');
+                        },
+                      ),
+                    ).animate(delay: (200 + index * 40).ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
+                  },
+                ),
+            ],
             const SizedBox(height: 40.0),
           ],
         ),
