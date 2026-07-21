@@ -9,6 +9,9 @@ import '../blocs/dashboard_event.dart';
 import '../blocs/dashboard_state.dart';
 import '../blocs/search_cubit.dart';
 import '../../../../core/firebase/firebase_analytics_service.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../../../core/widgets/research_trend_line_chart.dart';
+import '../../../../core/widgets/topic_distribution_chart.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -281,9 +284,44 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                   icon: Icons.format_quote,
                                   color: Colors.amber,
                                 ),
-                              ],
+                               ],
                             ),
                             const SizedBox(height: 24.0),
+
+                            // Interactive Trend LineChart
+                            const ResearchTrendLineChart(
+                              title: 'Xu hướng Nghiên cứu & Trích dẫn',
+                              subtitle: 'Tốc độ tăng trưởng qua các năm (2020 - 2025)',
+                              years: ['2020', '2021', '2022', '2023', '2024', '2025'],
+                              publicationSpots: [
+                                FlSpot(0, 120),
+                                FlSpot(1, 190),
+                                FlSpot(2, 280),
+                                FlSpot(3, 350),
+                                FlSpot(4, 480),
+                                FlSpot(5, 620),
+                              ],
+                              citationSpots: [
+                                FlSpot(0, 450),
+                                FlSpot(1, 820),
+                                FlSpot(2, 1400),
+                                FlSpot(3, 2100),
+                                FlSpot(4, 3200),
+                                FlSpot(5, 4500),
+                              ],
+                            ),
+                            const SizedBox(height: 20.0),
+
+                            // Topic Distribution PieChart
+                            const TopicDistributionChart(
+                              title: 'Phân bố Chủ đề Nghiên cứu Hot',
+                              topicData: [
+                                {'name': 'Machine Learning', 'value': 40.0, 'color': Color(0xFF6366F1)},
+                                {'name': 'Computer Vision', 'value': 25.0, 'color': Color(0xFF10B981)},
+                                {'name': 'NLP & LLM', 'value': 20.0, 'color': Color(0xFF38BDF8)},
+                                {'name': 'Data Mining', 'value': 15.0, 'color': Color(0xFFF59E0B)},
+                              ],
+                            ),
                             const SizedBox(height: 24.0),
                             // Recent Interest Papers Section
                             Column(

@@ -67,7 +67,22 @@ class JournalRepositoryImpl implements JournalRepository {
         return Left(ServerFailure(e.toString()));
       }
     } else {
-      return const Left(NetworkFailure('Internet connection is required to load journal details.'));
+      return Left(ServerFailure('No internet connection available.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Journal>>> searchSources(String query, {String? type}) async {
+    final hasConnection = await _networkInfo.isConnected;
+    if (hasConnection) {
+      try {
+        final results = await _remoteDataSource.searchSources(query, type: type);
+        return Right(results);
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('Không có kết nối mạng'));
     }
   }
 }

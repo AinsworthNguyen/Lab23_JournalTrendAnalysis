@@ -14,6 +14,7 @@ abstract class JournalRemoteDataSource {
   Future<JournalModel> getJournalDetails(String journalId);
   Future<String> getTopJournalName(String conceptId);
   Future<PaperModel?> getMostInfluentialPaper(String conceptId);
+  Future<List<JournalModel>> searchSources(String query, {String? type});
 }
 
 @LazySingleton(as: JournalRemoteDataSource)
@@ -200,6 +201,7 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
             displayName: model.displayName,
             worksCount: countsMap[model.id] ?? model.worksCount,
             citedByCount: model.citedByCount,
+            type: model.type,
             homepageUrl: model.homepageUrl,
             publisher: model.publisher,
           );
@@ -212,6 +214,30 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
       }
     } catch (_) {}
     return [];
+  }
+
+  @override
+  Future<List<JournalModel>> searchSources(String query, {String? type}) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'search': query,
+        'per_page': 25,
+      };
+      if (type != null && type != 'all') {
+        queryParams['filter'] = 'type:$type';
+      } else {
+        queryParams['filter'] = 'type:journal|conference';
+      }
+
+      final response = await _apiClient.get('/sources', queryParameters: queryParams);
+      final results = response['results'] as List<dynamic>? ?? [];
+      return results
+          .map((json) => JournalModel.fromJson(json as Map<String, dynamic>))
+          .where((m) => m.type == 'journal' || m.type == 'conference')
+          .toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   @override

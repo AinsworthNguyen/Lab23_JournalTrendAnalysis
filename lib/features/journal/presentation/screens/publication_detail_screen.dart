@@ -198,6 +198,55 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                   ),
                   const SizedBox(height: 16.0),
 
+                  // Visual Citation Impact Card
+                  Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16.0),
+                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.trending_up_rounded, color: theme.colorScheme.primary, size: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Tầm Ảnh Hưởng Nghiên Cứu (Citation Impact)',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                paper.citationCount > 500
+                                    ? 'Bài báo thuộc Top 1% trích dẫn cao nhất ngành'
+                                    : paper.citationCount > 100
+                                        ? 'Bài báo đạt mức độ ảnh hưởng rất cao'
+                                        : 'Đang có đà tăng trưởng trích dẫn ổn định',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+
                   // Journal name & Year info
                   Card(
                     elevation: 0,

@@ -20,12 +20,12 @@ import 'core/firebase/firebase_crashlytics_service.dart' as _i203;
 import 'core/firebase/firebase_messaging_service.dart' as _i278;
 import 'core/firebase/firebase_remote_config_service.dart' as _i790;
 import 'core/firebase/firebase_storage_service.dart' as _i173;
-import 'core/firebase/firebase_user_service.dart' as _i999;
+import 'core/firebase/firebase_user_service.dart' as _i51;
 import 'core/network/api_client.dart' as _i871;
 import 'core/network/network_info.dart' as _i75;
 import 'core/utils/pdf_report_service.dart' as _i732;
-import 'features/admin/presentation/blocs/admin_analytics_cubit.dart' as _i997_admin;
-import 'features/admin/presentation/blocs/admin_users_cubit.dart' as _i998;
+import 'features/admin/presentation/blocs/admin_analytics_cubit.dart' as _i212;
+import 'features/admin/presentation/blocs/admin_users_cubit.dart' as _i253;
 import 'features/home/data/datasources/search_local_data_source.dart' as _i987;
 import 'features/home/data/repositories/search_repository_impl.dart' as _i1043;
 import 'features/home/data/repositories/sync_repository_impl.dart' as _i899;
@@ -124,6 +124,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i732.PDFReportService>(() => _i732.PDFReportService());
     gh.lazySingleton<_i871.ApiClient>(() => registerModule.apiClient);
     gh.lazySingleton<_i895.Connectivity>(() => registerModule.connectivity);
+    gh.lazySingleton<_i51.IFirebaseUserService>(
+        () => _i51.FirebaseUserService());
     gh.lazySingleton<_i943.IFirebaseAuthService>(
         () => _i943.FirebaseAuthService());
     gh.lazySingleton<_i1013.IFirebaseAnalyticsService>(
@@ -155,12 +157,6 @@ extension GetItInjectableX on _i174.GetIt {
             gh<_i979.Box<dynamic>>(instanceName: 'searchBox')));
     gh.lazySingleton<_i790.IFirebaseRemoteConfigService>(
         () => _i790.FirebaseRemoteConfigService());
-    gh.lazySingleton<_i999.IFirebaseUserService>(
-        () => _i999.FirebaseUserService());
-    gh.factory<_i998.AdminUsersCubit>(
-        () => _i998.AdminUsersCubit(gh<_i999.IFirebaseUserService>()));
-    gh.factory<_i997_admin.AdminAnalyticsCubit>(
-        () => _i997_admin.AdminAnalyticsCubit(gh<_i999.IFirebaseUserService>()));
     gh.lazySingleton<_i515.SearchTopicsUseCase>(
         () => _i515.SearchTopicsUseCase(gh<_i871.ApiClient>()));
     gh.lazySingleton<_i979.Box<dynamic>>(
@@ -205,6 +201,10 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i1029.KeywordsLocalDataSource>(),
           gh<_i75.NetworkInfo>(),
         ));
+    gh.factory<_i212.AdminAnalyticsCubit>(
+        () => _i212.AdminAnalyticsCubit(gh<_i51.IFirebaseUserService>()));
+    gh.factory<_i253.AdminUsersCubit>(
+        () => _i253.AdminUsersCubit(gh<_i51.IFirebaseUserService>()));
     gh.factory<_i30.NotificationCubit>(
         () => _i30.NotificationCubit(gh<_i278.IFirebaseMessagingService>()));
     gh.lazySingleton<_i669.SyncRepository>(() => _i899.SyncRepositoryImpl(
@@ -259,6 +259,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i83.JournalsCubit>(() => _i83.JournalsCubit(
           getJournalRanking: gh<_i70.GetJournalRankingUseCase>(),
           getUserPreferences: gh<_i417.GetUserPreferencesUseCase>(),
+          journalRepository: gh<_i246.JournalRepository>(),
         ));
     gh.factory<_i129.DashboardBloc>(() => _i129.DashboardBloc(
           getUserPreferences: gh<_i417.GetUserPreferencesUseCase>(),
