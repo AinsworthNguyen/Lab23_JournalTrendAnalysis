@@ -347,8 +347,9 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
             // Sliding Tab Selector (Segmented Control style)
             Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.15)),
               ),
               padding: const EdgeInsets.all(4),
               child: Row(
@@ -359,10 +360,10 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: _activeTabIndex == 0 ? theme.colorScheme.surface : Colors.transparent,
+                          color: _activeTabIndex == 0 ? theme.colorScheme.primaryContainer : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _activeTabIndex == 0
-                              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))]
+                              ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -375,7 +376,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Overview & Analytics',
+                              'Analytics',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: _activeTabIndex == 0 ? FontWeight.bold : FontWeight.normal,
@@ -393,10 +394,10 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: _activeTabIndex == 1 ? theme.colorScheme.surface : Colors.transparent,
+                          color: _activeTabIndex == 1 ? theme.colorScheme.primaryContainer : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _activeTabIndex == 1
-                              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))]
+                              ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -409,7 +410,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Publications & Search',
+                              'Publications',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: _activeTabIndex == 1 ? FontWeight.bold : FontWeight.normal,
