@@ -69,6 +69,8 @@ void main() {
 
   final tUserPrefs = const UserPreferences(
     fullName: 'Test User',
+    email: 'test@example.com',
+    photoUrl: '',
     interestConceptId: 'C41008148',
     interestConceptName: 'Computer Science',
     role: 'user',

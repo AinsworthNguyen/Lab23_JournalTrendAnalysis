@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../../personalization/domain/usecases/get_user_preferences_usecase.dart';
@@ -58,6 +59,8 @@ class JournalsCubit extends Cubit<JournalsState> {
   final GetUserPreferencesUseCase _getUserPreferences;
   final JournalRepository _journalRepository;
 
+  Timer? _debounceTimer;
+
   JournalsCubit({
     required GetJournalRankingUseCase getJournalRanking,
     required GetUserPreferencesUseCase getUserPreferences,
@@ -99,8 +102,10 @@ class JournalsCubit extends Cubit<JournalsState> {
     }
   }
 
-  void searchSources(String query) async {
+  void searchSources(String query, {Duration debounceDuration = const Duration(milliseconds: 400)}) {
+    _debounceTimer?.cancel();
     emit(state.copyWith(searchQuery: query));
+
     if (query.trim().isEmpty) {
       emit(state.copyWith(
         filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, ''),
@@ -108,24 +113,25 @@ class JournalsCubit extends Cubit<JournalsState> {
       return;
     }
 
-    emit(state.copyWith(isLoading: true));
-    final typeParam = state.selectedTypeFilter == 'all' ? null : state.selectedTypeFilter;
-    final result = await _journalRepository.searchSources(query, type: typeParam);
-    result.fold(
-      (failure) {
-        // Fallback local filter
-        emit(state.copyWith(
-          isLoading: false,
-          filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, query),
-        ));
-      },
-      (searchResult) {
-        emit(state.copyWith(
-          isLoading: false,
-          filteredJournals: _applyFilters(searchResult, state.selectedTypeFilter, query),
-        ));
-      },
-    );
+    _debounceTimer = Timer(debounceDuration, () async {
+      emit(state.copyWith(isLoading: true));
+      final typeParam = state.selectedTypeFilter == 'all' ? null : state.selectedTypeFilter;
+      final result = await _journalRepository.searchSources(query, type: typeParam);
+      result.fold(
+        (failure) {
+          emit(state.copyWith(
+            isLoading: false,
+            filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, query),
+          ));
+        },
+        (searchResult) {
+          emit(state.copyWith(
+            isLoading: false,
+            filteredJournals: _applyFilters(searchResult, state.selectedTypeFilter, query),
+          ));
+        },
+      );
+    });
   }
 
   List<Journal> _applyFilters(List<Journal> list, String filter, String query) {
@@ -137,5 +143,11 @@ class JournalsCubit extends Cubit<JournalsState> {
           j.displayName.toLowerCase().contains(query.toLowerCase());
       return matchesType && matchesQuery;
     }).toList();
+  }
+
+  @override
+  Future<void> close() {
+    _debounceTimer?.cancel();
+    return super.close();
   }
 }

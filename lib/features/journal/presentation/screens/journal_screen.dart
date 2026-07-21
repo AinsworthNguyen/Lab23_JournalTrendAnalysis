@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../injection_container.dart';
-import '../../../personalization/domain/usecases/get_user_preferences_usecase.dart';
-import '../../domain/usecases/get_journal_ranking_usecase.dart';
 import '../blocs/journals_cubit.dart';
 import '../../../../core/widgets/horizontal_bar_chart.dart';
 
