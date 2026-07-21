@@ -51,7 +51,7 @@ class SearchCubit extends Cubit<SearchState> {
     );
   }
 
-  void search(String query, {Duration debounceDuration = const Duration(milliseconds: 400)}) {
+  void search(String query, {Duration debounceDuration = const Duration(milliseconds: 600)}) {
     _debounceTimer?.cancel();
     if (query.trim().isEmpty) {
       loadSearchHistory();

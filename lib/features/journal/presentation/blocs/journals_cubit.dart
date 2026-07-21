@@ -102,7 +102,7 @@ class JournalsCubit extends Cubit<JournalsState> {
     }
   }
 
-  void searchSources(String query, {Duration debounceDuration = const Duration(milliseconds: 400)}) {
+  void searchSources(String query, {Duration debounceDuration = const Duration(milliseconds: 600)}) {
     _debounceTimer?.cancel();
     emit(state.copyWith(searchQuery: query));
 
