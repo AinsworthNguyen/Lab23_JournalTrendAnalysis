@@ -221,20 +221,20 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
     try {
       final queryParams = <String, dynamic>{
         'search': query,
-        'per_page': 25,
+        'per_page': 30,
+        'filter': 'type:journal|conference|book series',
       };
-      if (type != null && type != 'all') {
-        queryParams['filter'] = 'type:$type';
-      } else {
-        queryParams['filter'] = 'type:journal|conference';
-      }
 
       final response = await _apiClient.get('/sources', queryParameters: queryParams);
       final results = response['results'] as List<dynamic>? ?? [];
-      return results
+      final models = results
           .map((json) => JournalModel.fromJson(json as Map<String, dynamic>))
-          .where((m) => m.type == 'journal' || m.type == 'conference')
           .toList();
+
+      if (type != null && type != 'all') {
+        return models.where((m) => m.type == type).toList();
+      }
+      return models;
     } catch (_) {
       return [];
     }

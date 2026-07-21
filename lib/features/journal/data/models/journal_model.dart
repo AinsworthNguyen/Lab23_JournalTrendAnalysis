@@ -15,13 +15,29 @@ class JournalModel extends Journal {
     final fullId = json['id'] as String? ?? '';
     final cleanedId = fullId.split('/').last;
     final rawType = json['type'] as String? ?? 'journal';
+    final name = json['display_name'] as String? ?? 'Unknown Venue';
+    final lowerName = name.toLowerCase();
+
+    final isConf = rawType == 'conference' ||
+        lowerName.contains('conference') ||
+        lowerName.contains('proceedings') ||
+        lowerName.contains('symposium') ||
+        lowerName.contains('workshop') ||
+        lowerName.contains('congress') ||
+        lowerName.contains('proc.') ||
+        lowerName.contains('neurips') ||
+        lowerName.contains('cvpr') ||
+        lowerName.contains('icml') ||
+        lowerName.contains('aaai') ||
+        lowerName.contains('ijcai') ||
+        lowerName.contains('ieee/cvf');
 
     return JournalModel(
       id: cleanedId,
-      displayName: json['display_name'] as String? ?? 'Unknown Venue',
+      displayName: name,
       worksCount: json['works_count'] as int? ?? 0,
       citedByCount: json['cited_by_count'] as int? ?? 0,
-      type: rawType,
+      type: isConf ? 'conference' : (rawType == 'conference' ? 'conference' : 'journal'),
       homepageUrl: json['homepage_url'] as String?,
       publisher: json['publisher'] as String?,
     );
@@ -40,12 +56,30 @@ class JournalModel extends Journal {
   }
 
   factory JournalModel.fromDbMap(Map<dynamic, dynamic> map) {
+    final name = map['display_name'] as String? ?? '';
+    final rawType = map['type'] as String? ?? 'journal';
+    final lowerName = name.toLowerCase();
+
+    final isConf = rawType == 'conference' ||
+        lowerName.contains('conference') ||
+        lowerName.contains('proceedings') ||
+        lowerName.contains('symposium') ||
+        lowerName.contains('workshop') ||
+        lowerName.contains('congress') ||
+        lowerName.contains('proc.') ||
+        lowerName.contains('neurips') ||
+        lowerName.contains('cvpr') ||
+        lowerName.contains('icml') ||
+        lowerName.contains('aaai') ||
+        lowerName.contains('ijcai') ||
+        lowerName.contains('ieee/cvf');
+
     return JournalModel(
       id: map['id'] as String? ?? '',
-      displayName: map['display_name'] as String? ?? '',
+      displayName: name,
       worksCount: map['works_count'] as int? ?? 0,
       citedByCount: map['cited_by_count'] as int? ?? 0,
-      type: map['type'] as String? ?? 'journal',
+      type: isConf ? 'conference' : (rawType == 'conference' ? 'conference' : 'journal'),
       homepageUrl: map['homepage_url'] as String?,
       publisher: map['publisher'] as String?,
     );
