@@ -163,6 +163,7 @@ final GoRouter appRouter = GoRouter(
       redirect: (context, state) async {
         try {
           final authService = getIt<IFirebaseAuthService>();
+          if (authService.isBypassed) return null; // Allow testing admin in guest mode
           final user = authService.currentUser;
           if (user == null) return '/login';
           final userService = getIt<IFirebaseUserService>();

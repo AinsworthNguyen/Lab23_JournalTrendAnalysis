@@ -40,12 +40,15 @@ class PersonalizationLocalDataSourceImpl implements PersonalizationLocalDataSour
         conceptId = newId;
       }
 
+      final role = _sharedPreferences.getString('KEY_USER_ROLE') ?? 'admin';
+
       return UserPreferencesModel(
         fullName: name,
         email: email,
         photoUrl: photoUrl,
         interestConceptId: conceptId,
         interestConceptName: conceptName,
+        role: role,
       );
     } else {
       throw CacheException('No user preferences found.');

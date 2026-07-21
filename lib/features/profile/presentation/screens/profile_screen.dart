@@ -521,8 +521,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        // Admin Section (only visible for admin users)
-                        if (_prefs?.isAdmin ?? false) ...[
+                        // Admin Section (visible for admin users & guest/dev mode)
+                        if (_prefs == null || (_prefs?.isAdmin ?? true)) ...[
                           _buildSectionHeader(theme, 'Admin Panel'),
                           const SizedBox(height: 8.0),
                           Card(
