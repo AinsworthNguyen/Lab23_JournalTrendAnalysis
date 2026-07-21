@@ -9,6 +9,7 @@ import '../../../../core/usecases/usecase.dart';
 
 class JournalsState {
   final List<Journal> journals;
+  final List<Journal> searchResults;
   final List<Journal> filteredJournals;
   final bool isLoading;
   final bool isSearching;
@@ -18,6 +19,7 @@ class JournalsState {
 
   const JournalsState({
     required this.journals,
+    this.searchResults = const [],
     required this.filteredJournals,
     required this.isLoading,
     this.isSearching = false,
@@ -29,6 +31,7 @@ class JournalsState {
   factory JournalsState.initial() {
     return const JournalsState(
       journals: [],
+      searchResults: [],
       filteredJournals: [],
       isLoading: false,
       isSearching: false,
@@ -39,6 +42,7 @@ class JournalsState {
 
   JournalsState copyWith({
     List<Journal>? journals,
+    List<Journal>? searchResults,
     List<Journal>? filteredJournals,
     bool? isLoading,
     bool? isSearching,
@@ -48,6 +52,7 @@ class JournalsState {
   }) {
     return JournalsState(
       journals: journals ?? this.journals,
+      searchResults: searchResults ?? this.searchResults,
       filteredJournals: filteredJournals ?? this.filteredJournals,
       isLoading: isLoading ?? this.isLoading,
       isSearching: isSearching ?? this.isSearching,
@@ -86,9 +91,11 @@ class JournalsCubit extends Cubit<JournalsState> {
         result.fold(
           (failure) => emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
           (journalsList) {
+            final baseList = state.searchResults.isNotEmpty ? state.searchResults : journalsList;
+            final isSearch = state.searchResults.isNotEmpty;
             emit(state.copyWith(
               journals: journalsList,
-              filteredJournals: _applyFilters(journalsList, state.selectedTypeFilter, state.searchQuery),
+              filteredJournals: _applyFilters(baseList, state.selectedTypeFilter, state.searchQuery, isSearchResult: isSearch),
               isLoading: false,
             ));
           },
@@ -98,50 +105,57 @@ class JournalsCubit extends Cubit<JournalsState> {
   }
 
   void setTypeFilter(String filter) {
+    final baseList = state.searchResults.isNotEmpty ? state.searchResults : state.journals;
+    final isSearch = state.searchResults.isNotEmpty;
+
     emit(state.copyWith(
       selectedTypeFilter: filter,
-      filteredJournals: _applyFilters(state.journals, filter, state.searchQuery),
+      filteredJournals: _applyFilters(baseList, filter, state.searchQuery, isSearchResult: isSearch),
     ));
-    if (state.searchQuery.trim().isNotEmpty) {
-      searchSources(state.searchQuery);
-    }
   }
 
   void searchSources(String query, {Duration debounceDuration = const Duration(milliseconds: 600)}) {
     _debounceTimer?.cancel();
     
+    if (query.trim().isEmpty) {
+      emit(state.copyWith(
+        searchQuery: '',
+        searchResults: const [],
+        filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, '', isSearchResult: false),
+        isSearching: false,
+      ));
+      return;
+    }
+
     // Instantly filter local journals so user sees immediate results while typing
-    final localFiltered = _applyFilters(state.journals, state.selectedTypeFilter, query, isSearchResult: false);
+    final baseList = state.searchResults.isNotEmpty ? state.searchResults : state.journals;
+    final localFiltered = _applyFilters(baseList, state.selectedTypeFilter, query, isSearchResult: state.searchResults.isNotEmpty);
     emit(state.copyWith(
       searchQuery: query,
       filteredJournals: localFiltered,
       isSearching: false,
     ));
 
-    if (query.trim().isEmpty) {
-      return;
-    }
-
     _debounceTimer = Timer(debounceDuration, () async {
       emit(state.copyWith(isSearching: true));
-      final typeParam = state.selectedTypeFilter == 'all' ? null : state.selectedTypeFilter;
-      final result = await _journalRepository.searchSources(query, type: typeParam);
+      final result = await _journalRepository.searchSources(query, type: null);
       result.fold(
         (failure) {
           emit(state.copyWith(
             isSearching: false,
-            filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, query, isSearchResult: false),
           ));
         },
         (searchResult) {
           if (searchResult.isNotEmpty) {
             emit(state.copyWith(
               isSearching: false,
+              searchResults: searchResult,
               filteredJournals: _applyFilters(searchResult, state.selectedTypeFilter, query, isSearchResult: true),
             ));
           } else {
             emit(state.copyWith(
               isSearching: false,
+              searchResults: const [],
               filteredJournals: _applyFilters(state.journals, state.selectedTypeFilter, query, isSearchResult: false),
             ));
           }
