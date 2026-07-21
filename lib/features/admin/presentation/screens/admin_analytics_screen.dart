@@ -101,7 +101,26 @@ class _AdminAnalyticsView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text('System Analytics', style: Theme.of(context).textTheme.displaySmall),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('System Analytics', style: Theme.of(context).textTheme.displaySmall),
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded, color: _adminAccent),
+              tooltip: 'Refresh analytics',
+              onPressed: () {
+                context.read<AdminAnalyticsCubit>().loadSummary();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Refreshing analytics...'),
+                    duration: Duration(milliseconds: 800),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
         const SizedBox(height: 4),
         Text(
           'Aggregated metrics from Firebase',

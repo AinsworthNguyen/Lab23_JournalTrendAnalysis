@@ -125,21 +125,42 @@ class _AdminDashboardView extends StatelessWidget {
                   } else if (state is AdminAnalyticsError) {
                     statusText = 'Offline';
                   }
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _adminAccent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: _adminAccent.withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      statusText,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: _adminAccent,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        tooltip: 'Refresh metrics',
+                        icon: const Icon(Icons.refresh_rounded, color: _adminAccent, size: 18),
+                        onPressed: () {
+                          context.read<AdminAnalyticsCubit>().loadSummary();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Refreshing metrics...'),
+                              duration: Duration(milliseconds: 800),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
                       ),
-                    ),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _adminAccent.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: _adminAccent.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          statusText,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: _adminAccent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),

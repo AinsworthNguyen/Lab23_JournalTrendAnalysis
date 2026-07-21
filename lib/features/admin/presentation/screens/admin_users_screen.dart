@@ -47,26 +47,45 @@ class _AdminUsersView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('User Management', style: Theme.of(context).textTheme.displaySmall),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  await context.read<AdminUsersCubit>().seedData();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Sample data seeded successfully to Firebase!'),
-                        backgroundColor: Color(0xFF10B981),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.cloud_upload_outlined, size: 16, color: _adminAccent),
-                label: const Text('Seed DB', style: TextStyle(color: _adminAccent, fontSize: 13, fontWeight: FontWeight.w600)),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: _adminAccent.withValues(alpha: 0.5)),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded, color: _adminAccent),
+                    tooltip: 'Refresh user list',
+                    onPressed: () {
+                      context.read<AdminUsersCubit>().startWatching();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Refreshing user list...'),
+                          duration: Duration(milliseconds: 800),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await context.read<AdminUsersCubit>().seedData();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Sample data seeded successfully to Firebase!'),
+                            backgroundColor: Color(0xFF10B981),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.cloud_upload_outlined, size: 16, color: _adminAccent),
+                    label: const Text('Seed DB', style: TextStyle(color: _adminAccent, fontSize: 13, fontWeight: FontWeight.w600)),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: _adminAccent.withValues(alpha: 0.5)),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
