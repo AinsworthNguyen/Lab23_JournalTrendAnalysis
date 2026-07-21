@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:hive/hive.dart';
 import '../../../../injection_container.dart';
 import '../blocs/journals_cubit.dart';
 import '../../../../core/widgets/horizontal_bar_chart.dart';
@@ -29,6 +30,40 @@ class JournalScreenContent extends StatefulWidget {
 
 class _JournalScreenContentState extends State<JournalScreenContent> {
   late final TextEditingController _searchController;
+
+  List<String> _getRecentSearches() {
+    try {
+      final box = Hive.box('search_history');
+      final list = box.get('journal_history') as List<dynamic>?;
+      return list?.cast<String>() ?? [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  void _saveSearch(String query) {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    try {
+      final box = Hive.box('search_history');
+      final current = _getRecentSearches();
+      current.remove(q);
+      current.insert(0, q);
+      if (current.length > 5) {
+        current.removeLast();
+      }
+      box.put('journal_history', current);
+      setState(() {});
+    } catch (_) {}
+  }
+
+  void _clearHistory() {
+    try {
+      final box = Hive.box('search_history');
+      box.delete('journal_history');
+      setState(() {});
+    } catch (_) {}
+  }
 
   @override
   void initState() {
@@ -136,6 +171,9 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                         setState(() {});
                         context.read<JournalsCubit>().searchSources(q);
                       },
+                      onSubmitted: (q) {
+                        _saveSearch(q);
+                      },
                       style: theme.textTheme.bodyMedium,
                       decoration: InputDecoration(
                         hintText: 'Search (IEEE, ACM, Nature, CVPR, NeurIPS...)',
@@ -169,6 +207,72 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                           borderSide: BorderSide.none,
                         ),
                       ),
+                    ),
+                    
+                    // Recent Searches (History)
+                    Builder(
+                      builder: (context) {
+                        final history = _getRecentSearches();
+                        if (history.isEmpty || _searchController.text.isNotEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.history, size: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Recent Searches',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  GestureDetector(
+                                    onTap: _clearHistory,
+                                    child: Text(
+                                      'Clear All',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: history.map((q) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8.0),
+                                      child: ActionChip(
+                                        visualDensity: VisualDensity.compact,
+                                        label: Text(q, style: const TextStyle(fontSize: 11)),
+                                        onPressed: () {
+                                          _searchController.text = q;
+                                          setState(() {});
+                                          context.read<JournalsCubit>().searchSources(q);
+                                        },
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                     
                     // Auto-completion search suggestions helper
@@ -216,6 +320,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                                     ),
                                     onPressed: () {
                                       _searchController.text = item['acronym']!;
+                                      _saveSearch(item['acronym']!);
                                       setState(() {});
                                       context.read<JournalsCubit>().searchSources(item['acronym']!);
                                     },

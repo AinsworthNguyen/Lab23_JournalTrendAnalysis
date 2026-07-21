@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import '../../../../injection_container.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/firebase/firebase_analytics_service.dart';
@@ -32,6 +33,40 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
 
   late final TextEditingController _paperSearchController;
   Timer? _paperDebounceTimer;
+
+  List<String> _getRecentPaperSearches() {
+    try {
+      final box = Hive.box('search_history');
+      final list = box.get('paper_history_${widget.journalId}') as List<dynamic>?;
+      return list?.cast<String>() ?? [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  void _savePaperSearch(String query) {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    try {
+      final box = Hive.box('search_history');
+      final current = _getRecentPaperSearches();
+      current.remove(q);
+      current.insert(0, q);
+      if (current.length > 5) {
+        current.removeLast();
+      }
+      box.put('paper_history_${widget.journalId}', current);
+      setState(() {});
+    } catch (_) {}
+  }
+
+  void _clearPaperHistory() {
+    try {
+      final box = Hive.box('search_history');
+      box.delete('paper_history_${widget.journalId}');
+      setState(() {});
+    } catch (_) {}
+  }
 
   @override
   void initState() {
@@ -118,6 +153,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
       });
 
       try {
+        _savePaperSearch(q);
         final response = await getIt<ApiClient>().get('/works', queryParameters: {
           'filter': 'primary_location.source.id:${widget.journalId},publication_year:<2026',
           'search': q,
@@ -424,6 +460,9 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                 setState(() {});
                 _searchPapersInJournal(q);
               },
+              onSubmitted: (q) {
+                _savePaperSearch(q);
+              },
               style: theme.textTheme.bodyMedium,
               decoration: InputDecoration(
                 hintText: 'Search papers in ${journal.displayName}...',
@@ -457,6 +496,72 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                   borderSide: BorderSide.none,
                 ),
               ),
+            ),
+
+            // Recent Searches for Papers (History)
+            Builder(
+              builder: (context) {
+                final history = _getRecentPaperSearches();
+                if (history.isEmpty || _paperSearchController.text.isNotEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.history, size: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Recent Searches',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                          GestureDetector(
+                            onTap: _clearPaperHistory,
+                            child: Text(
+                              'Clear All',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: history.map((q) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ActionChip(
+                                visualDensity: VisualDensity.compact,
+                                label: Text(q, style: const TextStyle(fontSize: 11)),
+                                onPressed: () {
+                                  _paperSearchController.text = q;
+                                  setState(() {});
+                                  _searchPapersInJournal(q);
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
 
             // Auto-Completion Topic Chips for Paper Search
