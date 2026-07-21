@@ -430,70 +430,157 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
             // Tab content switches here
             if (_activeTabIndex == 0) ...[
               // Statistics Grid (Works & Citations)
-              Row(
-                children: [
-                  Expanded(
-                    child: Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14.0),
-                        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.article_outlined, color: theme.colorScheme.primary, size: 24.0),
-                            const SizedBox(height: 12.0),
-                            Text(
-                              NumberFormat.compact().format(journal.worksCount),
-                              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4.0),
-                            Text(
-                              'Total Works',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              Builder(
+                builder: (context) {
+                  final currentYear = DateTime.now().year;
+                  final targetYear = _initialPapers.any((p) => p.publicationYear == currentYear)
+                      ? currentYear
+                      : (_initialPapers.any((p) => p.publicationYear == currentYear - 1)
+                          ? currentYear - 1
+                          : 2025);
+
+                  final worksThisYear = _initialPapers.where((p) => p.publicationYear == targetYear).length;
+                  final citationsThisYear = _initialPapers
+                      .where((p) => p.publicationYear == targetYear)
+                      .fold<int>(0, (sum, p) => sum + p.citationCount);
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Card(
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14.0),
+                                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.article_outlined, color: theme.colorScheme.primary, size: 24.0),
+                                    const SizedBox(height: 12.0),
+                                    Text(
+                                      NumberFormat.compact().format(journal.worksCount),
+                                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 4.0),
+                                    Text(
+                                      'Total Works',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12.0),
-                  Expanded(
-                    child: Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14.0),
-                        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.format_quote, color: Colors.green, size: 24.0),
-                            const SizedBox(height: 12.0),
-                            Text(
-                              NumberFormat.compact().format(journal.citedByCount),
-                              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4.0),
-                            Text(
-                              'Total Citations',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(width: 12.0),
+                          Expanded(
+                            child: Card(
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14.0),
+                                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.format_quote, color: Colors.green, size: 24.0),
+                                    const SizedBox(height: 12.0),
+                                    Text(
+                                      NumberFormat.compact().format(journal.citedByCount),
+                                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 4.0),
+                                    Text(
+                                      'Total Citations',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ],
+                      const SizedBox(height: 12.0),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Card(
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14.0),
+                                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.auto_awesome, color: Colors.orange, size: 24.0),
+                                    const SizedBox(height: 12.0),
+                                    Text(
+                                      worksThisYear.toString(),
+                                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 4.0),
+                                    Text(
+                                      'Works ($targetYear)',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12.0),
+                          Expanded(
+                            child: Card(
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14.0),
+                                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.trending_up, color: Colors.blue, size: 24.0),
+                                    const SizedBox(height: 12.0),
+                                    Text(
+                                      citationsThisYear.toString(),
+                                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 4.0),
+                                    Text(
+                                      'Citations ($targetYear)',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
               ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0),
               const SizedBox(height: 20.0),
 
