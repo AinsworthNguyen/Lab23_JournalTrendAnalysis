@@ -93,6 +93,7 @@ abstract class IFirebaseUserService {
   Future<void> setUserRole(String uid, String role);
   Future<AppAnalyticsSummary> getAnalyticsSummary();
   Future<int> getTotalUserCount();
+  Future<void> seedSampleData();
 }
 
 // ─── Service Implementation ───────────────────────────────────────────────────
@@ -174,5 +175,107 @@ class FirebaseUserService implements IFirebaseUserService {
       debugPrint('[FirebaseUserService] getTotalUserCount error: $e');
       return 0;
     }
+  }
+
+  @override
+  Future<void> seedSampleData() async {
+    final batch = _firestore.batch();
+
+    final users = [
+      {
+        'id': 'sample_admin_1',
+        'fullName': 'System Admin (You)',
+        'email': 'admin@journaltrend.com',
+        'photoUrl': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        'role': 'admin',
+        'isBlocked': false,
+        'viewCount': 145,
+        'pdfExportCount': 12,
+      },
+      {
+        'id': 'sample_user_1',
+        'fullName': 'Dr. Alan Turing',
+        'email': 'alan.turing@cambridge.edu',
+        'photoUrl': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+        'role': 'user',
+        'isBlocked': false,
+        'viewCount': 89,
+        'pdfExportCount': 7,
+      },
+      {
+        'id': 'sample_user_2',
+        'fullName': 'Prof. Geoffrey Hinton',
+        'email': 'hinton@toronto.edu',
+        'photoUrl': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+        'role': 'user',
+        'isBlocked': false,
+        'viewCount': 210,
+        'pdfExportCount': 25,
+      },
+      {
+        'id': 'sample_user_3',
+        'fullName': 'Dr. Fei-Fei Li',
+        'email': 'feifeili@stanford.edu',
+        'photoUrl': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+        'role': 'user',
+        'isBlocked': false,
+        'viewCount': 312,
+        'pdfExportCount': 40,
+      },
+      {
+        'id': 'sample_user_4',
+        'fullName': 'Spam Bot 9000',
+        'email': 'spambot@malicious.com',
+        'photoUrl': '',
+        'role': 'user',
+        'isBlocked': true,
+        'viewCount': 2,
+        'pdfExportCount': 0,
+      },
+      {
+        'id': 'sample_user_5',
+        'fullName': 'Abusive Account',
+        'email': 'badactor@tempmail.com',
+        'photoUrl': '',
+        'role': 'user',
+        'isBlocked': true,
+        'viewCount': 5,
+        'pdfExportCount': 0,
+      },
+    ];
+
+    for (final u in users) {
+      final ref = _firestore.collection('users').doc(u['id'] as String);
+      batch.set(ref, {
+        'fullName': u['fullName'],
+        'email': u['email'],
+        'photoUrl': u['photoUrl'],
+        'role': u['role'],
+        'isBlocked': u['isBlocked'],
+        'viewCount': u['viewCount'],
+        'pdfExportCount': u['pdfExportCount'],
+        'createdAt': FieldValue.serverTimestamp(),
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    final analyticsRef = _firestore.collection('app_analytics').doc('summary');
+    batch.set(analyticsRef, {
+      'totalUsers': 6,
+      'activeUsersThisWeek': 4,
+      'totalPdfExports': 84,
+      'totalViews': 763,
+      'lastUpdated': FieldValue.serverTimestamp(),
+      'topPublications': [
+        {'title': 'Attention Is All You Need', 'viewCount': 352},
+        {'title': 'Deep Residual Learning for Image Recognition', 'viewCount': 284},
+        {'title': 'Generative Adversarial Nets', 'viewCount': 198},
+        {'title': 'Mastering the Game of Go with Deep Neural Networks', 'viewCount': 145},
+        {'title': 'BERT: Pre-training of Deep Bidirectional Transformers', 'viewCount': 120},
+      ],
+    });
+
+    await batch.commit();
+    debugPrint('[FirebaseUserService] Seeded sample data successfully.');
   }
 }

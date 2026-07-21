@@ -98,6 +98,10 @@ class AdminUsersCubit extends Cubit<AdminUsersState> {
     await _userService.unblockUser(uid);
   }
 
+  Future<void> seedData() async {
+    await _userService.seedSampleData();
+  }
+
   List<AdminUserModel> _applyFilter(
     List<AdminUserModel> users,
     String query,

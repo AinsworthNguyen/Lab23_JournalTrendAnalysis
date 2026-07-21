@@ -43,7 +43,33 @@ class _AdminUsersView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('User Management', style: Theme.of(context).textTheme.displaySmall),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('User Management', style: Theme.of(context).textTheme.displaySmall),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await context.read<AdminUsersCubit>().seedData();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Sample data seeded successfully to Firebase!'),
+                        backgroundColor: Color(0xFF10B981),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.cloud_upload_outlined, size: 16, color: _adminAccent),
+                label: const Text('Seed DB', style: TextStyle(color: _adminAccent, fontSize: 13, fontWeight: FontWeight.w600)),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: _adminAccent.withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           BlocBuilder<AdminUsersCubit, AdminUsersState>(
             builder: (context, state) {
@@ -211,6 +237,28 @@ class _AdminUsersView extends StatelessWidget {
                 Text('No users found', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Text('Try changing keywords or filters', style: Theme.of(context).textTheme.bodyMedium),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await context.read<AdminUsersCubit>().seedData();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Sample data seeded successfully to Firebase!'),
+                          backgroundColor: Color(0xFF10B981),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.cloud_upload_outlined, size: 18),
+                  label: const Text('Seed Sample Users & Analytics'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _adminAccent,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
               ],
             ),
           );
