@@ -521,7 +521,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24.0),
+                        // Admin Section (only visible for admin users)
+                        if (_prefs?.isAdmin ?? false) ...[
+                          _buildSectionHeader(theme, 'Admin Panel'),
+                          const SizedBox(height: 8.0),
+                          Card(
+                            elevation: 0,
+                            color: const Color(0xFF1C1A0E),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              side: const BorderSide(color: Color(0xFF44380B)),
+                            ),
+                            child: ListTile(
+                              leading: const Icon(Icons.admin_panel_settings, color: Color(0xFFF59E0B)),
+                              title: const Text(
+                                'Admin Dashboard',
+                                style: TextStyle(color: Color(0xFFF59E0B), fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: const Text(
+                                'Quản lý người dùng, thống kê hệ thống & Remote Config',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFFF59E0B)),
+                              onTap: () => context.go('/admin/dashboard'),
+                            ),
+                          ),
+                          const SizedBox(height: 24.0),
+                        ],
 
                         // Settings Section Header
                         _buildSectionHeader(theme, 'profile.settings'.tr()),

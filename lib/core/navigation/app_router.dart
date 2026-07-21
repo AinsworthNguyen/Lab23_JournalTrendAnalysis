@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../injection_container.dart';
 import '../../core/firebase/firebase_auth_service.dart';
+import '../../core/firebase/firebase_user_service.dart';
 import '../../features/personalization/presentation/screens/login_screen.dart';
 import '../../features/personalization/presentation/screens/setup_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -13,6 +14,11 @@ import '../../features/keywords/presentation/screens/keywords_screen.dart';
 import '../../features/keywords/presentation/screens/keyword_detail_screen.dart';
 import '../../features/author/presentation/screens/author_detail_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/admin/presentation/screens/admin_shell.dart';
+import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/admin/presentation/screens/admin_users_screen.dart';
+import '../../features/admin/presentation/screens/admin_analytics_screen.dart';
+import '../../features/admin/presentation/screens/admin_config_screen.dart';
 import '../constants/prefs_keys.dart';
 import '../utils/app_logger.dart';
 
@@ -147,6 +153,47 @@ final GoRouter appRouter = GoRouter(
               builder: (context, state) => const ProfileScreen(),
             ),
           ],
+        ),
+      ],
+    ),
+
+    // ── Admin Section ─────────────────────────────────────────────────────
+    GoRoute(
+      path: '/admin',
+      redirect: (context, state) async {
+        try {
+          final authService = getIt<IFirebaseAuthService>();
+          final user = authService.currentUser;
+          if (user == null) return '/login';
+          final userService = getIt<IFirebaseUserService>();
+          final isAdmin = await userService.isAdmin(user.uid);
+          if (!isAdmin) {
+            AppLogger.w('Non-admin tried to access /admin — redirecting to /home');
+            return '/home';
+          }
+        } catch (e) {
+          AppLogger.e('Admin route guard error', e);
+          return '/home';
+        }
+        return null;
+      },
+      builder: (context, state) => const AdminShell(child: AdminDashboardScreen()),
+      routes: [
+        GoRoute(
+          path: 'dashboard',
+          builder: (_, __) => const AdminShell(child: AdminDashboardScreen()),
+        ),
+        GoRoute(
+          path: 'users',
+          builder: (_, __) => const AdminShell(child: AdminUsersScreen()),
+        ),
+        GoRoute(
+          path: 'analytics',
+          builder: (_, __) => const AdminShell(child: AdminAnalyticsScreen()),
+        ),
+        GoRoute(
+          path: 'config',
+          builder: (_, __) => const AdminShell(child: AdminConfigScreen()),
         ),
       ],
     ),

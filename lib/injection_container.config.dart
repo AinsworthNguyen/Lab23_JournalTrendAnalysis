@@ -20,9 +20,12 @@ import 'core/firebase/firebase_crashlytics_service.dart' as _i203;
 import 'core/firebase/firebase_messaging_service.dart' as _i278;
 import 'core/firebase/firebase_remote_config_service.dart' as _i790;
 import 'core/firebase/firebase_storage_service.dart' as _i173;
+import 'core/firebase/firebase_user_service.dart' as _i999;
 import 'core/network/api_client.dart' as _i871;
 import 'core/network/network_info.dart' as _i75;
 import 'core/utils/pdf_report_service.dart' as _i732;
+import 'features/admin/presentation/blocs/admin_analytics_cubit.dart' as _i997_admin;
+import 'features/admin/presentation/blocs/admin_users_cubit.dart' as _i998;
 import 'features/home/data/datasources/search_local_data_source.dart' as _i987;
 import 'features/home/data/repositories/search_repository_impl.dart' as _i1043;
 import 'features/home/data/repositories/sync_repository_impl.dart' as _i899;
@@ -152,6 +155,12 @@ extension GetItInjectableX on _i174.GetIt {
             gh<_i979.Box<dynamic>>(instanceName: 'searchBox')));
     gh.lazySingleton<_i790.IFirebaseRemoteConfigService>(
         () => _i790.FirebaseRemoteConfigService());
+    gh.lazySingleton<_i999.IFirebaseUserService>(
+        () => _i999.FirebaseUserService());
+    gh.factory<_i998.AdminUsersCubit>(
+        () => _i998.AdminUsersCubit(gh<_i999.IFirebaseUserService>()));
+    gh.factory<_i997_admin.AdminAnalyticsCubit>(
+        () => _i997_admin.AdminAnalyticsCubit(gh<_i999.IFirebaseUserService>()));
     gh.lazySingleton<_i515.SearchTopicsUseCase>(
         () => _i515.SearchTopicsUseCase(gh<_i871.ApiClient>()));
     gh.lazySingleton<_i979.Box<dynamic>>(
