@@ -226,7 +226,7 @@ class _AdminAnalyticsView extends StatelessWidget {
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
             getTooltipColor: (_) => AppColors.surface,
-            getTooltipItem: (group, _, rod, __) => BarTooltipItem(
+            getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
               _formatCount(rod.toY.toInt()),
               const TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.w600),
             ),
@@ -279,7 +279,7 @@ class _AdminAnalyticsView extends StatelessWidget {
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
             getTooltipColor: (_) => AppColors.surface,
-            getTooltipItem: (group, _, rod, __) => BarTooltipItem(
+            getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
               _formatCount(rod.toY.toInt()),
               const TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.w600),
             ),

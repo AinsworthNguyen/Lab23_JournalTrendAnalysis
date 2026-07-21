@@ -181,19 +181,19 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: 'dashboard',
-          builder: (_, __) => const AdminShell(child: AdminDashboardScreen()),
+          builder: (context, state) => const AdminShell(child: AdminDashboardScreen()),
         ),
         GoRoute(
           path: 'users',
-          builder: (_, __) => const AdminShell(child: AdminUsersScreen()),
+          builder: (context, state) => const AdminShell(child: AdminUsersScreen()),
         ),
         GoRoute(
           path: 'analytics',
-          builder: (_, __) => const AdminShell(child: AdminAnalyticsScreen()),
+          builder: (context, state) => const AdminShell(child: AdminAnalyticsScreen()),
         ),
         GoRoute(
           path: 'config',
-          builder: (_, __) => const AdminShell(child: AdminConfigScreen()),
+          builder: (context, state) => const AdminShell(child: AdminConfigScreen()),
         ),
       ],
     ),
