@@ -360,10 +360,10 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: _activeTabIndex == 0 ? theme.colorScheme.primaryContainer : Colors.transparent,
+                          color: _activeTabIndex == 0 ? theme.colorScheme.primary : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _activeTabIndex == 0
-                              ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))]
+                              ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -372,15 +372,15 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                             Icon(
                               Icons.analytics_outlined,
                               size: 18,
-                              color: _activeTabIndex == 0 ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: _activeTabIndex == 0 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 8),
                             Text(
                               'Analytics',
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: _activeTabIndex == 0 ? FontWeight.bold : FontWeight.normal,
-                                color: _activeTabIndex == 0 ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                fontWeight: _activeTabIndex == 0 ? FontWeight.bold : FontWeight.w500,
+                                color: _activeTabIndex == 0 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -394,10 +394,10 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: _activeTabIndex == 1 ? theme.colorScheme.primaryContainer : Colors.transparent,
+                          color: _activeTabIndex == 1 ? theme.colorScheme.primary : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _activeTabIndex == 1
-                              ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))]
+                              ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -406,15 +406,15 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                             Icon(
                               Icons.library_books_outlined,
                               size: 18,
-                              color: _activeTabIndex == 1 ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: _activeTabIndex == 1 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 8),
                             Text(
                               'Publications',
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: _activeTabIndex == 1 ? FontWeight.bold : FontWeight.normal,
-                                color: _activeTabIndex == 1 ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                fontWeight: _activeTabIndex == 1 ? FontWeight.bold : FontWeight.w500,
+                                color: _activeTabIndex == 1 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -429,20 +429,17 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
 
             // Tab content switches here
             if (_activeTabIndex == 0) ...[
-              // Statistics Grid (Works & Citations)
+              // Statistics Grid (Works, Citations, Impact, OA Rate)
               Builder(
                 builder: (context) {
-                  final currentYear = DateTime.now().year;
-                  final targetYear = _initialPapers.any((p) => p.publicationYear == currentYear)
-                      ? currentYear
-                      : (_initialPapers.any((p) => p.publicationYear == currentYear - 1)
-                          ? currentYear - 1
-                          : 2025);
-
-                  final worksThisYear = _initialPapers.where((p) => p.publicationYear == targetYear).length;
-                  final citationsThisYear = _initialPapers
-                      .where((p) => p.publicationYear == targetYear)
-                      .fold<int>(0, (sum, p) => sum + p.citationCount);
+                  final avgCitations = journal.worksCount > 0
+                      ? (journal.citedByCount / journal.worksCount).toStringAsFixed(1)
+                      : '0.0';
+                  
+                  final oaCount = _initialPapers.where((p) => p.isOpenAccess).length;
+                  final oaRatio = _initialPapers.isNotEmpty
+                      ? ((oaCount / _initialPapers.length) * 100).toStringAsFixed(0)
+                      : '0';
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -492,7 +489,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.format_quote, color: Colors.green, size: 24.0),
+                                    const Icon(Icons.format_quote, color: Colors.green, size: 24.0),
                                     const SizedBox(height: 12.0),
                                     Text(
                                       NumberFormat.compact().format(journal.citedByCount),
@@ -527,15 +524,15 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.auto_awesome, color: Colors.orange, size: 24.0),
+                                    const Icon(Icons.show_chart_rounded, color: Colors.orange, size: 24.0),
                                     const SizedBox(height: 12.0),
                                     Text(
-                                      worksThisYear.toString(),
+                                      avgCitations,
                                       style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                                     ),
                                     const SizedBox(height: 4.0),
                                     Text(
-                                      'Works ($targetYear)',
+                                      'Avg Citations / Paper',
                                       style: theme.textTheme.bodySmall?.copyWith(
                                         color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                       ),
@@ -558,15 +555,15 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.trending_up, color: Colors.blue, size: 24.0),
+                                    const Icon(Icons.lock_open_rounded, color: Colors.cyan, size: 24.0),
                                     const SizedBox(height: 12.0),
                                     Text(
-                                      citationsThisYear.toString(),
+                                      '$oaRatio%',
                                       style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                                     ),
                                     const SizedBox(height: 4.0),
                                     Text(
-                                      'Citations ($targetYear)',
+                                      'Open Access Ratio',
                                       style: theme.textTheme.bodySmall?.copyWith(
                                         color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                       ),
