@@ -6,9 +6,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart';
 import '../blocs/admin_analytics_cubit.dart';
 
-const Color _adminAccent = Color(0xFFFB923C); // Soft Orange (Cam nhạt)
-const Color _adminSurface = Color(0xFF24180B);
-const Color _adminBorder = Color(0xFF5C330A);
+const Color _adminAccent = Color(0xFF38BDF8); // Electric Cyan (Xanh Cyan hiện đại)
+const Color _adminSurface = Color(0xFF0F172A);
+const Color _adminBorder = Color(0xFF1E293B);
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -69,7 +69,7 @@ class _AdminDashboardView extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _adminAccent.withValues(alpha: 0.35),
+          color: _adminAccent.withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: [
@@ -173,7 +173,7 @@ class _AdminDashboardView extends StatelessWidget {
                     Text(
                       'Admin Control Center',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: const Color(0xFFFED7AA),
+                        color: AppColors.textMain,
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                         letterSpacing: -0.3,

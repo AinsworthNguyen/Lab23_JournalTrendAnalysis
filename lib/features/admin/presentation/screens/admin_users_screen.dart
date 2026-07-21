@@ -4,7 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart';
 import '../blocs/admin_users_cubit.dart';
 
-const Color _adminAccent = Color(0xFFFB923C); // Soft Orange (Cam nhạt)
+const Color _adminAccent = Color(0xFF38BDF8); // Electric Cyan (Xanh Cyan hiện đại)
 
 class AdminUsersScreen extends StatelessWidget {
   const AdminUsersScreen({super.key});
