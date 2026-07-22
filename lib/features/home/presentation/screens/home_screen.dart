@@ -42,6 +42,8 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   bool _isSearching = false;
   String? _currentConceptId;
   int _visiblePapersCount = 5;
+  bool _shouldScrollToRecent = false;
+  final GlobalKey _recentPapersKey = GlobalKey();
 
   @override
   void initState() {
@@ -56,9 +58,19 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   }
 
   void _onFocusChanged() {
-    setState(() {
-      _isSearching = _searchFocusNode.hasFocus;
-    });
+    if (!_searchFocusNode.hasFocus) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted && !_searchFocusNode.hasFocus) {
+          setState(() {
+            _isSearching = false;
+          });
+        }
+      });
+    } else {
+      setState(() {
+        _isSearching = true;
+      });
+    }
   }
 
   @override
@@ -84,6 +96,18 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
               _currentConceptId = state.conceptId;
               setState(() {
                 _visiblePapersCount = 5;
+              });
+            }
+            if (_shouldScrollToRecent) {
+              _shouldScrollToRecent = false;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (_recentPapersKey.currentContext != null) {
+                  Scrollable.ensureVisible(
+                    _recentPapersKey.currentContext!,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                }
               });
             }
           }
@@ -287,6 +311,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                             const SizedBox(height: 24.0),
                             // Recent Interest Papers Section
                             Column(
+                              key: _recentPapersKey,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
@@ -465,6 +490,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                     onTap: () {
                                       _searchController.clear();
                                       _searchFocusNode.unfocus();
+                                      _shouldScrollToRecent = true;
                                       getIt<IFirebaseAnalyticsService>().logSearchTopic(item['name']!);
                                       context.read<DashboardBloc>().add(
                                             SelectConceptEvent(
@@ -522,6 +548,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                           title: Text(query),
                                           onTap: () {
                                             _searchController.text = query;
+                                            _searchFocusNode.requestFocus();
                                             getIt<IFirebaseAnalyticsService>().logSearchTopic(query);
                                             context.read<SearchCubit>().search(query);
                                           },
