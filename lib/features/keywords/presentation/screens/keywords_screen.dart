@@ -399,7 +399,9 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Top Topics (${_filteredTopKeywords.length})',
+                                      _searchController.text.isEmpty
+                                          ? 'Top Topics'
+                                          : 'Top Topics (${top5List.length})',
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: _activeTabIndex == 0 ? FontWeight.bold : FontWeight.w500,
@@ -433,7 +435,9 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Emerging (${_filteredEmergingKeywords.length})',
+                                      _searchController.text.isEmpty
+                                          ? 'Emerging Topics'
+                                          : 'Emerging (${emerging5List.length})',
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: _activeTabIndex == 1 ? FontWeight.bold : FontWeight.w500,
