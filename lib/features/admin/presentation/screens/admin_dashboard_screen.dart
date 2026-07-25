@@ -27,6 +27,9 @@ class _AdminDashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width >= 850;
+
     return SafeArea(
       child: RefreshIndicator(
         color: _adminAccent,
@@ -34,15 +37,32 @@ class _AdminDashboardView extends StatelessWidget {
           context.read<AdminAnalyticsCubit>().loadSummary();
         },
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           children: [
             _buildGreetingHeader(context),
             const SizedBox(height: 24),
             _buildStatsGrid(context),
             const SizedBox(height: 24),
-            _buildQuickActions(context),
-            const SizedBox(height: 24),
-            _buildRecentInfo(context),
+            if (isDesktop)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _buildQuickActions(context),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    flex: 2,
+                    child: _buildRecentInfo(context),
+                  ),
+                ],
+              )
+            else ...[
+              _buildQuickActions(context),
+              const SizedBox(height: 24),
+              _buildRecentInfo(context),
+            ],
           ],
         ),
       ),
@@ -213,10 +233,13 @@ class _AdminDashboardView extends StatelessWidget {
   // ─── Stats Grid 2×2 ───────────────────────────────────────────────────────
 
   Widget _buildStatsGrid(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width >= 850;
+
     return BlocBuilder<AdminAnalyticsCubit, AdminAnalyticsState>(
       builder: (context, state) {
         if (state is AdminAnalyticsLoading) {
-          return _buildStatsGridSkeleton();
+          return _buildStatsGridSkeleton(context);
         }
         if (state is AdminAnalyticsError) {
           return _buildErrorCard(context, state.message, () {
@@ -225,12 +248,12 @@ class _AdminDashboardView extends StatelessWidget {
         }
         final summary = state is AdminAnalyticsLoaded ? state.summary : const AppAnalyticsSummary();
         return GridView.count(
-          crossAxisCount: 2,
+          crossAxisCount: isDesktop ? 4 : 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 1.1,
+          childAspectRatio: isDesktop ? 1.4 : 1.1,
           children: [
             _buildStatCard(context, icon: Icons.people, label: 'Total Users',       value: _formatCount(summary.totalUsers),          trend: null),
             _buildStatCard(context, icon: Icons.person_pin, label: 'Active This Week', value: _formatCount(summary.activeUsersThisWeek),  trend: null),
@@ -287,14 +310,17 @@ class _AdminDashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGridSkeleton() {
+  Widget _buildStatsGridSkeleton(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width >= 850;
+
     return GridView.count(
-      crossAxisCount: 2,
+      crossAxisCount: isDesktop ? 4 : 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 1.1,
+      childAspectRatio: isDesktop ? 1.4 : 1.1,
       children: List.generate(4, (_) => Container(
         decoration: BoxDecoration(
           color: _adminSurface,

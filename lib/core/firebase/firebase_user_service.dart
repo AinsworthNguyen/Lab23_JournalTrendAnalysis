@@ -107,7 +107,111 @@ class FirebaseUserService implements IFirebaseUserService {
       StreamController<List<AdminUserModel>>.broadcast();
   AppAnalyticsSummary? _localAnalytics;
 
-  FirebaseUserService() : _firestore = FirebaseFirestore.instance;
+  FirebaseUserService() : _firestore = FirebaseFirestore.instance {
+    _initializeLocalUsers();
+  }
+
+  void _initializeLocalUsers() {
+    final now = DateTime.now();
+    _localUsers.addAll([
+      AdminUserModel(
+        uid: 'sample_admin_1',
+        fullName: 'System Admin (You)',
+        email: 'admin@journaltrend.com',
+        photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        role: 'admin',
+        isBlocked: false,
+        createdAt: now,
+        lastActiveAt: now,
+        viewCount: 145,
+        pdfExportCount: 12,
+      ),
+      AdminUserModel(
+        uid: 'sample_admin_ndv6060',
+        fullName: 'Nguyen Duc Viet (Admin)',
+        email: 'ndv6060@gmail.com',
+        photoUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+        role: 'admin',
+        isBlocked: false,
+        createdAt: now,
+        lastActiveAt: now,
+        viewCount: 0,
+        pdfExportCount: 0,
+      ),
+      AdminUserModel(
+        uid: 'sample_admin_nguyenducviet22022004',
+        fullName: 'Nguyen Duc Viet 2 (Admin)',
+        email: 'nguyenducviet22022004@gmail.com',
+        photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+        role: 'admin',
+        isBlocked: false,
+        createdAt: now,
+        lastActiveAt: now,
+        viewCount: 0,
+        pdfExportCount: 0,
+      ),
+      AdminUserModel(
+        uid: 'sample_user_1',
+        fullName: 'Dr. Alan Turing',
+        email: 'alan.turing@cambridge.edu',
+        photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+        role: 'user',
+        isBlocked: false,
+        createdAt: now.subtract(const Duration(days: 1)),
+        lastActiveAt: now,
+        viewCount: 89,
+        pdfExportCount: 7,
+      ),
+      AdminUserModel(
+        uid: 'sample_user_2',
+        fullName: 'Prof. Geoffrey Hinton',
+        email: 'hinton@toronto.edu',
+        photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+        role: 'user',
+        isBlocked: false,
+        createdAt: now.subtract(const Duration(days: 2)),
+        lastActiveAt: now,
+        viewCount: 210,
+        pdfExportCount: 25,
+      ),
+      AdminUserModel(
+        uid: 'sample_user_3',
+        fullName: 'Dr. Fei-Fei Li',
+        email: 'feifeili@stanford.edu',
+        photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+        role: 'user',
+        isBlocked: false,
+        createdAt: now.subtract(const Duration(days: 3)),
+        lastActiveAt: now,
+        viewCount: 312,
+        pdfExportCount: 40,
+      ),
+      AdminUserModel(
+        uid: 'sample_user_4',
+        fullName: 'Spam Bot 9000',
+        email: 'spambot@malicious.com',
+        photoUrl: '',
+        role: 'user',
+        isBlocked: true,
+        createdAt: now.subtract(const Duration(days: 5)),
+        lastActiveAt: now,
+        viewCount: 2,
+        pdfExportCount: 0,
+      ),
+      AdminUserModel(
+        uid: 'sample_user_5',
+        fullName: 'Abusive Account',
+        email: 'badactor@tempmail.com',
+        photoUrl: '',
+        role: 'user',
+        isBlocked: true,
+        createdAt: now.subtract(const Duration(days: 7)),
+        lastActiveAt: now,
+        viewCount: 5,
+        pdfExportCount: 0,
+      ),
+    ]);
+  }
 
   @override
   Future<bool> isAdmin(String uid) async {
@@ -122,29 +226,70 @@ class FirebaseUserService implements IFirebaseUserService {
 
   @override
   Stream<List<AdminUserModel>> watchAllUsers() {
-    try {
-      return _firestore.collection('users').snapshots().map((snapshot) {
-        final firestoreList = snapshot.docs.map(AdminUserModel.fromFirestore).toList();
-        final combinedMap = <String, AdminUserModel>{};
-        for (final u in firestoreList) {
+    final controller = StreamController<List<AdminUserModel>>.broadcast();
+
+    List<AdminUserModel> getCombinedList(List<AdminUserModel> firestoreList) {
+      final combinedMap = <String, AdminUserModel>{};
+      for (final u in firestoreList) {
+        combinedMap[u.uid] = u;
+      }
+      for (final u in _localUsers) {
+        if (!combinedMap.containsKey(u.uid)) {
           combinedMap[u.uid] = u;
         }
-        for (final u in _localUsers) {
-          if (!combinedMap.containsKey(u.uid)) {
-            combinedMap[u.uid] = u;
-          }
-        }
-        final list = combinedMap.values.toList();
-        list.sort((a, b) {
-          if (a.createdAt == null) return 1;
-          if (b.createdAt == null) return -1;
-          return b.createdAt!.compareTo(a.createdAt!);
-        });
-        return list;
-      }).handleError((_) => _localUsers);
-    } catch (_) {
-      return Stream.value(_localUsers);
+      }
+      final list = combinedMap.values.toList();
+      list.sort((a, b) {
+        if (a.createdAt == null) return 1;
+        if (b.createdAt == null) return -1;
+        return b.createdAt!.compareTo(a.createdAt!);
+      });
+      return list;
     }
+
+    // Emit initial local list when a listener subscribes to prevent blank states
+    controller.onListen = () {
+      if (!controller.isClosed) {
+        controller.add(getCombinedList([]));
+      }
+    };
+
+    // Listen to local user changes
+    final localSub = _localUsersController.stream.listen((localList) {
+      if (!controller.isClosed) {
+        controller.add(getCombinedList([]));
+      }
+    });
+
+    // Listen to live Firestore snapshots
+    StreamSubscription? firestoreSub;
+    try {
+      firestoreSub = _firestore.collection('users').snapshots().listen(
+        (snapshot) {
+          final firestoreList = snapshot.docs.map(AdminUserModel.fromFirestore).toList();
+          if (!controller.isClosed) {
+            controller.add(getCombinedList(firestoreList));
+          }
+        },
+        onError: (e) {
+          debugPrint('[FirebaseUserService] watchAllUsers firestore error: $e');
+          // If firestore fails (e.g. Permission Denied), fallback to local/seed data
+          if (!controller.isClosed) {
+            controller.add(getCombinedList([]));
+          }
+        },
+      );
+    } catch (e) {
+      debugPrint('[FirebaseUserService] watchAllUsers catch error: $e');
+    }
+
+    controller.onCancel = () {
+      localSub.cancel();
+      firestoreSub?.cancel();
+      controller.close();
+    };
+
+    return controller.stream;
   }
 
   @override
@@ -269,6 +414,30 @@ class FirebaseUserService implements IFirebaseUserService {
         pdfExportCount: 12,
       ),
       AdminUserModel(
+        uid: 'sample_admin_ndv6060',
+        fullName: 'Nguyen Duc Viet (Admin)',
+        email: 'ndv6060@gmail.com',
+        photoUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+        role: 'admin',
+        isBlocked: false,
+        createdAt: now,
+        lastActiveAt: now,
+        viewCount: 0,
+        pdfExportCount: 0,
+      ),
+      AdminUserModel(
+        uid: 'sample_admin_nguyenducviet22022004',
+        fullName: 'Nguyen Duc Viet 2 (Admin)',
+        email: 'nguyenducviet22022004@gmail.com',
+        photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+        role: 'admin',
+        isBlocked: false,
+        createdAt: now,
+        lastActiveAt: now,
+        viewCount: 0,
+        pdfExportCount: 0,
+      ),
+      AdminUserModel(
         uid: 'sample_user_1',
         fullName: 'Dr. Alan Turing',
         email: 'alan.turing@cambridge.edu',
@@ -331,7 +500,7 @@ class FirebaseUserService implements IFirebaseUserService {
     ]);
 
     _localAnalytics = AppAnalyticsSummary(
-      totalUsers: 6,
+      totalUsers: 8,
       activeUsersThisWeek: 4,
       totalPdfExports: 84,
       totalViews: 763,
@@ -359,6 +528,26 @@ class FirebaseUserService implements IFirebaseUserService {
           'isBlocked': false,
           'viewCount': 145,
           'pdfExportCount': 12,
+        },
+        {
+          'id': 'sample_admin_ndv6060',
+          'fullName': 'Nguyen Duc Viet (Admin)',
+          'email': 'ndv6060@gmail.com',
+          'photoUrl': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+          'role': 'admin',
+          'isBlocked': false,
+          'viewCount': 0,
+          'pdfExportCount': 0,
+        },
+        {
+          'id': 'sample_admin_nguyenducviet22022004',
+          'fullName': 'Nguyen Duc Viet 2 (Admin)',
+          'email': 'nguyenducviet22022004@gmail.com',
+          'photoUrl': 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+          'role': 'admin',
+          'isBlocked': false,
+          'viewCount': 0,
+          'pdfExportCount': 0,
         },
         {
           'id': 'sample_user_1',
@@ -429,7 +618,7 @@ class FirebaseUserService implements IFirebaseUserService {
 
       final analyticsRef = _firestore.collection('app_analytics').doc('summary');
       batch.set(analyticsRef, {
-        'totalUsers': 6,
+        'totalUsers': 8,
         'activeUsersThisWeek': 4,
         'totalPdfExports': 84,
         'totalViews': 763,
@@ -444,7 +633,9 @@ class FirebaseUserService implements IFirebaseUserService {
       });
 
       await batch.commit();
-    } catch (_) {}
-    debugPrint('[FirebaseUserService] Seeded sample data successfully.');
+      debugPrint('[FirebaseUserService] Seeded sample data successfully.');
+    } catch (e) {
+      debugPrint('[FirebaseUserService] Seed database failed: $e');
+    }
   }
 }
