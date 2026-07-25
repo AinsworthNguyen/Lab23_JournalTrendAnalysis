@@ -214,6 +214,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
           photoUrl: prefs!.photoUrl,
           interestConceptId: event.conceptId,
           interestConceptName: event.conceptName,
+          role: prefs!.role,
+          isBlocked: prefs!.isBlocked,
         );
 
         final saveResult = await _saveUserPreferences(updatedPrefs);

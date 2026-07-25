@@ -6,21 +6,16 @@ import 'package:journal_trend_analysis/core/theme/app_colors.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  GoogleFonts.config.allowRuntimeFetching = false;
-
+  GoogleFonts.config.allowRuntimeFetching = true;
   group('AppTheme Tests', () {
-    testWidgets('darkTheme has dark brightness and custom primary color', (
-      tester,
-    ) async {
+    test('darkTheme has dark brightness and custom primary color', () {
       final darkTheme = AppTheme.darkTheme;
       expect(darkTheme.brightness, Brightness.dark);
       expect(darkTheme.scaffoldBackgroundColor, AppColors.background);
       expect(darkTheme.colorScheme.primary, AppColors.primary);
     });
 
-    testWidgets('lightTheme has light brightness and custom primary color', (
-      tester,
-    ) async {
+    test('lightTheme has light brightness and custom primary color', () {
       final lightTheme = AppTheme.lightTheme;
       expect(lightTheme.brightness, Brightness.light);
       expect(lightTheme.scaffoldBackgroundColor, AppColors.backgroundLight);

@@ -12,7 +12,7 @@ class GetJournalRankingUseCase implements UseCase<List<Journal>, String> {
   GetJournalRankingUseCase(this._repository);
 
   @override
-  Future<Either<Failure, List<Journal>>> call(String params) {
-    return _repository.getTopJournals(params);
+  Future<Either<Failure, List<Journal>>> call(String params, {String? searchQuery}) {
+    return _repository.getTopJournals(params, searchQuery: searchQuery);
   }
 }

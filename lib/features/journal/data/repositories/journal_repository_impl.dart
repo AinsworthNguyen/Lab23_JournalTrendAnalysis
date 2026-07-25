@@ -22,18 +22,16 @@ class JournalRepositoryImpl implements JournalRepository {
   );
 
   @override
-  Future<Either<Failure, List<Journal>>> getTopJournals(
-    String conceptId,
-  ) async {
+  Future<Either<Failure, List<Journal>>> getTopJournals(String conceptId, {String? searchQuery}) async {
     final hasConnection = await _networkInfo.isConnected;
 
     if (hasConnection) {
       try {
-        final remoteJournals = await _remoteDataSource.getTopJournals(
-          conceptId,
-        );
+        final remoteJournals = await _remoteDataSource.getTopJournals(conceptId, searchQuery: searchQuery);
         if (remoteJournals.isNotEmpty) {
-          await _localDataSource.cacheTopJournals(conceptId, remoteJournals);
+          if (searchQuery == null || searchQuery.isEmpty) {
+            await _localDataSource.cacheTopJournals(conceptId, remoteJournals);
+          }
           return Right(remoteJournals);
         }
       } catch (_) {}
@@ -71,11 +69,22 @@ class JournalRepositoryImpl implements JournalRepository {
         return Left(ServerFailure(e.toString()));
       }
     } else {
-      return const Left(
-        NetworkFailure(
-          'Internet connection is required to load journal details.',
-        ),
-      );
+      return Left(ServerFailure('No internet connection available.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Journal>>> searchSources(String query, {String? type}) async {
+    final hasConnection = await _networkInfo.isConnected;
+    if (hasConnection) {
+      try {
+        final results = await _remoteDataSource.searchSources(query, type: type);
+        return Right(results);
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection available'));
     }
   }
 }

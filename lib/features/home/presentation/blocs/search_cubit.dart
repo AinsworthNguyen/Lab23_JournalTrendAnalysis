@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/usecases/usecase.dart';
@@ -45,6 +46,8 @@ class SearchCubit extends Cubit<SearchState> {
   final SaveSearchQueryUseCase _saveSearchQuery;
   final ClearRecentSearchesUseCase _clearRecentSearches;
 
+  Timer? _debounceTimer;
+
   Future<void> loadSearchHistory() async {
     final result = await _getRecentSearches(const NoParams());
     result.fold(
@@ -53,18 +56,24 @@ class SearchCubit extends Cubit<SearchState> {
     );
   }
 
-  Future<void> search(final String query) async {
+  void search(
+    final String query, {
+    final Duration debounceDuration = const Duration(milliseconds: 600),
+  }) {
+    _debounceTimer?.cancel();
     if (query.trim().isEmpty) {
-      await loadSearchHistory();
+      unawaited(loadSearchHistory());
       return;
     }
 
-    emit(SearchLoading());
-    final result = await _searchTopics(query);
-    result.fold(
-      (final failure) => emit(SearchFailure(failure.message)),
-      (final results) => emit(SearchSuggestionsLoaded(results)),
-    );
+    _debounceTimer = Timer(debounceDuration, () async {
+      emit(SearchLoading());
+      final result = await _searchTopics(query);
+      result.fold(
+        (final failure) => emit(SearchFailure(failure.message)),
+        (final results) => emit(SearchSuggestionsLoaded(results)),
+      );
+    });
   }
 
   Future<void> selectQuery(final String query) async {
@@ -75,5 +84,11 @@ class SearchCubit extends Cubit<SearchState> {
   Future<void> clearHistory() async {
     await _clearRecentSearches(const NoParams());
     emit(SearchHistoryLoaded(const <String>[]));
+  }
+
+  @override
+  Future<void> close() {
+    _debounceTimer?.cancel();
+    return super.close();
   }
 }

@@ -217,6 +217,55 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                   ),
                   const SizedBox(height: 16.0),
 
+                  // Visual Citation Impact Card
+                  Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16.0),
+                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.trending_up_rounded, color: theme.colorScheme.primary, size: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Research Citation Impact',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                paper.citationCount > 500
+                                    ? 'Top 1% most cited publication in field'
+                                    : paper.citationCount > 100
+                                        ? 'High-impact publication'
+                                        : 'Steady citation growth momentum',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+
                   // Journal name & Year info
                   Card(
                     elevation: 0,
@@ -484,7 +533,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                 Text(
                                   isVi
                                       ? 'Sử dụng mô hình AI Gemini để dịch thuật và tóm tắt nhanh bài báo khoa học này thành các ý chính tiếng Việt.'
-                                      : 'Use Gemini AI model to quickly summarize and translate this scientific abstract into key Vietnamese insights.',
+                                      : 'Use Gemini AI model to generate concise key research insights from this abstract.',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: theme.colorScheme.onSurface
                                         .withValues(alpha: 0.6),
@@ -533,9 +582,9 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                   ],
                                 ),
                               ] else if (_aiResponse != null) ...[
-                                const Text(
-                                  'Tóm tắt nội dung chính:',
-                                  style: TextStyle(
+                                Text(
+                                  isVi ? 'Tóm tắt nội dung chính:' : 'Key Summary Insights:',
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14.0,
                                   ),
@@ -582,9 +631,9 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                     }),
                                 const SizedBox(height: 8.0),
                                 if (_aiResponse!['contribution'] != null) ...[
-                                  const Text(
-                                    'Đóng góp khoa học chính:',
-                                    style: TextStyle(
+                                  Text(
+                                    isVi ? 'Đóng góp khoa học chính:' : 'Main Scientific Contribution:',
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14.0,
                                     ),

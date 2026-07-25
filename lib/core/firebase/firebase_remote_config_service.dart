@@ -5,6 +5,7 @@ abstract class IFirebaseRemoteConfigService {
   Future<void> initialize();
   int getInt(final String key);
   String getString(final String key);
+  Future<void> setInt(final String key, final int value);
   Future<bool> fetchAndActivate();
 }
 
@@ -13,27 +14,48 @@ class FirebaseRemoteConfigService implements IFirebaseRemoteConfigService {
   FirebaseRemoteConfigService() : _remoteConfig = FirebaseRemoteConfig.instance;
 
   final FirebaseRemoteConfig _remoteConfig;
+  final Map<String, int> _localOverrides = {};
 
   @override
   Future<void> initialize() async {
-    final Map<String, dynamic> defaults = const <String, dynamic>{
-      'max_journals_limit': 10,
-      'max_keywords_limit': 10,
-    };
-    await _remoteConfig.setDefaults(defaults);
-    await _remoteConfig.setConfigSettings(
-      RemoteConfigSettings(
+    try {
+      await _remoteConfig.setDefaults(const {
+        'max_journals_limit': 10,
+        'max_keywords_limit': 10,
+      });
+      await _remoteConfig.setConfigSettings(RemoteConfigSettings(
         fetchTimeout: const Duration(seconds: 40),
         minimumFetchInterval: const Duration(minutes: 5),
-      ),
-    );
+      ));
+    } catch (_) {}
   }
 
   @override
-  int getInt(final String key) => _remoteConfig.getInt(key);
+  int getInt(final String key) {
+    if (_localOverrides.containsKey(key)) {
+      return _localOverrides[key]!;
+    }
+    try {
+      final val = _remoteConfig.getInt(key);
+      return val != 0 ? val : 10;
+    } catch (_) {
+      return 10;
+    }
+  }
 
   @override
-  String getString(final String key) => _remoteConfig.getString(key);
+  String getString(final String key) {
+    try {
+      return _remoteConfig.getString(key);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  @override
+  Future<void> setInt(final String key, final int value) async {
+    _localOverrides[key] = value;
+  }
 
   @override
   Future<bool> fetchAndActivate() async {

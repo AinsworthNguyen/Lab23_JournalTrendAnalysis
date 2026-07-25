@@ -7,6 +7,8 @@ class UserPreferencesModel extends UserPreferences {
     required super.photoUrl,
     required super.interestConceptId,
     required super.interestConceptName,
+    super.role = 'user',
+    super.isBlocked = false,
   });
 
   factory UserPreferencesModel.fromJson(Map<String, dynamic> json) {
@@ -16,6 +18,8 @@ class UserPreferencesModel extends UserPreferences {
       photoUrl: json['photoUrl'] as String? ?? '',
       interestConceptId: json['interestConceptId'] as String? ?? '',
       interestConceptName: json['interestConceptName'] as String? ?? '',
+      role: json['role'] as String? ?? 'user',
+      isBlocked: json['isBlocked'] as bool? ?? false,
     );
   }
 
@@ -26,6 +30,8 @@ class UserPreferencesModel extends UserPreferences {
       'photoUrl': photoUrl,
       'interestConceptId': interestConceptId,
       'interestConceptName': interestConceptName,
+      'role': role,
+      'isBlocked': isBlocked,
     };
   }
 
@@ -36,6 +42,9 @@ class UserPreferencesModel extends UserPreferences {
       photoUrl: entity.photoUrl,
       interestConceptId: entity.interestConceptId,
       interestConceptName: entity.interestConceptName,
+      role: entity.role,
+      isBlocked: entity.isBlocked,
     );
   }
 }
+

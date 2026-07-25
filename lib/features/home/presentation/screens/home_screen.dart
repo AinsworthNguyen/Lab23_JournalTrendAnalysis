@@ -9,7 +9,9 @@ import '../blocs/dashboard_event.dart';
 import '../blocs/dashboard_state.dart';
 import '../blocs/search_cubit.dart';
 import '../../../../core/firebase/firebase_analytics_service.dart';
-import '../../../admin/data/datasources/user_activity_tracker.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../../../core/widgets/research_trend_line_chart.dart';
+import '../../../../core/widgets/topic_distribution_chart.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -43,8 +45,6 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   bool _isSearching = false;
   String? _currentConceptId;
   int _visiblePapersCount = 5;
-  bool _shouldScrollToRecent = false;
-  final GlobalKey _recentPapersKey = GlobalKey();
 
   @override
   void initState() {
@@ -56,29 +56,12 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   void _onSearchChanged() {
     final query = _searchController.text;
     context.read<SearchCubit>().search(query);
-    if (query.trim().length >= 3) {
-      try {
-        if (getIt.isRegistered<IUserActivityTracker>()) {
-          getIt<IUserActivityTracker>().logSearch(query.trim());
-        }
-      } catch (_) {}
-    }
   }
 
   void _onFocusChanged() {
-    if (!_searchFocusNode.hasFocus) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted && !_searchFocusNode.hasFocus) {
-          setState(() {
-            _isSearching = false;
-          });
-        }
-      });
-    } else {
-      setState(() {
-        _isSearching = true;
-      });
-    }
+    setState(() {
+      _isSearching = _searchFocusNode.hasFocus;
+    });
   }
 
   @override
@@ -96,9 +79,9 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
       body: BlocConsumer<DashboardBloc, DashboardState>(
         listener: (context, state) {
           if (state is DashboardFailure) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
           } else if (state is DashboardLoaded) {
             if (_currentConceptId != state.conceptId) {
               _currentConceptId = state.conceptId;
@@ -106,23 +89,13 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                 _visiblePapersCount = 5;
               });
             }
-            if (_shouldScrollToRecent) {
-              _shouldScrollToRecent = false;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (_recentPapersKey.currentContext != null) {
-                  Scrollable.ensureVisible(
-                    _recentPapersKey.currentContext!,
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut,
-                  );
-                }
-              });
-            }
           }
         },
         builder: (context, state) {
           if (state is DashboardLoading || state is DashboardInitial) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
           }
 
           if (state is DashboardLoaded) {
@@ -149,30 +122,23 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'dashboard.welcome'.tr(
-                                      namedArgs: {'name': state.name},
+                                    'dashboard.welcome'.tr(namedArgs: {'name': state.name}),
+                                    style: theme.textTheme.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 4.0),
                                   Text(
-                                    'dashboard.sub_header'.tr(
-                                      namedArgs: {'interest': state.interest},
-                                    ),
+                                    'dashboard.sub_header'.tr(namedArgs: {'interest': state.interest}),
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.7),
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                     ),
                                   ),
                                   const SizedBox(height: 4.0),
                                   Text(
-                                    'dashboard.last_updated'.tr(
-                                      namedArgs: {'time': formattedTime},
-                                    ),
+                                    'dashboard.last_updated'.tr(namedArgs: {'time': formattedTime}),
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.5),
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                     ),
                                   ),
                                 ],
@@ -183,17 +149,13 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                               onPressed: state.isSyncing
                                   ? null
                                   : () {
-                                      context.read<DashboardBloc>().add(
-                                        SyncDashboard(),
-                                      );
+                                      context.read<DashboardBloc>().add(SyncDashboard());
                                     },
                               icon: state.isSyncing
                                   ? const SizedBox(
                                       width: 18.0,
                                       height: 18.0,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
+                                      child: CircularProgressIndicator(strokeWidth: 2),
                                     )
                                   : const Icon(Icons.sync),
                               tooltip: 'dashboard.btn_refresh'.tr(),
@@ -208,9 +170,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                             borderRadius: BorderRadius.circular(16.0),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.shadowColor.withValues(
-                                  alpha: 0.08,
-                                ),
+                                color: theme.shadowColor.withValues(alpha: 0.08),
                                 blurRadius: 24,
                                 offset: const Offset(0, 8),
                               ),
@@ -233,25 +193,19 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                   : null,
                             ),
                             onSubmitted: (value) {
-                              final searchState = context
-                                  .read<SearchCubit>()
-                                  .state;
-                              if (searchState is SearchSuggestionsLoaded &&
-                                  searchState.results.isNotEmpty) {
+                              final searchState = context.read<SearchCubit>().state;
+                              if (searchState is SearchSuggestionsLoaded && searchState.results.isNotEmpty) {
                                 final firstItem = searchState.results.first;
                                 _searchController.clear();
                                 _searchFocusNode.unfocus();
-                                getIt<IFirebaseAnalyticsService>()
-                                    .logSearchTopic(firstItem['name']!);
+                                getIt<IFirebaseAnalyticsService>().logSearchTopic(firstItem['name']!);
                                 context.read<DashboardBloc>().add(
-                                  SelectConceptEvent(
-                                    conceptId: firstItem['id']!,
-                                    conceptName: firstItem['name']!,
-                                  ),
-                                );
-                                context.read<SearchCubit>().selectQuery(
-                                  firstItem['name']!,
-                                );
+                                      SelectConceptEvent(
+                                        conceptId: firstItem['id']!,
+                                        conceptName: firstItem['name']!,
+                                      ),
+                                    );
+                                context.read<SearchCubit>().selectQuery(firstItem['name']!);
                               } else {
                                 _searchFocusNode.unfocus();
                               }
@@ -271,522 +225,363 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                           },
                           child: SingleChildScrollView(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20.0,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                if (!_isSearching) ...[
-                                  // Bento Grid Dashboard Metrics (All 6 cards)
-                                  GridView(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          crossAxisSpacing: 16.0,
-                                          mainAxisSpacing: 16.0,
-                                          mainAxisExtent: 150.0,
-                                        ),
-                                    children: [
-                                      _buildMetricCard(
-                                        context,
-                                        title:
-                                            'dashboard.metrics.total_publications'
-                                                .tr(),
-                                        value: NumberFormat.decimalPattern()
-                                            .format(state.totalPublications),
-                                        icon: Icons.article_outlined,
-                                        color: Colors.blue,
-                                      ),
-                                      _buildMetricCard(
-                                        context,
-                                        title: 'dashboard.metrics.avg_citations'
-                                            .tr(),
-                                        value: state.avgCitations
-                                            .toStringAsFixed(1),
-                                        icon: Icons.analytics_outlined,
-                                        color: Colors.green,
-                                      ),
-                                      _buildMetricCard(
-                                        context,
-                                        title: 'dashboard.metrics.active_year'
-                                            .tr(),
-                                        value: state.activeYear.toString(),
-                                        icon: Icons.calendar_today_outlined,
-                                        color: Colors.purple,
-                                      ),
-                                      _buildMetricCard(
-                                        context,
-                                        title: 'dashboard.metrics.top_author'
-                                            .tr(),
-                                        value: state.topAuthor.isNotEmpty
-                                            ? state.topAuthor
-                                            : 'N/A',
-                                        icon: Icons.person_outline,
-                                        color: Colors.teal,
-                                      ),
-                                      _buildMetricCard(
-                                        context,
-                                        title: 'dashboard.metrics.top_journal'
-                                            .tr(),
-                                        value: state.topJournal.isNotEmpty
-                                            ? state.topJournal
-                                            : 'N/A',
-                                        icon: Icons.book_outlined,
-                                        color: Colors.orange,
-                                      ),
-                                      _buildMetricCard(
-                                        context,
-                                        title:
-                                            'dashboard.metrics.most_influential'
-                                                .tr(),
-                                        value:
-                                            state
-                                                .mostInfluentialPaper
-                                                .isNotEmpty
-                                            ? state.mostInfluentialPaper
-                                            : 'N/A',
-                                        icon: Icons.format_quote,
-                                        color: Colors.amber,
-                                      ),
-                                    ],
+
+                          if (!_isSearching) ...[
+                            // Bento Grid Dashboard Metrics (All 6 cards)
+                            GridView(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16.0,
+                                mainAxisSpacing: 16.0,
+                                mainAxisExtent: 150.0,
+                              ),
+                              children: [
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.total_publications'.tr(),
+                                  value: NumberFormat.decimalPattern().format(state.totalPublications),
+                                  icon: Icons.article_outlined,
+                                  color: Colors.blue,
+                                ),
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.avg_citations'.tr(),
+                                  value: state.avgCitations.toStringAsFixed(1),
+                                  icon: Icons.analytics_outlined,
+                                  color: Colors.green,
+                                ),
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.active_year'.tr(),
+                                  value: state.activeYear.toString(),
+                                  icon: Icons.calendar_today_outlined,
+                                  color: Colors.purple,
+                                ),
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.top_author'.tr(),
+                                  value: state.topAuthor.isNotEmpty ? state.topAuthor : 'N/A',
+                                  icon: Icons.person_outline,
+                                  color: Colors.teal,
+                                ),
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.top_journal'.tr(),
+                                  value: state.topJournal.isNotEmpty ? state.topJournal : 'N/A',
+                                  icon: Icons.book_outlined,
+                                  color: Colors.orange,
+                                ),
+                                _buildMetricCard(
+                                  context,
+                                  title: 'dashboard.metrics.most_influential'.tr(),
+                                  value: state.mostInfluentialPaper.isNotEmpty ? state.mostInfluentialPaper : 'N/A',
+                                  icon: Icons.format_quote,
+                                  color: Colors.amber,
+                                ),
+                               ],
+                            ),
+                            const SizedBox(height: 24.0),
+
+                            // Interactive Trend LineChart
+                            const ResearchTrendLineChart(
+                              title: 'Research & Citation Trends',
+                              subtitle: 'Growth velocity over years (2020 - 2025)',
+                              years: ['2020', '2021', '2022', '2023', '2024', '2025'],
+                              publicationSpots: [
+                                FlSpot(0, 120),
+                                FlSpot(1, 190),
+                                FlSpot(2, 280),
+                                FlSpot(3, 350),
+                                FlSpot(4, 480),
+                                FlSpot(5, 620),
+                              ],
+                              citationSpots: [
+                                FlSpot(0, 450),
+                                FlSpot(1, 820),
+                                FlSpot(2, 1400),
+                                FlSpot(3, 2100),
+                                FlSpot(4, 3200),
+                                FlSpot(5, 4500),
+                              ],
+                            ),
+                            const SizedBox(height: 20.0),
+
+                            // Topic Distribution PieChart
+                            const TopicDistributionChart(
+                              title: 'Hot Research Topic Distribution',
+                              topicData: [
+                                {'name': 'Machine Learning', 'value': 40.0, 'color': Color(0xFF6366F1)},
+                                {'name': 'Computer Vision', 'value': 25.0, 'color': Color(0xFF10B981)},
+                                {'name': 'NLP & LLM', 'value': 20.0, 'color': Color(0xFF38BDF8)},
+                                {'name': 'Data Mining', 'value': 15.0, 'color': Color(0xFFF59E0B)},
+                              ],
+                            ),
+                            const SizedBox(height: 24.0),
+                            // Recent Interest Papers Section
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  'dashboard.recent_interest_papers'.tr(namedArgs: {'interest': state.interest}),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(height: 24.0),
-                                  const SizedBox(height: 24.0),
-                                  // Recent Interest Papers Section
-                                  Column(
-                                    key: _recentPapersKey,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Text(
-                                        'dashboard.recent_interest_papers'.tr(
-                                          namedArgs: {
-                                            'interest': state.interest,
-                                          },
-                                        ),
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                ),
+                                const SizedBox(height: 16.0),
+                                if (state.papers.isEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                                    child: Text(
+                                      'No publications found.',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                       ),
-                                      const SizedBox(height: 16.0),
-                                      if (state.papers.isEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 20.0,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  )
+                                else ...[
+                                    Column(
+                                      children: state.papers.take(_visiblePapersCount).toList().asMap().entries.map((entry) {
+                                        final index = entry.key;
+                                        final paper = entry.value;
+                                        return Card(
+                                          margin: const EdgeInsets.only(bottom: 12.0),
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(16.0),
+                                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.08)),
                                           ),
-                                          child: Text(
-                                            'No publications found.',
-                                            style: theme.textTheme.bodyMedium
-                                                ?.copyWith(
-                                                  color: theme
-                                                      .colorScheme
-                                                      .onSurface
-                                                      .withValues(alpha: 0.5),
-                                                ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        )
-                                      else ...[
-                                        Column(
-                                          children: state.papers.take(_visiblePapersCount).toList().asMap().entries.map((
-                                            entry,
-                                          ) {
-                                            final index = entry.key;
-                                            final paper = entry.value;
-                                            return Card(
-                                                  margin: const EdgeInsets.only(
-                                                    bottom: 12.0,
-                                                  ),
-                                                  elevation: 0,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          16.0,
-                                                        ),
-                                                    side: BorderSide(
-                                                      color: theme.dividerColor
-                                                          .withValues(
-                                                            alpha: 0.08,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  child: InkWell(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          16.0,
-                                                        ),
-                                                    onTap: () {
-                                                      context.push(
-                                                        '/journal/publication/${paper.id}',
-                                                      );
-                                                    },
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                            14.0,
-                                                          ),
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(16.0),
+                                            onTap: () {
+                                              context.push('/journal/publication/${paper.id}');
+                                            },
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(14.0),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    // Open Access Badge
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                                      decoration: BoxDecoration(
+                                                        color: paper.isOpenAccess
+                                                            ? Colors.green.withValues(alpha: 0.12)
+                                                            : Colors.grey.withValues(alpha: 0.12),
+                                                        borderRadius: BorderRadius.circular(6.0),
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
                                                         children: [
-                                                          Row(
-                                                            children: [
-                                                              // Open Access Badge
-                                                              Container(
-                                                                padding:
-                                                                    const EdgeInsets.symmetric(
-                                                                      horizontal:
-                                                                          8.0,
-                                                                      vertical:
-                                                                          4.0,
-                                                                    ),
-                                                                decoration: BoxDecoration(
-                                                                  color:
-                                                                      paper
-                                                                          .isOpenAccess
-                                                                      ? Colors.green.withValues(
-                                                                          alpha:
-                                                                              0.12,
-                                                                        )
-                                                                      : Colors.grey.withValues(
-                                                                          alpha:
-                                                                              0.12,
-                                                                        ),
-                                                                  borderRadius:
-                                                                      BorderRadius.circular(
-                                                                        6.0,
-                                                                      ),
-                                                                ),
-                                                                child: Row(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .min,
-                                                                  children: [
-                                                                    Icon(
-                                                                      paper.isOpenAccess
-                                                                          ? Icons.lock_open
-                                                                          : Icons.lock,
-                                                                      size:
-                                                                          11.0,
-                                                                      color:
-                                                                          paper
-                                                                              .isOpenAccess
-                                                                          ? Colors.green
-                                                                          : Colors.grey,
-                                                                    ),
-                                                                    const SizedBox(
-                                                                      width:
-                                                                          4.0,
-                                                                    ),
-                                                                    Text(
-                                                                      paper.isOpenAccess
-                                                                          ? 'journal.open_access'.tr()
-                                                                          : 'journal.closed_access'.tr(),
-                                                                      style: TextStyle(
-                                                                        fontSize:
-                                                                            9.0,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                        color:
-                                                                            paper.isOpenAccess
-                                                                            ? Colors.green
-                                                                            : Colors.grey,
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              const Spacer(),
-                                                              // Citation Count
-                                                              Icon(
-                                                                Icons
-                                                                    .format_quote,
-                                                                size: 13.0,
-                                                                color: theme
-                                                                    .colorScheme
-                                                                    .primary,
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 4.0,
-                                                              ),
-                                                              Text(
-                                                                NumberFormat.decimalPattern()
-                                                                    .format(
-                                                                      paper
-                                                                          .citationCount,
-                                                                    ),
-                                                                style: theme
-                                                                    .textTheme
-                                                                    .bodySmall
-                                                                    ?.copyWith(
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold,
-                                                                    ),
-                                                              ),
-                                                            ],
+                                                          Icon(
+                                                            paper.isOpenAccess ? Icons.lock_open : Icons.lock,
+                                                            size: 11.0,
+                                                            color: paper.isOpenAccess ? Colors.green : Colors.grey,
                                                           ),
-                                                          const SizedBox(
-                                                            height: 10.0,
-                                                          ),
+                                                          const SizedBox(width: 4.0),
                                                           Text(
-                                                            paper.title,
-                                                            maxLines: 2,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style: theme
-                                                                .textTheme
-                                                                .titleMedium
-                                                                ?.copyWith(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  height: 1.3,
-                                                                ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 8.0,
-                                                          ),
-                                                          Row(
-                                                            children: [
-                                                              Expanded(
-                                                                child: Text(
-                                                                  paper.journalName ??
-                                                                      'No journal info',
-                                                                  maxLines: 1,
-                                                                  overflow:
-                                                                      TextOverflow
-                                                                          .ellipsis,
-                                                                  style: theme
-                                                                      .textTheme
-                                                                      .bodySmall
-                                                                      ?.copyWith(
-                                                                        color: theme
-                                                                            .colorScheme
-                                                                            .onSurface
-                                                                            .withValues(
-                                                                              alpha: 0.6,
-                                                                            ),
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 8.0,
-                                                              ),
-                                                              Text(
-                                                                paper
-                                                                    .publicationYear
-                                                                    .toString(),
-                                                                style: theme.textTheme.bodySmall?.copyWith(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: theme
-                                                                      .colorScheme
-                                                                      .primary
-                                                                      .withValues(
-                                                                        alpha:
-                                                                            0.8,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                            ],
+                                                            paper.isOpenAccess
+                                                                ? 'journal.open_access'.tr()
+                                                                : 'journal.closed_access'.tr(),
+                                                            style: TextStyle(
+                                                              fontSize: 9.0,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: paper.isOpenAccess ? Colors.green : Colors.grey,
+                                                            ),
                                                           ),
                                                         ],
                                                       ),
                                                     ),
-                                                  ),
-                                                )
-                                                .animate(delay: (index * 50).ms)
-                                                .fadeIn(duration: 400.ms)
-                                                .slideY(
-                                                  begin: 0.1,
-                                                  end: 0,
-                                                  curve: Curves.easeOut,
-                                                );
-                                          }).toList(),
-                                        ),
-                                        if (state.papers.length >
-                                            _visiblePapersCount)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 8.0,
-                                            ),
-                                            child: OutlinedButton.icon(
-                                              onPressed: () {
-                                                setState(() {
-                                                  _visiblePapersCount += 5;
-                                                });
-                                              },
-                                              icon: const Icon(Icons.add),
-                                              label: const Text('More'),
-                                              style: OutlinedButton.styleFrom(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      vertical: 14.0,
-                                                    ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                        12.0,
+                                                    const Spacer(),
+                                                    // Citation Count
+                                                    Icon(Icons.format_quote, size: 13.0, color: theme.colorScheme.primary),
+                                                    const SizedBox(width: 4.0),
+                                                    Text(
+                                                      NumberFormat.decimalPattern().format(paper.citationCount),
+                                                      style: theme.textTheme.bodySmall?.copyWith(
+                                                        fontWeight: FontWeight.bold,
                                                       ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ),
+                                                const SizedBox(height: 10.0),
+                                                Text(
+                                                  paper.title,
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: theme.textTheme.titleMedium?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    height: 1.3,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8.0),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        paper.journalName ?? 'No journal info',
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                        style: theme.textTheme.bodySmall?.copyWith(
+                                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8.0),
+                                                    Text(
+                                                      paper.publicationYear.toString(),
+                                                      style: theme.textTheme.bodySmall?.copyWith(
+                                                        fontWeight: FontWeight.bold,
+                                                        color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                      ],
-                                    ],
+                                        ),
+                                      ).animate(delay: (index * 50).ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOut);
+                                    }).toList(),
                                   ),
-                                  const SizedBox(
-                                    height: 80.0,
-                                  ), // Padding bottom
+                                  if (state.papers.length > _visiblePapersCount)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: OutlinedButton.icon(
+                                        onPressed: () {
+                                          setState(() {
+                                            _visiblePapersCount += 5;
+                                          });
+                                        },
+                                        icon: const Icon(Icons.add),
+                                        label: const Text('More'),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 14.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ],
                             ),
-                          ),
-                        ),
+                            const SizedBox(height: 80.0), // Padding bottom
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
 
-                        // Search Suggestions Overlay
-                        if (_isSearching)
-                          Positioned.fill(
-                            child: Container(
-                              color: theme.scaffoldBackgroundColor,
-                              child: BlocBuilder<SearchCubit, SearchState>(
-                                builder: (context, searchState) {
-                                  if (searchState is SearchLoading) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  }
+                  // Search Suggestions Overlay
+                  if (_isSearching)
+                    Positioned.fill(
+                      child: Container(
+                        color: theme.scaffoldBackgroundColor,
+                        child: BlocBuilder<SearchCubit, SearchState>(
+                          builder: (context, searchState) {
+                            if (searchState is SearchLoading) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
 
-                                  if (searchState is SearchSuggestionsLoaded) {
-                                    return ListView.builder(
-                                      itemCount: searchState.results.length,
+                            if (searchState is SearchSuggestionsLoaded) {
+                              return ListView.builder(
+                                itemCount: searchState.results.length,
+                                itemBuilder: (context, index) {
+                                  final item = searchState.results[index];
+                                  return ListTile(
+                                    leading: const Icon(Icons.science_outlined),
+                                    title: Text(item['name'] ?? ''),
+                                    onTap: () {
+                                      _searchController.clear();
+                                      _searchFocusNode.unfocus();
+                                      getIt<IFirebaseAnalyticsService>().logSearchTopic(item['name']!);
+                                      context.read<DashboardBloc>().add(
+                                            SelectConceptEvent(
+                                              conceptId: item['id']!,
+                                              conceptName: item['name']!,
+                                            ),
+                                          );
+                                      context.read<SearchCubit>().selectQuery(item['name']!);
+                                    },
+                                  );
+                                },
+                              );
+                            }
+
+                            if (searchState is SearchHistoryLoaded) {
+                              if (searchState.history.isEmpty) {
+                                return Center(
+                                  child: Text(
+                                    "${'dashboard.recent_searches'.tr()} is empty",
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'dashboard.recent_searches'.tr(),
+                                          style: theme.textTheme.titleSmall,
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            context.read<SearchCubit>().clearHistory();
+                                          },
+                                          child: const Text('Clear'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: ListView.builder(
+                                      itemCount: searchState.history.length,
                                       itemBuilder: (context, index) {
-                                        final item = searchState.results[index];
+                                        final query = searchState.history[index];
                                         return ListTile(
-                                          leading: const Icon(
-                                            Icons.science_outlined,
-                                          ),
-                                          title: Text(item['name'] ?? ''),
+                                          leading: const Icon(Icons.history),
+                                          title: Text(query),
                                           onTap: () {
-                                            _searchController.clear();
-                                            _searchFocusNode.unfocus();
-                                            _shouldScrollToRecent = true;
-                                            getIt<IFirebaseAnalyticsService>()
-                                                .logSearchTopic(item['name']!);
-                                            context.read<DashboardBloc>().add(
-                                              SelectConceptEvent(
-                                                conceptId: item['id']!,
-                                                conceptName: item['name']!,
-                                              ),
-                                            );
-                                            context
-                                                .read<SearchCubit>()
-                                                .selectQuery(item['name']!);
+                                            _searchController.text = query;
+                                            getIt<IFirebaseAnalyticsService>().logSearchTopic(query);
+                                            context.read<SearchCubit>().search(query);
                                           },
                                         );
                                       },
-                                    );
-                                  }
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
 
-                                  if (searchState is SearchHistoryLoaded) {
-                                    if (searchState.history.isEmpty) {
-                                      return Center(
-                                        child: Text(
-                                          "${'dashboard.recent_searches'.tr()} is empty",
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withValues(alpha: 0.5),
-                                              ),
-                                        ),
-                                      );
-                                    }
-
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16.0,
-                                            vertical: 8.0,
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                'dashboard.recent_searches'
-                                                    .tr(),
-                                                style:
-                                                    theme.textTheme.titleSmall,
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  context
-                                                      .read<SearchCubit>()
-                                                      .clearHistory();
-                                                },
-                                                child: const Text('Clear'),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: ListView.builder(
-                                            itemCount:
-                                                searchState.history.length,
-                                            itemBuilder: (context, index) {
-                                              final query =
-                                                  searchState.history[index];
-                                              return ListTile(
-                                                leading: const Icon(
-                                                  Icons.history,
-                                                ),
-                                                title: Text(query),
-                                                onTap: () {
-                                                  _searchController.text =
-                                                      query;
-                                                  _searchFocusNode
-                                                      .requestFocus();
-                                                  getIt<
-                                                        IFirebaseAnalyticsService
-                                                      >()
-                                                      .logSearchTopic(query);
-                                                  context
-                                                      .read<SearchCubit>()
-                                                      .search(query);
-                                                },
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  }
-
-                                  return const SizedBox.shrink();
-                                },
-                              ),
-                            ),
-                          ),
-                      ],
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ),
                     ),
-                  ),
                 ],
               ),
-            );
+            ),
+          ],
+        ),
+      );
           }
 
           return const SizedBox.shrink();
@@ -805,68 +600,58 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
     final theme = Theme.of(context);
 
     return Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10.0),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(icon, color: color, size: 26.0),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8.0),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        value,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4.0),
-                      Text(
-                        title,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                Container(
+                  padding: const EdgeInsets.all(10.0),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
                   ),
+                  child: Icon(icon, color: color, size: 26.0),
                 ),
               ],
             ),
-          ),
-        )
-        .animate()
-        .fadeIn(duration: 500.ms)
-        .scale(
-          begin: const Offset(0.95, 0.95),
-          end: const Offset(1, 1),
-          curve: Curves.easeOutBack,
-        );
-  }
-}
+            const SizedBox(height: 8.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    value,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4.0),
+                  Text(
+                    title,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1), curve: Curves.easeOutBack);
+  }}

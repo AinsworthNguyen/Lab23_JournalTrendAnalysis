@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../../../../injection_container.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../personalization/domain/usecases/get_user_preferences_usecase.dart';
 import '../../domain/entities/keyword.dart';
 import '../../domain/usecases/get_emerging_keywords_usecase.dart';
@@ -19,7 +22,9 @@ class KeywordsScreen extends StatefulWidget {
 
 class _KeywordsScreenState extends State<KeywordsScreen> {
   bool _isLoading = true;
+  bool _isSearchingTopics = false;
   String? _errorMessage;
+  int _activeTabIndex = 0; // 0: Top Topics, 1: Emerging Topics
 
   List<Keyword> _topKeywords = [];
   List<Keyword> _emergingKeywords = [];
@@ -27,12 +32,55 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
   List<Keyword> _filteredEmergingKeywords = [];
 
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  Timer? _debounceTimer;
+
+  List<String> _getRecentSearches() {
+    try {
+      final box = Hive.box('search_history');
+      final list = box.get('topic_search_history') as List<dynamic>?;
+      return list?.cast<String>() ?? [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  void _saveSearch(String query) {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    try {
+      final box = Hive.box('search_history');
+      final current = _getRecentSearches();
+      current.remove(q);
+      current.insert(0, q);
+      if (current.length > 5) {
+        current.removeLast();
+      }
+      box.put('topic_search_history', current);
+      setState(() {});
+    } catch (_) {}
+  }
+
+  void _clearHistory() {
+    try {
+      final box = Hive.box('search_history');
+      box.delete('topic_search_history');
+      setState(() {});
+    } catch (_) {}
+  }
 
   @override
   void initState() {
     super.initState();
     _loadData();
     _searchController.addListener(_onSearchChanged);
+    _searchFocusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadData() async {
@@ -42,9 +90,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
     });
 
     try {
-      final prefResult = await getIt<GetUserPreferencesUseCase>().call(
-        const NoParams(),
-      );
+      final prefResult = await getIt<GetUserPreferencesUseCase>().call(const NoParams());
       prefResult.fold(
         (failure) => setState(() {
           _isLoading = false;
@@ -59,6 +105,9 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
           if (mounted) {
             results[0].fold((f) => null, (data) => _topKeywords = data);
             results[1].fold((f) => null, (data) => _emergingKeywords = data);
+
+            _topKeywords.sort((a, b) => b.worksCount.compareTo(a.worksCount));
+            _emergingKeywords.sort((a, b) => b.worksCount.compareTo(a.worksCount));
 
             _filteredTopKeywords = List.from(_topKeywords);
             _filteredEmergingKeywords = List.from(_emergingKeywords);
@@ -80,24 +129,71 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.trim().toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
+      _debounceTimer?.cancel();
+      setState(() {
+        _isSearchingTopics = false;
         _filteredTopKeywords = List.from(_topKeywords);
         _filteredEmergingKeywords = List.from(_emergingKeywords);
-      } else {
-        _filteredTopKeywords = _topKeywords.where((kw) {
-          return kw.displayName.toLowerCase().contains(query);
+      });
+      return;
+    }
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 350), () async {
+      if (!mounted) return;
+      setState(() {
+        _isSearchingTopics = true;
+      });
+
+      try {
+        final response = await getIt<ApiClient>().get('/topics', queryParameters: {
+          'search': query,
+          'per_page': 20,
+        });
+        final results = response['results'] as List<dynamic>? ?? [];
+        final searchResults = results.map((json) {
+          final map = json as Map<String, dynamic>;
+          final fullId = map['id'] as String? ?? '';
+          final cleanedId = fullId.split('/').last;
+          return Keyword(
+            id: cleanedId,
+            displayName: map['display_name'] as String? ?? 'Unknown Topic',
+            level: 2,
+            worksCount: map['works_count'] as int? ?? 0,
+          );
         }).toList();
-        _filteredEmergingKeywords = _emergingKeywords.where((kw) {
-          return kw.displayName.toLowerCase().contains(query);
-        }).toList();
+
+        // Sort search results strictly by worksCount descending
+        searchResults.sort((a, b) => b.worksCount.compareTo(a.worksCount));
+
+        if (mounted && _searchController.text.trim() == query) {
+          _saveSearch(query);
+          setState(() {
+            _isSearchingTopics = false;
+            _filteredTopKeywords = searchResults.take(5).toList();
+            _filteredEmergingKeywords = searchResults.skip(5).take(5).toList();
+            if (_filteredEmergingKeywords.isEmpty && searchResults.isNotEmpty) {
+              _filteredEmergingKeywords = List.from(_filteredTopKeywords);
+            }
+          });
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _isSearchingTopics = false;
+          });
+        }
       }
     });
   }
 
   @override
   void dispose() {
+    _searchFocusNode.removeListener(_onFocusChanged);
+    _searchFocusNode.dispose();
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -127,11 +223,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: theme.colorScheme.error,
-                      ),
+                      Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
                       const SizedBox(height: 16),
                       Text(
                         _errorMessage!,
@@ -150,14 +242,14 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
             }
 
             // Prep chart data for top keywords (top 5 only)
-            final chartLabels = _filteredTopKeywords
-                .take(5)
-                .map((k) => k.displayName)
-                .toList();
-            final chartValues = _filteredTopKeywords
-                .take(5)
-                .map((k) => k.worksCount.toDouble())
-                .toList();
+            final top5List = _filteredTopKeywords.take(5).toList();
+            final topChartLabels = top5List.map((k) => k.displayName).toList();
+            final topChartValues = top5List.map((k) => k.worksCount.toDouble()).toList();
+
+            // Prep chart data for emerging keywords (top 5 only)
+            final emerging5List = _filteredEmergingKeywords.take(5).toList();
+            final emergingChartLabels = emerging5List.map((k) => k.displayName).toList();
+            final emergingChartValues = emerging5List.map((k) => k.worksCount.toDouble()).toList();
 
             return RefreshIndicator(
               onRefresh: _loadData,
@@ -170,174 +262,454 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                     // Search Bar
                     TextField(
                       controller: _searchController,
+                      focusNode: _searchFocusNode,
                       decoration: InputDecoration(
-                        hintText: 'dashboard.search_hint'.tr(),
+                        hintText: 'Search research topics (e.g. AI, Physics, Data)...',
                         prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchController.clear();
-                                },
+                        suffixIcon: _isSearchingTopics
+                            ? const Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2.0),
+                                ),
                               )
-                            : null,
+                            : (_searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                    },
+                                  )
+                                : null),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
                       ),
                     ),
+
+                    // Chips logic when query is empty:
+                    // 1) Unfocused: Show 'Try searching:' chips.
+                    // 2) Focused: If history exists, show ONLY 'Recent Searches:' chips. If no history, show 'Try searching:' chips.
+                    if (_searchController.text.isEmpty) ...[
+                      Builder(
+                        builder: (context) {
+                          final recentSearches = _getRecentSearches();
+                          final showHistory = _searchFocusNode.hasFocus && recentSearches.isNotEmpty;
+
+                          if (showHistory) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 10.0),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.history_rounded, size: 14, color: theme.colorScheme.primary),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Recent Searches:',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    GestureDetector(
+                                      onTap: _clearHistory,
+                                      child: Text(
+                                        'Clear All',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6.0),
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: recentSearches.map((item) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 6.0),
+                                        child: ActionChip(
+                                          visualDensity: VisualDensity.compact,
+                                          avatar: const Icon(Icons.history, size: 12),
+                                          label: Text(item, style: const TextStyle(fontSize: 11)),
+                                          onPressed: () {
+                                            _searchController.text = item;
+                                          },
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 10.0),
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'Try searching:',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                      ...['Physics', 'Geology', 'Data Science', 'Python', 'AI', 'Computing'].map((tag) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(right: 6.0),
+                                          child: ActionChip(
+                                            visualDensity: VisualDensity.compact,
+                                            avatar: Icon(Icons.auto_awesome, size: 12, color: theme.colorScheme.primary),
+                                            label: Text(tag, style: const TextStyle(fontSize: 11)),
+                                            onPressed: () {
+                                              _searchController.text = tag;
+                                            },
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 16.0),
+
+                    // Sliding Segmented Control (Top Topics vs Emerging Topics)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.15)),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _activeTabIndex = 0),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _activeTabIndex == 0 ? theme.colorScheme.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: _activeTabIndex == 0
+                                      ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2))]
+                                      : null,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.leaderboard_rounded,
+                                      size: 18,
+                                      color: _activeTabIndex == 0 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _searchController.text.isEmpty
+                                          ? 'Top Topics'
+                                          : 'Top Topics (${top5List.length})',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: _activeTabIndex == 0 ? FontWeight.bold : FontWeight.w500,
+                                        color: _activeTabIndex == 0 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _activeTabIndex = 1),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _activeTabIndex == 1 ? theme.colorScheme.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: _activeTabIndex == 1
+                                      ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2))]
+                                      : null,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.trending_up_rounded,
+                                      size: 18,
+                                      color: _activeTabIndex == 1 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _searchController.text.isEmpty
+                                          ? 'Emerging Topics'
+                                          : 'Emerging (${emerging5List.length})',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: _activeTabIndex == 1 ? FontWeight.bold : FontWeight.w500,
+                                        color: _activeTabIndex == 1 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 20.0),
 
-                    // Top Keywords Chart (only shown when not searching or if search results are populated)
-                    if (chartLabels.isNotEmpty &&
-                        _searchController.text.isEmpty) ...[
-                      Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
-                          side: BorderSide(
-                            color: theme.dividerColor.withValues(alpha: 0.1),
+                    // TAB 0: TOP TOPICS
+                    if (_activeTabIndex == 0) ...[
+                      if (top5List.isEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search_off_rounded, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No Top Topics found',
+                                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _searchController.text.isNotEmpty
+                                    ? 'No top topic matches "${_searchController.text}".'
+                                    : 'No top topics available.',
+                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                                textAlign: TextAlign.center,
+                              ),
+                              if (_searchController.text.isNotEmpty && _filteredEmergingKeywords.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                OutlinedButton.icon(
+                                  onPressed: () => setState(() => _activeTabIndex = 1),
+                                  icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                                  label: Text('Check Emerging Topics (${_filteredEmergingKeywords.length} found)'),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: HorizontalBarChart(
-                            labels: chartLabels,
-                            values: chartValues,
-                            title: 'keywords.top_keywords'.tr(),
-                            barColor: theme.colorScheme.secondary,
-                          ),
-                        ),
-                      ).animate().fadeIn(duration: 400.ms),
-                      const SizedBox(height: 20.0),
-                    ],
-
-                    // Top Keywords List
-                    if (_filteredTopKeywords.isNotEmpty) ...[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4.0,
-                          vertical: 8.0,
-                        ),
-                        child: Text(
-                          'keywords.top_keywords'.tr(),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _filteredTopKeywords.length,
-                        itemBuilder: (context, index) {
-                          final kw = _filteredTopKeywords[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 10.0),
+                      ] else ...[
+                        if (topChartLabels.isNotEmpty) ...[
+                          Card(
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              side: BorderSide(
-                                color: theme.dividerColor.withValues(
-                                  alpha: 0.1,
-                                ),
+                              borderRadius: BorderRadius.circular(16.0),
+                              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: HorizontalBarChart(
+                                labels: topChartLabels,
+                                values: topChartValues,
+                                title: 'Top 5 Topics Overview',
+                                barColor: theme.colorScheme.secondary,
                               ),
                             ),
-                            child: ListTile(
-                              title: Text(
-                                kw.displayName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          ).animate().fadeIn(duration: 400.ms),
+                          const SizedBox(height: 16.0),
+                        ],
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                          child: Text(
+                            'Top 5 Research Topics',
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: top5List.length,
+                          itemBuilder: (context, index) {
+                            final kw = top5List[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 10.0),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                               ),
-                              subtitle: const Text('Research Topic'),
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '${NumberFormat.decimalPattern().format(kw.worksCount)} works',
-                                    style: const TextStyle(
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  radius: 14,
+                                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                  child: Text(
+                                    '#${index + 1}',
+                                    style: TextStyle(
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.primary,
                                     ),
                                   ),
-                                  const Icon(Icons.chevron_right, size: 16),
-                                ],
+                                ),
+                                title: Text(
+                                  kw.displayName,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: const Text('Research Topic'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${NumberFormat.compact().format(kw.worksCount)} works',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.chevron_right, size: 16),
+                                  ],
+                                ),
+                                onTap: () {
+                                  context.push(
+                                    '/keywords/detail/${kw.id}?name=${Uri.encodeComponent(kw.displayName)}',
+                                  );
+                                },
                               ),
-                              onTap: () {
-                                context.push(
-                                  '/keywords/detail/${kw.id}?name=${Uri.encodeComponent(kw.displayName)}',
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 20.0),
+                            );
+                          },
+                        ),
+                      ],
                     ],
 
-                    // Emerging Keywords List
-                    if (_filteredEmergingKeywords.isNotEmpty) ...[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4.0,
-                          vertical: 8.0,
-                        ),
-                        child: Text(
-                          'keywords.emerging_keywords'.tr(),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                    // TAB 1: EMERGING TOPICS
+                    if (_activeTabIndex == 1) ...[
+                      if (emerging5List.isEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search_off_rounded, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No Emerging Topics found',
+                                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _searchController.text.isNotEmpty
+                                    ? 'No emerging topic matches "${_searchController.text}".'
+                                    : 'No emerging topics available.',
+                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                                textAlign: TextAlign.center,
+                              ),
+                              if (_searchController.text.isNotEmpty && _filteredTopKeywords.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  onPressed: () => setState(() => _activeTabIndex = 0),
+                                  icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                                  label: Text('Switch to Top Topics (${_filteredTopKeywords.length} found)'),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                      ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _filteredEmergingKeywords.length,
-                        itemBuilder: (context, index) {
-                          final kw = _filteredEmergingKeywords[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 10.0),
+                      ] else ...[
+                        if (emergingChartLabels.isNotEmpty) ...[
+                          Card(
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              side: BorderSide(
-                                color: theme.dividerColor.withValues(
-                                  alpha: 0.1,
-                                ),
+                              borderRadius: BorderRadius.circular(16.0),
+                              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: HorizontalBarChart(
+                                labels: emergingChartLabels,
+                                values: emergingChartValues,
+                                title: 'Top 5 Emerging Topics Growth',
+                                barColor: Colors.teal,
                               ),
                             ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.green.withValues(
-                                  alpha: 0.1,
-                                ),
-                                child: const Icon(
-                                  Icons.trending_up,
-                                  color: Colors.green,
-                                  size: 18,
-                                ),
+                          ).animate().fadeIn(duration: 400.ms),
+                          const SizedBox(height: 16.0),
+                        ],
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                          child: Text(
+                            'Top 5 Emerging Topics',
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: emerging5List.length,
+                          itemBuilder: (context, index) {
+                            final kw = emerging5List[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 10.0),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                               ),
-                              title: Text(
-                                kw.displayName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  radius: 14,
+                                  backgroundColor: Colors.green.withValues(alpha: 0.15),
+                                  child: const Icon(Icons.trending_up, color: Colors.green, size: 14),
                                 ),
+                                title: Text(
+                                  kw.displayName,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: const Text('Emerging Topic'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${NumberFormat.compact().format(kw.worksCount)} works',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.chevron_right, size: 16),
+                                  ],
+                                ),
+                                onTap: () {
+                                  context.push(
+                                    '/keywords/detail/${kw.id}?name=${Uri.encodeComponent(kw.displayName)}',
+                                  );
+                                },
                               ),
-                              subtitle: const Text('Emerging Topic'),
-                              trailing: const Icon(
-                                Icons.chevron_right,
-                                size: 16,
-                              ),
-                              onTap: () {
-                                context.push(
-                                  '/keywords/detail/${kw.id}?name=${Uri.encodeComponent(kw.displayName)}',
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                            );
+                          },
+                        ),
+                      ],
                     ],
                   ],
                 ),

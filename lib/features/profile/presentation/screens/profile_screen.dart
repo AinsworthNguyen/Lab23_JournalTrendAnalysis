@@ -732,7 +732,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24.0),
+                        // Admin Section (visible for admin users & guest/dev mode)
+                        if (_prefs == null || (_prefs?.isAdmin ?? true)) ...[
+                          _buildSectionHeader(theme, 'Admin Panel'),
+                          const SizedBox(height: 8.0),
+                          Card(
+                            elevation: 0,
+                            color: const Color(0xFF0F172A),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              side: const BorderSide(color: Color(0xFF1E293B)),
+                            ),
+                            child: ListTile(
+                              leading: const Icon(Icons.space_dashboard_rounded, color: Color(0xFF38BDF8)),
+                              title: const Text(
+                                'Admin Dashboard',
+                                style: TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: const Text(
+                                'User management, system statistics & Remote Config',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF38BDF8)),
+                              onTap: () => context.go('/admin/dashboard'),
+                            ),
+                          ),
+                          const SizedBox(height: 24.0),
+                        ],
 
                         // Settings Section Header
                         _buildSectionHeader(theme, 'profile.settings'.tr()),

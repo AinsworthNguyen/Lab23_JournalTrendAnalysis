@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
@@ -20,6 +22,9 @@ class AppTheme {
       height: height,
       letterSpacing: letterSpacing,
     );
+    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
+      return base;
+    }
     try {
       return GoogleFonts.outfit(
         fontSize: fontSize,
@@ -48,6 +53,9 @@ class AppTheme {
       height: height,
       letterSpacing: letterSpacing,
     );
+    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
+      return base;
+    }
     try {
       return GoogleFonts.inter(
         fontSize: fontSize,
