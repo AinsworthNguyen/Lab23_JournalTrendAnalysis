@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -143,8 +144,106 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
   final FocusNode _authorsSearchFocusNode = FocusNode();
   final FocusNode _journalsSearchFocusNode = FocusNode();
 
+  Timer? _evolutionDebounce;
+  Timer? _authorsDebounce;
+  Timer? _journalsDebounce;
+
+  bool _isSearchingEvolution = false;
+  bool _isSearchingAuthors = false;
+  bool _isSearchingJournals = false;
+
+  List<Paper>? _searchedPapers;
+  List<Author>? _searchedAuthors;
+  List<Journal>? _searchedJournals;
+
+  void _onEvolutionSearchChanged(String query) {
+    _evolutionDebounce?.cancel();
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      setState(() {
+        _isSearchingEvolution = false;
+        _searchedPapers = null;
+      });
+      return;
+    }
+    setState(() {
+      _isSearchingEvolution = true;
+    });
+    _evolutionDebounce = Timer(const Duration(milliseconds: 500), () async {
+      final res = await getIt<GetPublicationsUseCase>().call(
+        GetPublicationsParams(conceptId: widget.keywordId, page: 1, searchQuery: trimmed),
+      );
+      if (mounted) {
+        res.fold(
+          (f) => setState(() { _isSearchingEvolution = false; }),
+          (papers) => setState(() {
+            _searchedPapers = papers;
+            _isSearchingEvolution = false;
+          }),
+        );
+      }
+    });
+  }
+
+  void _onAuthorsSearchChanged(String query) {
+    _authorsDebounce?.cancel();
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      setState(() {
+        _isSearchingAuthors = false;
+        _searchedAuthors = null;
+      });
+      return;
+    }
+    setState(() {
+      _isSearchingAuthors = true;
+    });
+    _authorsDebounce = Timer(const Duration(milliseconds: 500), () async {
+      final res = await getIt<GetTopAuthorsUseCase>().call(widget.keywordId, searchQuery: trimmed);
+      if (mounted) {
+        res.fold(
+          (f) => setState(() { _isSearchingAuthors = false; }),
+          (authors) => setState(() {
+            _searchedAuthors = authors;
+            _isSearchingAuthors = false;
+          }),
+        );
+      }
+    });
+  }
+
+  void _onJournalsSearchChanged(String query) {
+    _journalsDebounce?.cancel();
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      setState(() {
+        _isSearchingJournals = false;
+        _searchedJournals = null;
+      });
+      return;
+    }
+    setState(() {
+      _isSearchingJournals = true;
+    });
+    _journalsDebounce = Timer(const Duration(milliseconds: 500), () async {
+      final res = await getIt<GetJournalRankingUseCase>().call(widget.keywordId, searchQuery: trimmed);
+      if (mounted) {
+        res.fold(
+          (f) => setState(() { _isSearchingJournals = false; }),
+          (journals) => setState(() {
+            _searchedJournals = journals;
+            _isSearchingJournals = false;
+          }),
+        );
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _evolutionDebounce?.cancel();
+    _authorsDebounce?.cancel();
+    _journalsDebounce?.cancel();
     _evolutionSearchController.dispose();
     _authorsSearchController.dispose();
     _journalsSearchController.dispose();
@@ -262,11 +361,11 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
     }
 
     final query = _evolutionSearchController.text.trim().toLowerCase();
-    final filteredPapers = query.isEmpty
+    final filteredPapers = _searchedPapers ?? (query.isEmpty
         ? _relatedPapers
         : _relatedPapers.where((p) =>
             p.title.toLowerCase().contains(query) ||
-            (p.journalName?.toLowerCase().contains(query) ?? false)).toList();
+            (p.journalName?.toLowerCase().contains(query) ?? false)).toList());
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
@@ -287,7 +386,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                         icon: const Icon(Icons.clear, size: 20),
                         onPressed: () {
                           _evolutionSearchController.clear();
-                          setState(() {});
+                          _onEvolutionSearchChanged('');
                         },
                       )
                     : null,
@@ -297,7 +396,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 isDense: true,
               ),
-              onChanged: (_) => setState(() {}),
+              onChanged: _onEvolutionSearchChanged,
             ),
           ),
 
@@ -425,7 +524,12 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
           ),
 
           // Related Publications List
-          if (filteredPapers.isEmpty)
+          if (_isSearchingEvolution)
+            const Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (filteredPapers.isEmpty)
             Card(
               elevation: 0,
               margin: const EdgeInsets.only(top: 8.0),
@@ -487,11 +591,11 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
   Widget _buildAuthorsTab() {
     final theme = Theme.of(context);
     final query = _authorsSearchController.text.trim().toLowerCase();
-    final filteredAuthors = query.isEmpty
+    final filteredAuthors = _searchedAuthors ?? (query.isEmpty
         ? _topAuthors
         : _topAuthors.where((a) =>
             a.displayName.toLowerCase().contains(query) ||
-            (a.lastKnownInstitution?.toLowerCase().contains(query) ?? false)).toList();
+            (a.lastKnownInstitution?.toLowerCase().contains(query) ?? false)).toList());
 
     final top5Authors = filteredAuthors.take(5).toList();
     final labels = top5Authors.map((a) => a.displayName).toList();
@@ -514,7 +618,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                       icon: const Icon(Icons.clear, size: 20),
                       onPressed: () {
                         _authorsSearchController.clear();
-                        setState(() {});
+                        _onAuthorsSearchChanged('');
                       },
                     )
                   : null,
@@ -524,11 +628,16 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               isDense: true,
             ),
-            onChanged: (_) => setState(() {}),
+            onChanged: _onAuthorsSearchChanged,
           ),
         ),
 
-        if (filteredAuthors.isEmpty)
+        if (_isSearchingAuthors)
+          const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (filteredAuthors.isEmpty)
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -623,11 +732,11 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
   Widget _buildJournalsTab() {
     final theme = Theme.of(context);
     final query = _journalsSearchController.text.trim().toLowerCase();
-    final filteredJournals = query.isEmpty
+    final filteredJournals = _searchedJournals ?? (query.isEmpty
         ? _relatedJournals
         : _relatedJournals.where((j) =>
             j.displayName.toLowerCase().contains(query) ||
-            (j.publisher?.toLowerCase().contains(query) ?? false)).toList();
+            (j.publisher?.toLowerCase().contains(query) ?? false)).toList());
 
     final top5Journals = filteredJournals.take(5).toList();
     final labels = top5Journals.map((j) => j.displayName).toList();
@@ -650,7 +759,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                       icon: const Icon(Icons.clear, size: 20),
                       onPressed: () {
                         _journalsSearchController.clear();
-                        setState(() {});
+                        _onJournalsSearchChanged('');
                       },
                     )
                   : null,
@@ -660,11 +769,16 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               isDense: true,
             ),
-            onChanged: (_) => setState(() {}),
+            onChanged: _onJournalsSearchChanged,
           ),
         ),
 
-        if (filteredJournals.isEmpty)
+        if (_isSearchingJournals)
+          const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (filteredJournals.isEmpty)
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(

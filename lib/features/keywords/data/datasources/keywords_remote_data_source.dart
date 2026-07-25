@@ -5,7 +5,7 @@ import '../models/keyword_model.dart';
 import '../models/trend_model.dart';
 
 abstract class KeywordsRemoteDataSource {
-  Future<List<AuthorModel>> getTopAuthors(String conceptId);
+  Future<List<AuthorModel>> getTopAuthors(String conceptId, {String? searchQuery});
   Future<AuthorModel> getAuthorDetails(String authorId);
   Future<List<KeywordModel>> getTopKeywords(String conceptId);
   Future<List<KeywordModel>> getEmergingKeywords(String conceptId);
@@ -20,7 +20,7 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
   KeywordsRemoteDataSourceImpl(this._apiClient);
 
   @override
-  Future<List<AuthorModel>> getTopAuthors(String conceptId) async {
+  Future<List<AuthorModel>> getTopAuthors(String conceptId, {String? searchQuery}) async {
     final filter = conceptId.startsWith('T')
         ? 'topics.id:$conceptId,publication_year:<2026'
         : 'concepts.id:$conceptId,publication_year:<2026';
@@ -28,6 +28,9 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
       'filter': filter,
       'group_by': 'authorships.author.id',
     };
+    if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+      queryParams['search'] = searchQuery.trim();
+    }
     final response = await _apiClient.get('/works', queryParameters: queryParams);
     final results = response['group_by'] as List<dynamic>? ?? [];
     

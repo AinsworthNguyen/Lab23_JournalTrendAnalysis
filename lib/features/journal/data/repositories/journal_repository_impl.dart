@@ -22,14 +22,16 @@ class JournalRepositoryImpl implements JournalRepository {
   );
 
   @override
-  Future<Either<Failure, List<Journal>>> getTopJournals(String conceptId) async {
+  Future<Either<Failure, List<Journal>>> getTopJournals(String conceptId, {String? searchQuery}) async {
     final hasConnection = await _networkInfo.isConnected;
 
     if (hasConnection) {
       try {
-        final remoteJournals = await _remoteDataSource.getTopJournals(conceptId);
+        final remoteJournals = await _remoteDataSource.getTopJournals(conceptId, searchQuery: searchQuery);
         if (remoteJournals.isNotEmpty) {
-          await _localDataSource.cacheTopJournals(conceptId, remoteJournals);
+          if (searchQuery == null || searchQuery.isEmpty) {
+            await _localDataSource.cacheTopJournals(conceptId, remoteJournals);
+          }
           return Right(remoteJournals);
         }
       } catch (_) {}

@@ -15,7 +15,7 @@ class FakeGetJournalRankingUseCase implements GetJournalRankingUseCase {
   FakeGetJournalRankingUseCase(this.journals);
 
   @override
-  Future<Either<Failure, List<Journal>>> call(String conceptId) async {
+  Future<Either<Failure, List<Journal>>> call(String conceptId, {String? searchQuery}) async {
     return Right(journals);
   }
 }
@@ -37,7 +37,7 @@ class FakeJournalRepository implements JournalRepository {
   }
 
   @override
-  Future<Either<Failure, List<Journal>>> getTopJournals(String conceptId) async {
+  Future<Either<Failure, List<Journal>>> getTopJournals(String conceptId, {String? searchQuery}) async {
     throw UnimplementedError();
   }
 

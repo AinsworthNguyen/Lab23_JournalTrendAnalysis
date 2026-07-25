@@ -10,7 +10,7 @@ abstract class JournalRemoteDataSource {
     String? searchQuery,
   });
   Future<PaperModel> getPaperDetails(String paperId);
-  Future<List<JournalModel>> getTopJournals(String conceptId);
+  Future<List<JournalModel>> getTopJournals(String conceptId, {String? searchQuery});
   Future<JournalModel> getJournalDetails(String journalId);
   Future<String> getTopJournalName(String conceptId);
   Future<PaperModel?> getMostInfluentialPaper(String conceptId);
@@ -126,7 +126,7 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
   }
 
   @override
-  Future<List<JournalModel>> getTopJournals(String conceptId) async {
+  Future<List<JournalModel>> getTopJournals(String conceptId, {String? searchQuery}) async {
     try {
       final filter = conceptId.startsWith('T')
           ? 'topics.id:$conceptId,publication_year:<2026'
@@ -135,6 +135,9 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
         'filter': filter,
         'group_by': 'primary_location.source.id',
       };
+      if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+        queryParams['search'] = searchQuery.trim();
+      }
       final response = await _apiClient.get('/works', queryParameters: queryParams);
       final results = response['group_by'] as List<dynamic>? ?? [];
       

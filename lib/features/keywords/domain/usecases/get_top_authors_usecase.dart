@@ -12,7 +12,7 @@ class GetTopAuthorsUseCase implements UseCase<List<Author>, String> {
   GetTopAuthorsUseCase(this._repository);
 
   @override
-  Future<Either<Failure, List<Author>>> call(String params) {
-    return _repository.getTopAuthors(params);
+  Future<Either<Failure, List<Author>>> call(String params, {String? searchQuery}) {
+    return _repository.getTopAuthors(params, searchQuery: searchQuery);
   }
 }

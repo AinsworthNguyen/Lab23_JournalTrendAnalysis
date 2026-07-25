@@ -22,14 +22,16 @@ class AuthorRepositoryImpl implements AuthorRepository {
   );
 
   @override
-  Future<Either<Failure, List<Author>>> getTopAuthors(String conceptId) async {
+  Future<Either<Failure, List<Author>>> getTopAuthors(String conceptId, {String? searchQuery}) async {
     final hasConnection = await _networkInfo.isConnected;
 
     if (hasConnection) {
       try {
-        final remoteAuthors = await _remoteDataSource.getTopAuthors(conceptId);
+        final remoteAuthors = await _remoteDataSource.getTopAuthors(conceptId, searchQuery: searchQuery);
         if (remoteAuthors.isNotEmpty) {
-          await _localDataSource.cacheTopAuthors(conceptId, remoteAuthors);
+          if (searchQuery == null || searchQuery.isEmpty) {
+            await _localDataSource.cacheTopAuthors(conceptId, remoteAuthors);
+          }
           return Right(remoteAuthors);
         }
       } catch (_) {}
