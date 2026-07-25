@@ -159,7 +159,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                     TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'dashboard.search_hint'.tr(),
+                        hintText: 'Search research topics (e.g. AI, Physics, Data)...',
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
@@ -174,7 +174,40 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20.0),
+
+                    // Suggested Quick Search Chips when search is empty
+                    if (_searchController.text.isEmpty) ...[
+                      const SizedBox(height: 10.0),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            Text(
+                              'Try searching:',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 8.0),
+                            ...['Physics', 'Geology', 'Data Science', 'Python', 'AI', 'Computing'].map((tag) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 6.0),
+                                child: ActionChip(
+                                  visualDensity: VisualDensity.compact,
+                                  avatar: Icon(Icons.auto_awesome, size: 12, color: theme.colorScheme.primary),
+                                  label: Text(tag, style: const TextStyle(fontSize: 11)),
+                                  onPressed: () {
+                                    _searchController.text = tag;
+                                  },
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16.0),
 
                     // Top Keywords Chart (only shown when not searching or if search results are populated)
                     if (chartLabels.isNotEmpty && _searchController.text.isEmpty) ...[
