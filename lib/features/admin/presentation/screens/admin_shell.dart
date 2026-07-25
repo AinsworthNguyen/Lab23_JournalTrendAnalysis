@@ -36,6 +36,31 @@ class _AdminShellState extends State<AdminShell> {
       _currentIndex = routeIndex;
     }
 
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width >= 850;
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Row(
+          children: [
+            _AdminSidebar(
+              currentIndex: _currentIndex,
+              tabs: _tabs,
+              onTap: _onTap,
+            ),
+            Expanded(
+              child: ClipRect(
+                child: SafeArea(
+                  child: widget.child,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const _AdminAppBar(),
@@ -108,7 +133,7 @@ class _AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           tooltip: 'Back to App',
-          onPressed: () => context.go('/home'),
+          onPressed: () => context.go('/home?fromAdmin=true'),
           icon: const Icon(Icons.exit_to_app_rounded, color: AppColors.textSecondary, size: 20),
         ),
         const SizedBox(width: 8),
@@ -167,4 +192,166 @@ class _AdminTab {
   final IconData activeIcon;
   final String label;
   const _AdminTab({required this.path, required this.icon, required this.activeIcon, required this.label});
+}
+
+// ─── Admin Sidebar (Desktop/Laptop Layout) ───────────────────────────────────
+
+class _AdminSidebar extends StatelessWidget {
+  final int currentIndex;
+  final List<_AdminTab> tabs;
+  final ValueChanged<int> onTap;
+
+  const _AdminSidebar({
+    required this.currentIndex,
+    required this.tabs,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 260,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          right: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.4),
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _adminAccent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: _adminAccent.withValues(alpha: 0.35)),
+                    ),
+                    child: const Icon(Icons.admin_panel_settings, color: _adminAccent, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ADMIN PANEL',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: _adminAccent,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 10,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Control Center',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppColors.textMain,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(color: AppColors.border, height: 1, indent: 16, endIndent: 16),
+            const SizedBox(height: 16),
+            // Navigation items
+            Expanded(
+              child: ListView.builder(
+                itemCount: tabs.length,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemBuilder: (context, index) {
+                  final tab = tabs[index];
+                  final isActive = index == currentIndex;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: InkWell(
+                      onTap: () => onTap(index),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isActive ? _adminAccent.withValues(alpha: 0.1) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isActive ? _adminAccent.withValues(alpha: 0.25) : Colors.transparent,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isActive ? tab.activeIcon : tab.icon,
+                              color: isActive ? _adminAccent : AppColors.textSecondary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              tab.label,
+                              style: TextStyle(
+                                color: isActive ? _adminAccent : AppColors.textSecondary,
+                                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // Footer (Exit button)
+            const Divider(color: AppColors.border, height: 1, indent: 16, endIndent: 16),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: InkWell(
+                onTap: () => context.go('/home?fromAdmin=true'),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.exit_to_app_rounded, color: AppColors.textSecondary, size: 20),
+                      SizedBox(width: 10),
+                      Text(
+                        'Exit to App',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

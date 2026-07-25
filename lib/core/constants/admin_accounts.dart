@@ -3,6 +3,7 @@ class AdminAccounts {
 
   static const Set<String> emails = {
     'ndv6060@gmail.com',
+    'nguyenducviet22022004@gmail.com',
   };
 
   static bool isAdminEmail(String? email) {
