@@ -40,7 +40,7 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       queryParams['search'] = searchQuery;
     } else {
-      queryParams['sort'] = 'cited_by_count:desc';
+      queryParams['sort'] = 'publication_year:desc';
     }
 
     final response = await _apiClient.get('/works', queryParameters: queryParams);
