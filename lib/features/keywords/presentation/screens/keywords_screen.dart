@@ -106,6 +106,9 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
             results[0].fold((f) => null, (data) => _topKeywords = data);
             results[1].fold((f) => null, (data) => _emergingKeywords = data);
 
+            _topKeywords.sort((a, b) => b.worksCount.compareTo(a.worksCount));
+            _emergingKeywords.sort((a, b) => b.worksCount.compareTo(a.worksCount));
+
             _filteredTopKeywords = List.from(_topKeywords);
             _filteredEmergingKeywords = List.from(_emergingKeywords);
 
@@ -161,6 +164,9 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
             worksCount: map['works_count'] as int? ?? 0,
           );
         }).toList();
+
+        // Sort search results strictly by worksCount descending
+        searchResults.sort((a, b) => b.worksCount.compareTo(a.worksCount));
 
         if (mounted && _searchController.text.trim() == query) {
           _saveSearch(query);

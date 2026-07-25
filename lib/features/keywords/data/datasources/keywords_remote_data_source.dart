@@ -147,10 +147,11 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
       final fieldId = _getFieldIdFromConceptId(conceptId);
       final response = await _apiClient.get('/topics', queryParameters: {
         'filter': 'field.id:$fieldId',
+        'sort': 'works_count:desc',
         'per_page': 15,
       });
       final results = response['results'] as List<dynamic>? ?? [];
-      return results.map((json) {
+      final keywords = results.map((json) {
         final map = json as Map<String, dynamic>;
         final fullId = map['id'] as String? ?? '';
         final cleanedId = fullId.split('/').last;
@@ -161,6 +162,8 @@ class KeywordsRemoteDataSourceImpl implements KeywordsRemoteDataSource {
           worksCount: map['works_count'] as int? ?? 0,
         );
       }).toList();
+      keywords.sort((a, b) => b.worksCount.compareTo(a.worksCount));
+      return keywords;
     } catch (_) {}
     return [];
   }
