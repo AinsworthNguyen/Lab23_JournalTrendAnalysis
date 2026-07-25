@@ -32,6 +32,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
   List<Keyword> _filteredEmergingKeywords = [];
 
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounceTimer;
 
   List<String> _getRecentSearches() {
@@ -73,6 +74,13 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
     super.initState();
     _loadData();
     _searchController.addListener(_onSearchChanged);
+    _searchFocusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadData() async {
@@ -177,6 +185,8 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
 
   @override
   void dispose() {
+    _searchFocusNode.removeListener(_onFocusChanged);
+    _searchFocusNode.dispose();
     _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -246,6 +256,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                     // Search Bar
                     TextField(
                       controller: _searchController,
+                      focusNode: _searchFocusNode,
                       decoration: InputDecoration(
                         hintText: 'Search research topics (e.g. AI, Physics, Data)...',
                         prefixIcon: const Icon(Icons.search),
@@ -272,8 +283,8 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                       ),
                     ),
 
-                    // Recent Search History Chips & Suggested Chips
-                    if (_searchController.text.isEmpty) ...[
+                    // Recent Search History Chips & Suggested Chips (Only shown when search input has Focus and query is empty)
+                    if (_searchFocusNode.hasFocus && _searchController.text.isEmpty) ...[
                       Builder(
                         builder: (context) {
                           final recentSearches = _getRecentSearches();
