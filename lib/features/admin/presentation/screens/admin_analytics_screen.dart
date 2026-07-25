@@ -128,25 +128,50 @@ class _AdminAnalyticsView extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
-        // Chart 1: User stats bar chart
-        _buildChartCard(
-          context,
-          title: 'User Overview',
-          subtitle: 'User counts by activity status',
-          chart: _buildUserStatsBarChart(context, summary),
-          height: 200,
-        ),
-        const SizedBox(height: 16),
-
-        // Chart 2: Activity stats bar chart
-        _buildChartCard(
-          context,
-          title: 'System Activity',
-          subtitle: 'Page views & PDF report exports',
-          chart: _buildActivityBarChart(context, summary),
-          height: 200,
-        ),
-        const SizedBox(height: 16),
+        if (MediaQuery.sizeOf(context).width >= 850) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _buildChartCard(
+                  context,
+                  title: 'User Overview',
+                  subtitle: 'User counts by activity status',
+                  chart: _buildUserStatsBarChart(context, summary),
+                  height: 240,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildChartCard(
+                  context,
+                  title: 'System Activity',
+                  subtitle: 'Page views & PDF report exports',
+                  chart: _buildActivityBarChart(context, summary),
+                  height: 240,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ] else ...[
+          _buildChartCard(
+            context,
+            title: 'User Overview',
+            subtitle: 'User counts by activity status',
+            chart: _buildUserStatsBarChart(context, summary),
+            height: 200,
+          ),
+          const SizedBox(height: 16),
+          _buildChartCard(
+            context,
+            title: 'System Activity',
+            subtitle: 'Page views & PDF report exports',
+            chart: _buildActivityBarChart(context, summary),
+            height: 200,
+          ),
+          const SizedBox(height: 16),
+        ],
 
         // Top publications list
         if (summary.topPublications.isNotEmpty) ...[

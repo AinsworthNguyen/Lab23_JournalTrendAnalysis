@@ -19,6 +19,7 @@ import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/admin/presentation/screens/admin_users_screen.dart';
 import '../../features/admin/presentation/screens/admin_analytics_screen.dart';
 import '../../features/admin/presentation/screens/admin_config_screen.dart';
+import '../constants/admin_accounts.dart';
 import '../constants/prefs_keys.dart';
 import '../utils/app_logger.dart';
 
@@ -58,6 +59,17 @@ final GoRouter appRouter = GoRouter(
       }
 
       // Logged in & Personalized
+      final email = authService.currentUser?.email;
+      final role = prefs.getString(PrefsKeys.role);
+      final isAdmin = AdminAccounts.isAdminEmail(email) || role == 'admin';
+
+      final isGoingToHome = state.matchedLocation == '/home' || state.matchedLocation == '/';
+      final isFromAdmin = state.uri.queryParameters['fromAdmin'] == 'true';
+
+      if (isAdmin && (isGoingToLogin || isGoingToSetup || (isGoingToHome && !isFromAdmin))) {
+        return '/admin/dashboard';
+      }
+
       if (isGoingToLogin || isGoingToSetup) {
         return '/home';
       }
