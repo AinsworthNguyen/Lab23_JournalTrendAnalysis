@@ -283,15 +283,19 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                       ),
                     ),
 
-                    // Recent Search History Chips & Suggested Chips (Only shown when search input has Focus and query is empty)
-                    if (_searchFocusNode.hasFocus && _searchController.text.isEmpty) ...[
+                    // Chips logic when query is empty:
+                    // 1) Unfocused: Show 'Try searching:' chips.
+                    // 2) Focused: If history exists, show ONLY 'Recent Searches:' chips. If no history, show 'Try searching:' chips.
+                    if (_searchController.text.isEmpty) ...[
                       Builder(
                         builder: (context) {
                           final recentSearches = _getRecentSearches();
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (recentSearches.isNotEmpty) ...[
+                          final showHistory = _searchFocusNode.hasFocus && recentSearches.isNotEmpty;
+
+                          if (showHistory) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 const SizedBox(height: 10.0),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -342,37 +346,43 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                                   ),
                                 ),
                               ],
-                              const SizedBox(height: 10.0),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      'Try searching:',
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    ...['Physics', 'Geology', 'Data Science', 'Python', 'AI', 'Computing'].map((tag) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(right: 6.0),
-                                        child: ActionChip(
-                                          visualDensity: VisualDensity.compact,
-                                          avatar: Icon(Icons.auto_awesome, size: 12, color: theme.colorScheme.primary),
-                                          label: Text(tag, style: const TextStyle(fontSize: 11)),
-                                          onPressed: () {
-                                            _searchController.text = tag;
-                                          },
+                            );
+                          } else {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 10.0),
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'Try searching:',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                      );
-                                    }),
-                                  ],
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                      ...['Physics', 'Geology', 'Data Science', 'Python', 'AI', 'Computing'].map((tag) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(right: 6.0),
+                                          child: ActionChip(
+                                            visualDensity: VisualDensity.compact,
+                                            avatar: Icon(Icons.auto_awesome, size: 12, color: theme.colorScheme.primary),
+                                            label: Text(tag, style: const TextStyle(fontSize: 11)),
+                                            onPressed: () {
+                                              _searchController.text = tag;
+                                            },
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          );
+                              ],
+                            );
+                          }
                         },
                       ),
                     ],
