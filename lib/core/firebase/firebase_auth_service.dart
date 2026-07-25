@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:injectable/injectable.dart';
+import '../constants/admin_accounts.dart';
 
 abstract class IFirebaseAuthService {
   Stream<User?> get authStateChanges;
@@ -15,11 +18,13 @@ abstract class IFirebaseAuthService {
 @LazySingleton(as: IFirebaseAuthService)
 class FirebaseAuthService implements IFirebaseAuthService {
   final FirebaseAuth _firebaseAuth;
+  final FirebaseFirestore _firestore;
   final GoogleSignIn _googleSignIn;
   bool _isBypassed = false;
 
   FirebaseAuthService()
       : _firebaseAuth = FirebaseAuth.instance,
+        _firestore = FirebaseFirestore.instance,
         _googleSignIn = GoogleSignIn();
 
   @override
@@ -52,7 +57,9 @@ class FirebaseAuthService implements IFirebaseAuthService {
         idToken: googleAuth.idToken,
       );
       _isBypassed = false;
-      return await _firebaseAuth.signInWithCredential(credential);
+      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      await _syncUserProfile(userCredential.user);
+      return userCredential;
     } on MissingPluginException {
       throw FirebaseAuthException(
         code: 'UNSUPPORTED_PLATFORM',
@@ -66,6 +73,36 @@ class FirebaseAuthService implements IFirebaseAuthService {
         );
       }
       rethrow;
+    }
+  }
+
+  Future<void> _syncUserProfile(User? user) async {
+    if (user == null) return;
+
+    try {
+      final userRef = _firestore.collection('users').doc(user.uid);
+      final snapshot = await userRef.get();
+      final existingRole = snapshot.data()?['role'] as String?;
+      final existingIsBlocked = snapshot.data()?['isBlocked'] as bool?;
+      final role = AdminAccounts.isAdminEmail(user.email)
+          ? 'admin'
+          : existingRole ?? 'user';
+
+      final data = <String, Object?>{
+        'fullName': user.displayName ?? user.email ?? 'Google User',
+        'email': user.email ?? '',
+        'photoUrl': user.photoURL ?? '',
+        'role': role,
+        'isBlocked': existingIsBlocked ?? false,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      };
+      if (!snapshot.exists) {
+        data['createdAt'] = FieldValue.serverTimestamp();
+      }
+
+      await userRef.set(data, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[FirebaseAuthService] Failed to sync user profile: $e');
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../injection_container.dart';
+import '../../../../core/constants/admin_accounts.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
 import '../../domain/entities/user_preferences.dart';
 import '../blocs/personalization_bloc.dart';
@@ -237,6 +238,7 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                               final currentUser = authService.currentUser;
                               final email = currentUser?.email ?? '';
                               final photoUrl = currentUser?.photoURL ?? '';
+                              final role = AdminAccounts.roleForEmail(email);
 
                               final prefs = UserPreferences(
                                 fullName: name,
@@ -244,6 +246,7 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                                 photoUrl: photoUrl,
                                 interestConceptId: _selectedConcept!.id,
                                 interestConceptName: _selectedConcept!.name,
+                                role: role,
                               );
 
                               context.read<PersonalizationBloc>().add(SavePreferencesEvent(prefs));
@@ -283,6 +286,7 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                               final currentUser = authService.currentUser;
                               final email = currentUser?.email ?? '';
                               final photoUrl = currentUser?.photoURL ?? '';
+                              final role = AdminAccounts.roleForEmail(email);
 
                               // Default/Guest profile values
                               final guestPrefs = UserPreferences(
@@ -291,6 +295,7 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                                 photoUrl: photoUrl,
                                 interestConceptId: 'C41008148', // Computer Science
                                 interestConceptName: 'Computer Science',
+                                role: role,
                               );
 
                               context.read<PersonalizationBloc>().add(SavePreferencesEvent(guestPrefs));

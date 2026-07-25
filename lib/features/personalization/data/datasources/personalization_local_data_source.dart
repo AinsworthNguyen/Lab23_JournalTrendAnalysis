@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/admin_accounts.dart';
 import '../../../../core/constants/prefs_keys.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/user_preferences_model.dart';
@@ -40,7 +41,9 @@ class PersonalizationLocalDataSourceImpl implements PersonalizationLocalDataSour
         conceptId = newId;
       }
 
-      final role = _sharedPreferences.getString('KEY_USER_ROLE') ?? 'admin';
+      final role = _sharedPreferences.getString(PrefsKeys.role) ??
+          AdminAccounts.roleForEmail(email);
+      final isBlocked = _sharedPreferences.getBool(PrefsKeys.isBlocked) ?? false;
 
       return UserPreferencesModel(
         fullName: name,
@@ -49,6 +52,7 @@ class PersonalizationLocalDataSourceImpl implements PersonalizationLocalDataSour
         interestConceptId: conceptId,
         interestConceptName: conceptName,
         role: role,
+        isBlocked: isBlocked,
       );
     } else {
       throw CacheException('No user preferences found.');
@@ -63,6 +67,8 @@ class PersonalizationLocalDataSourceImpl implements PersonalizationLocalDataSour
       await _sharedPreferences.setString(PrefsKeys.photoUrl, preferences.photoUrl);
       await _sharedPreferences.setString(PrefsKeys.interestConceptId, preferences.interestConceptId);
       await _sharedPreferences.setString(PrefsKeys.interestConceptName, preferences.interestConceptName);
+      await _sharedPreferences.setString(PrefsKeys.role, preferences.role);
+      await _sharedPreferences.setBool(PrefsKeys.isBlocked, preferences.isBlocked);
     } catch (e) {
       throw CacheException('Failed to save user preferences: $e');
     }
@@ -76,6 +82,8 @@ class PersonalizationLocalDataSourceImpl implements PersonalizationLocalDataSour
       await _sharedPreferences.remove(PrefsKeys.photoUrl);
       await _sharedPreferences.remove(PrefsKeys.interestConceptId);
       await _sharedPreferences.remove(PrefsKeys.interestConceptName);
+      await _sharedPreferences.remove(PrefsKeys.role);
+      await _sharedPreferences.remove(PrefsKeys.isBlocked);
       await _sharedPreferences.remove(PrefsKeys.lastSyncDate);
     } catch (e) {
       throw CacheException('Failed to clear user preferences: $e');
