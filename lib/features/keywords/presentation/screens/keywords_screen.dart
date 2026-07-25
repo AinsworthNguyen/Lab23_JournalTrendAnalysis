@@ -144,8 +144,14 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
             }
 
             // Prep chart data for top keywords (top 5 only)
-            final chartLabels = _filteredTopKeywords.take(5).map((k) => k.displayName).toList();
-            final chartValues = _filteredTopKeywords.take(5).map((k) => k.worksCount.toDouble()).toList();
+            final top5List = _filteredTopKeywords.take(5).toList();
+            final topChartLabels = top5List.map((k) => k.displayName).toList();
+            final topChartValues = top5List.map((k) => k.worksCount.toDouble()).toList();
+
+            // Prep chart data for emerging keywords (top 5 only)
+            final emerging5List = _filteredEmergingKeywords.take(5).toList();
+            final emergingChartLabels = emerging5List.map((k) => k.displayName).toList();
+            final emergingChartValues = emerging5List.map((k) => k.worksCount.toDouble()).toList();
 
             return RefreshIndicator(
               onRefresh: _loadData,
@@ -207,44 +213,50 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 16.0),
+                    const SizedBox(height: 20.0),
 
-                    // Top Keywords Chart (only shown when not searching or if search results are populated)
-                    if (chartLabels.isNotEmpty && _searchController.text.isEmpty) ...[
-                      Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
-                          side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: HorizontalBarChart(
-                            labels: chartLabels,
-                            values: chartValues,
-                            title: 'keywords.top_keywords'.tr(),
-                            barColor: theme.colorScheme.secondary,
+                    // SECTION 1: TOP RESEARCH TOPICS
+                    if (top5List.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(Icons.leaderboard_rounded, color: theme.colorScheme.primary, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'keywords.top_keywords'.tr(),
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                           ),
-                        ),
-                      ).animate().fadeIn(duration: 400.ms),
-                      const SizedBox(height: 20.0),
-                    ],
-
-                    // Top Keywords List
-                    if (_filteredTopKeywords.isNotEmpty) ...[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-                        child: Text(
-                          'keywords.top_keywords'.tr(),
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                        ),
+                        ],
                       ),
+                      const SizedBox(height: 12.0),
+
+                      // Top Keywords Chart
+                      if (topChartLabels.isNotEmpty) ...[
+                        Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: HorizontalBarChart(
+                              labels: topChartLabels,
+                              values: topChartValues,
+                              title: 'Top 5 Topics Overview',
+                              barColor: theme.colorScheme.secondary,
+                            ),
+                          ),
+                        ).animate().fadeIn(duration: 400.ms),
+                        const SizedBox(height: 12.0),
+                      ],
+
+                      // Top Keywords List (Top 5 only)
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _filteredTopKeywords.length,
+                        itemCount: top5List.length,
                         itemBuilder: (context, index) {
-                          final kw = _filteredTopKeywords[index];
+                          final kw = top5List[index];
                           return Card(
                             margin: const EdgeInsets.only(bottom: 10.0),
                             elevation: 0,
@@ -253,19 +265,35 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                               side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                             ),
                             child: ListTile(
+                              leading: CircleAvatar(
+                                radius: 14,
+                                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                child: Text(
+                                  '#${index + 1}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ),
                               title: Text(
                                 kw.displayName,
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               subtitle: const Text('Research Topic'),
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    '${NumberFormat.decimalPattern().format(kw.worksCount)} works',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    '${NumberFormat.compact().format(kw.worksCount)} works',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                    ),
                                   ),
+                                  const SizedBox(width: 4),
                                   const Icon(Icons.chevron_right, size: 16),
                                 ],
                               ),
@@ -278,24 +306,51 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                           );
                         },
                       ),
-                      const SizedBox(height: 20.0),
+                      const SizedBox(height: 24.0),
                     ],
 
-                    // Emerging Keywords List
-                    if (_filteredEmergingKeywords.isNotEmpty) ...[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-                        child: Text(
-                          'keywords.emerging_keywords'.tr(),
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                        ),
+                    // SECTION 2: EMERGING RESEARCH TOPICS
+                    if (emerging5List.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          const Icon(Icons.trending_up_rounded, color: Colors.green, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'keywords.emerging_keywords'.tr(),
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 12.0),
+
+                      // Emerging Keywords Chart
+                      if (emergingChartLabels.isNotEmpty) ...[
+                        Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: HorizontalBarChart(
+                              labels: emergingChartLabels,
+                              values: emergingChartValues,
+                              title: 'Top 5 Emerging Topics Growth',
+                              barColor: Colors.teal,
+                            ),
+                          ),
+                        ).animate().fadeIn(duration: 400.ms),
+                        const SizedBox(height: 12.0),
+                      ],
+
+                      // Emerging Keywords List (Top 5 only)
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _filteredEmergingKeywords.length,
+                        itemCount: emerging5List.length,
                         itemBuilder: (context, index) {
-                          final kw = _filteredEmergingKeywords[index];
+                          final kw = emerging5List[index];
                           return Card(
                             margin: const EdgeInsets.only(bottom: 10.0),
                             elevation: 0,
@@ -305,15 +360,30 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: Colors.green.withValues(alpha: 0.1),
-                                child: const Icon(Icons.trending_up, color: Colors.green, size: 18),
+                                radius: 14,
+                                backgroundColor: Colors.green.withValues(alpha: 0.15),
+                                child: const Icon(Icons.trending_up, color: Colors.green, size: 14),
                               ),
                               title: Text(
                                 kw.displayName,
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               subtitle: const Text('Emerging Topic'),
-                              trailing: const Icon(Icons.chevron_right, size: 16),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${NumberFormat.compact().format(kw.worksCount)} works',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.chevron_right, size: 16),
+                                ],
+                              ),
                               onTap: () {
                                 context.push(
                                   '/keywords/detail/${kw.id}?name=${Uri.encodeComponent(kw.displayName)}',
