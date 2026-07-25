@@ -49,7 +49,13 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
-      if (mounted) setState(() {});
+      if (mounted) {
+        if (_tabController.index == 0) {
+          _searchController.clear();
+          _searchedPapers = null;
+        }
+        setState(() {});
+      }
     });
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
@@ -140,7 +146,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
         debugPrint('Failed to fetch counts_by_year for author: $e');
       }
 
-      // 3. Fetch Top Publications (by citations) & Recent Publications (by year)
+      // 3. Fetch Top Publications (by citations) & Publications (by year)
       final worksResults = await Future.wait([
         getIt<ApiClient>().get('/works', queryParameters: {
           'filter': 'authorships.author.id:${widget.authorId},primary_location.source.type:journal|conference,publication_year:<2026',
@@ -315,8 +321,11 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
       }
     }
 
-    // Select active paper set based on tab index (Top vs Recent)
-    final basePapers = _searchedPapers ?? (_tabController.index == 0 ? _topPapers : _recentPapers);
+    final isTopTab = _tabController.index == 0;
+    final sectionTitle = isTopTab ? 'Top Publications' : 'Publications';
+
+    // Select active paper set based on tab index (Top vs Publications)
+    final basePapers = isTopTab ? _topPapers : (_searchedPapers ?? _recentPapers);
 
     // Apply Open Access filter
     final filteredPapers = basePapers.where((paper) {
@@ -324,9 +333,6 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
       if (_selectedFilter == 'closed') return !paper.isOpenAccess;
       return true;
     }).toList();
-
-    final isTopTab = _tabController.index == 0;
-    final sectionTitle = isTopTab ? 'Top Publications (By Citations)' : 'Recent Publications (By Year)';
 
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -579,107 +585,109 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
                 indicatorSize: TabBarIndicatorSize.tab,
                 tabs: const [
                   Tab(text: 'Top Publications'),
-                  Tab(text: 'Recent Publications'),
+                  Tab(text: 'Publications'),
                 ],
               ),
             ),
             const SizedBox(height: 16.0),
 
-            // 5. Search Bar
-            TextField(
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-              textInputAction: TextInputAction.search,
-              onChanged: _onSearchChanged,
-              onSubmitted: (val) {
-                if (val.trim().isNotEmpty) _saveSearch(val.trim());
-              },
-              decoration: InputDecoration(
-                hintText: isTopTab ? 'Search top publications by title or topic...' : 'Search recent publications by title or topic...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _isSearching
-                    ? UnconstrainedBox(
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: theme.colorScheme.primary,
+            // 5. Search Bar (Only shown on "Publications" tab!)
+            if (!isTopTab) ...[
+              TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                textInputAction: TextInputAction.search,
+                onChanged: _onSearchChanged,
+                onSubmitted: (val) {
+                  if (val.trim().isNotEmpty) _saveSearch(val.trim());
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search publications by title or topic...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _isSearching
+                      ? UnconstrainedBox(
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        )
+                      : (_searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                _onSearchChanged('');
+                              },
+                            )
+                          : null),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  isDense: true,
+                ),
+              ),
+
+              // Recent Searches Chips
+              if (_searchFocusNode.hasFocus && history.isNotEmpty) ...[
+                const SizedBox(height: 8.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.history_rounded, size: 14, color: theme.colorScheme.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Recent Searches:',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      )
-                    : (_searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
-                            onPressed: () {
-                              _searchController.clear();
-                              _onSearchChanged('');
-                            },
-                          )
-                        : null),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                isDense: true,
-              ),
-            ),
-
-            // Recent Searches Chips
-            if (_searchFocusNode.hasFocus && history.isNotEmpty) ...[
-              const SizedBox(height: 8.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.history_rounded, size: 14, color: theme.colorScheme.primary),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Recent Searches:',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                          fontWeight: FontWeight.w600,
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: _clearHistory,
+                      child: Text(
+                        'Clear All',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: _clearHistory,
-                    child: Text(
-                      'Clear All',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6.0),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: history.map((item) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 6.0),
-                      child: ActionChip(
-                        visualDensity: VisualDensity.compact,
-                        avatar: const Icon(Icons.history, size: 12),
-                        label: Text(item, style: const TextStyle(fontSize: 11)),
-                        onPressed: () {
-                          _searchController.text = item;
-                          _saveSearch(item);
-                          _onSearchChanged(item);
-                        },
-                      ),
-                    );
-                  }).toList(),
+                  ],
                 ),
-              ),
+                const SizedBox(height: 6.0),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: history.map((item) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6.0),
+                        child: ActionChip(
+                          visualDensity: VisualDensity.compact,
+                          avatar: const Icon(Icons.history, size: 12),
+                          label: Text(item, style: const TextStyle(fontSize: 11)),
+                          onPressed: () {
+                            _searchController.text = item;
+                            _saveSearch(item);
+                            _onSearchChanged(item);
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16.0),
             ],
-            const SizedBox(height: 16.0),
 
             // 6. Filter Chips: All / Open Access / Subscription
             SingleChildScrollView(
@@ -695,7 +703,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
                   ),
                   const SizedBox(width: 8.0),
                   ChoiceChip(
-                    label: const Text('Open Access (OA)'),
+                    label: const Text('Open Access'),
                     selected: _selectedFilter == 'oa',
                     onSelected: (selected) {
                       if (selected) setState(() => _selectedFilter = 'oa');
