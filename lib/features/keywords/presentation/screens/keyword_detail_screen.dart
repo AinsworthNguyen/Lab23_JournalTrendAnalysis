@@ -14,7 +14,11 @@ import '../../../journal/domain/usecases/get_publications_usecase.dart';
 import '../../../journal/domain/entities/journal.dart';
 import '../../../journal/domain/entities/paper.dart';
 import '../../../../core/firebase/firebase_analytics_service.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../../../../core/widgets/horizontal_bar_chart.dart';
+import '../../../home/domain/usecases/clear_recent_searches_usecase.dart';
+import '../../../home/domain/usecases/get_recent_searches_usecase.dart';
+import '../../../home/domain/usecases/save_search_query_usecase.dart';
 
 class KeywordDetailScreen extends StatefulWidget {
   final String keywordId;
@@ -42,13 +46,36 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
   List<Paper> _relatedPapers = [];
 
   bool _showPublicationsChart = true;
+  List<String> _recentSearches = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _loadData();
+    _loadRecentSearches();
+    _evolutionSearchFocusNode.addListener(() => setState(() {}));
+    _authorsSearchFocusNode.addListener(() => setState(() {}));
+    _journalsSearchFocusNode.addListener(() => setState(() {}));
     getIt<IFirebaseAnalyticsService>().logViewKeyword(widget.keywordName);
+  }
+
+  void _loadRecentSearches() async {
+    final res = await getIt<GetRecentSearchesUseCase>().call(NoParams());
+    res.fold((f) => null, (history) {
+      if (mounted) setState(() => _recentSearches = history);
+    });
+  }
+
+  void _saveSearchQuery(String query) async {
+    if (query.trim().isEmpty) return;
+    await getIt<SaveSearchQueryUseCase>().call(query.trim());
+    _loadRecentSearches();
+  }
+
+  void _clearRecentSearches() async {
+    await getIt<ClearRecentSearchesUseCase>().call(NoParams());
+    if (mounted) setState(() => _recentSearches = []);
   }
 
   Future<void> _loadData() async {
@@ -166,6 +193,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
       });
       return;
     }
+    _saveSearchQuery(trimmed);
     setState(() {
       _isSearchingEvolution = true;
     });
@@ -195,6 +223,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
       });
       return;
     }
+    _saveSearchQuery(trimmed);
     setState(() {
       _isSearchingAuthors = true;
     });
@@ -222,6 +251,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
       });
       return;
     }
+    _saveSearchQuery(trimmed);
     setState(() {
       _isSearchingJournals = true;
     });
@@ -237,6 +267,69 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
         );
       }
     });
+  }
+
+  Widget _buildRecentSearchesSection(TextEditingController controller, FocusNode focusNode, Function(String) onSelect) {
+    final theme = Theme.of(context);
+    if (!focusNode.hasFocus || _recentSearches.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.history_rounded, size: 14, color: theme.colorScheme.primary),
+                const SizedBox(width: 4),
+                Text(
+                  'Recent Searches:',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: _clearRecentSearches,
+              child: Text(
+                'Clear All',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6.0),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _recentSearches.map((item) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 6.0),
+                child: ActionChip(
+                  visualDensity: VisualDensity.compact,
+                  avatar: const Icon(Icons.history, size: 12),
+                  label: Text(item, style: const TextStyle(fontSize: 11)),
+                  onPressed: () {
+                    controller.text = item;
+                    onSelect(item);
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -375,28 +468,34 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
           // Separate Search Bar for Evolution (Publications)
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
-            child: TextField(
-              controller: _evolutionSearchController,
-              focusNode: _evolutionSearchFocusNode,
-              decoration: InputDecoration(
-                hintText: 'Search publications by title or journal...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _evolutionSearchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 20),
-                        onPressed: () {
-                          _evolutionSearchController.clear();
-                          _onEvolutionSearchChanged('');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: _evolutionSearchController,
+                  focusNode: _evolutionSearchFocusNode,
+                  decoration: InputDecoration(
+                    hintText: 'Search publications by title or journal...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _evolutionSearchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              _evolutionSearchController.clear();
+                              _onEvolutionSearchChanged('');
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    isDense: true,
+                  ),
+                  onChanged: _onEvolutionSearchChanged,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                isDense: true,
-              ),
-              onChanged: _onEvolutionSearchChanged,
+                _buildRecentSearchesSection(_evolutionSearchController, _evolutionSearchFocusNode, _onEvolutionSearchChanged),
+              ],
             ),
           ),
 
@@ -607,28 +706,34 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
         // Separate Search Bar for Authors
         Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
-          child: TextField(
-            controller: _authorsSearchController,
-            focusNode: _authorsSearchFocusNode,
-            decoration: InputDecoration(
-              hintText: 'Search top authors by name or institution...',
-              prefixIcon: const Icon(Icons.search, size: 20),
-              suffixIcon: _authorsSearchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 20),
-                      onPressed: () {
-                        _authorsSearchController.clear();
-                        _onAuthorsSearchChanged('');
-                      },
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _authorsSearchController,
+                focusNode: _authorsSearchFocusNode,
+                decoration: InputDecoration(
+                  hintText: 'Search top authors by name or institution...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _authorsSearchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 20),
+                          onPressed: () {
+                            _authorsSearchController.clear();
+                            _onAuthorsSearchChanged('');
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  isDense: true,
+                ),
+                onChanged: _onAuthorsSearchChanged,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              isDense: true,
-            ),
-            onChanged: _onAuthorsSearchChanged,
+              _buildRecentSearchesSection(_authorsSearchController, _authorsSearchFocusNode, _onAuthorsSearchChanged),
+            ],
           ),
         ),
 
@@ -748,28 +853,34 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
         // Separate Search Bar for Journals
         Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
-          child: TextField(
-            controller: _journalsSearchController,
-            focusNode: _journalsSearchFocusNode,
-            decoration: InputDecoration(
-              hintText: 'Search related journals by name or publisher...',
-              prefixIcon: const Icon(Icons.search, size: 20),
-              suffixIcon: _journalsSearchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 20),
-                      onPressed: () {
-                        _journalsSearchController.clear();
-                        _onJournalsSearchChanged('');
-                      },
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _journalsSearchController,
+                focusNode: _journalsSearchFocusNode,
+                decoration: InputDecoration(
+                  hintText: 'Search related journals by name or publisher...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _journalsSearchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 20),
+                          onPressed: () {
+                            _journalsSearchController.clear();
+                            _onJournalsSearchChanged('');
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  isDense: true,
+                ),
+                onChanged: _onJournalsSearchChanged,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              isDense: true,
-            ),
-            onChanged: _onJournalsSearchChanged,
+              _buildRecentSearchesSection(_journalsSearchController, _journalsSearchFocusNode, _onJournalsSearchChanged),
+            ],
           ),
         ),
 
