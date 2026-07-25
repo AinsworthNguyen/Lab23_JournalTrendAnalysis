@@ -30,8 +30,8 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
     String? searchQuery,
   }) async {
     final filter = conceptId.startsWith('T')
-        ? 'topics.id:$conceptId,primary_location.source.type:journal|conference,publication_year:<2026'
-        : 'concepts.id:$conceptId,primary_location.source.type:journal|conference,publication_year:<2026';
+        ? 'topics.id:$conceptId,primary_location.source.type:journal|conference,publication_year:>2020,publication_year:<2026'
+        : 'concepts.id:$conceptId,primary_location.source.type:journal|conference,publication_year:>2020,publication_year:<2026';
     final queryParams = <String, dynamic>{
       'filter': filter,
       'page': page,
@@ -40,7 +40,7 @@ class JournalRemoteDataSourceImpl implements JournalRemoteDataSource {
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       queryParams['search'] = searchQuery;
     } else {
-      queryParams['sort'] = 'publication_year:desc';
+      queryParams['sort'] = 'cited_by_count:desc';
     }
 
     final response = await _apiClient.get('/works', queryParameters: queryParams);

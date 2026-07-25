@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -420,7 +419,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
             child: Text(
-              'journal.title'.tr(),
+              'Recent Publications',
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
