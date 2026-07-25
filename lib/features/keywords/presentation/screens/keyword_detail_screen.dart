@@ -193,7 +193,6 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
       });
       return;
     }
-    _saveSearchQuery(trimmed);
     setState(() {
       _isSearchingEvolution = true;
     });
@@ -223,7 +222,6 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
       });
       return;
     }
-    _saveSearchQuery(trimmed);
     setState(() {
       _isSearchingAuthors = true;
     });
@@ -251,7 +249,6 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
       });
       return;
     }
-    _saveSearchQuery(trimmed);
     setState(() {
       _isSearchingJournals = true;
     });
@@ -321,6 +318,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                   label: Text(item, style: const TextStyle(fontSize: 11)),
                   onPressed: () {
                     controller.text = item;
+                    _saveSearchQuery(item);
                     onSelect(item);
                   },
                 ),
@@ -492,7 +490,11 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     isDense: true,
                   ),
+                  textInputAction: TextInputAction.search,
                   onChanged: _onEvolutionSearchChanged,
+                  onSubmitted: (val) {
+                    if (val.trim().isNotEmpty) _saveSearchQuery(val.trim());
+                  },
                 ),
                 _buildRecentSearchesSection(_evolutionSearchController, _evolutionSearchFocusNode, _onEvolutionSearchChanged),
               ],
@@ -730,7 +732,11 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   isDense: true,
                 ),
+                textInputAction: TextInputAction.search,
                 onChanged: _onAuthorsSearchChanged,
+                onSubmitted: (val) {
+                  if (val.trim().isNotEmpty) _saveSearchQuery(val.trim());
+                },
               ),
               _buildRecentSearchesSection(_authorsSearchController, _authorsSearchFocusNode, _onAuthorsSearchChanged),
             ],
@@ -877,7 +883,11 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   isDense: true,
                 ),
+                textInputAction: TextInputAction.search,
                 onChanged: _onJournalsSearchChanged,
+                onSubmitted: (val) {
+                  if (val.trim().isNotEmpty) _saveSearchQuery(val.trim());
+                },
               ),
               _buildRecentSearchesSection(_journalsSearchController, _journalsSearchFocusNode, _onJournalsSearchChanged),
             ],
