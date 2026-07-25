@@ -11,9 +11,14 @@ import 'package:journal_trend_analysis/features/personalization/presentation/blo
 import 'package:journal_trend_analysis/features/personalization/presentation/blocs/personalization_state.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockGetUserPreferencesUseCase extends Mock implements GetUserPreferencesUseCase {}
-class MockSaveUserPreferencesUseCase extends Mock implements SaveUserPreferencesUseCase {}
-class MockGenerateRandomNameUseCase extends Mock implements GenerateRandomNameUseCase {}
+class MockGetUserPreferencesUseCase extends Mock
+    implements GetUserPreferencesUseCase {}
+
+class MockSaveUserPreferencesUseCase extends Mock
+    implements SaveUserPreferencesUseCase {}
+
+class MockGenerateRandomNameUseCase extends Mock
+    implements GenerateRandomNameUseCase {}
 
 void main() {
   late PersonalizationBloc bloc;
@@ -23,13 +28,15 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(const NoParams());
-    registerFallbackValue(const UserPreferences(
-      fullName: '',
-      email: '',
-      photoUrl: '',
-      interestConceptId: '',
-      interestConceptName: '',
-    ));
+    registerFallbackValue(
+      const UserPreferences(
+        fullName: '',
+        email: '',
+        photoUrl: '',
+        interestConceptId: '',
+        interestConceptName: '',
+      ),
+    );
   });
 
   setUp(() {
@@ -61,64 +68,81 @@ void main() {
       interestConceptName: 'Quantum Computing',
     );
 
-    test('should emit [PersonalizationLoading, PersonalizationLoaded] when LoadUserPreferences is added successfully', () async {
-      when(() => mockGetUserPreferences(any())).thenAnswer((_) async => const Right(testPrefs));
+    test(
+      'should emit [PersonalizationLoading, PersonalizationLoaded] when LoadUserPreferences is added successfully',
+      () async {
+        when(
+          () => mockGetUserPreferences(any()),
+        ).thenAnswer((_) async => const Right(testPrefs));
 
-      final expectation = expectLater(
-        bloc.stream,
-        emitsInOrder([
-          PersonalizationLoading(),
-          const PersonalizationLoaded(preferences: testPrefs),
-        ]),
-      );
+        final expectation = expectLater(
+          bloc.stream,
+          emitsInOrder([
+            PersonalizationLoading(),
+            const PersonalizationLoaded(preferences: testPrefs),
+          ]),
+        );
 
-      bloc.add(LoadUserPreferences());
-      await expectation;
-    });
+        bloc.add(LoadUserPreferences());
+        await expectation;
+      },
+    );
 
-    test('should emit [PersonalizationLoading, PersonalizationLoaded(null)] when LoadUserPreferences fails', () async {
-      when(() => mockGetUserPreferences(any())).thenAnswer((_) async => const Left(CacheFailure('Cache fail')));
+    test(
+      'should emit [PersonalizationLoading, PersonalizationLoaded(null)] when LoadUserPreferences fails',
+      () async {
+        when(
+          () => mockGetUserPreferences(any()),
+        ).thenAnswer((_) async => const Left(CacheFailure('Cache fail')));
 
-      final expectation = expectLater(
-        bloc.stream,
-        emitsInOrder([
-          PersonalizationLoading(),
-          const PersonalizationLoaded(preferences: null),
-        ]),
-      );
+        final expectation = expectLater(
+          bloc.stream,
+          emitsInOrder([
+            PersonalizationLoading(),
+            const PersonalizationLoaded(preferences: null),
+          ]),
+        );
 
-      bloc.add(LoadUserPreferences());
-      await expectation;
-    });
+        bloc.add(LoadUserPreferences());
+        await expectation;
+      },
+    );
 
-    test('should emit [PersonalizationLoading, PersonalizationLoaded(generatedName)] when GenerateRandomNameEvent is added successfully', () async {
-      when(() => mockGenerateRandomName(any())).thenAnswer((_) async => const Right('Dr. Random'));
+    test(
+      'should emit [PersonalizationLoading, PersonalizationLoaded(generatedName)] when GenerateRandomNameEvent is added successfully',
+      () async {
+        when(
+          () => mockGenerateRandomName(any()),
+        ).thenAnswer((_) async => const Right('Dr. Random'));
 
-      final expectation = expectLater(
-        bloc.stream,
-        emitsInOrder([
-          PersonalizationLoading(),
-          const PersonalizationLoaded(generatedName: 'Dr. Random'),
-        ]),
-      );
+        final expectation = expectLater(
+          bloc.stream,
+          emitsInOrder([
+            PersonalizationLoading(),
+            const PersonalizationLoaded(generatedName: 'Dr. Random'),
+          ]),
+        );
 
-      bloc.add(GenerateRandomNameEvent());
-      await expectation;
-    });
+        bloc.add(GenerateRandomNameEvent());
+        await expectation;
+      },
+    );
 
-    test('should emit [PersonalizationLoading, PersonalizationSuccess] when SavePreferencesEvent is added successfully', () async {
-      when(() => mockSaveUserPreferences(any())).thenAnswer((_) async => const Right(null));
+    test(
+      'should emit [PersonalizationLoading, PersonalizationSuccess] when SavePreferencesEvent is added successfully',
+      () async {
+        when(
+          () => mockSaveUserPreferences(any()),
+        ).thenAnswer((_) async => const Right(null));
 
-      final expectation = expectLater(
-        bloc.stream,
-        emitsInOrder([
-          PersonalizationLoading(),
-          PersonalizationSuccess(),
-        ]),
-      );
+        final expectation = expectLater(
+          bloc.stream,
+          emitsInOrder([PersonalizationLoading(), PersonalizationSuccess()]),
+        );
 
-      bloc.add(const SavePreferencesEvent(testPrefs));
-      await expectation;
-    });
+        bloc.add(const SavePreferencesEvent(testPrefs));
+        await expectation;
+      },
+    );
   });
 }

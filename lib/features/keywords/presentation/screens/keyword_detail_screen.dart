@@ -30,7 +30,8 @@ class KeywordDetailScreen extends StatefulWidget {
   State<KeywordDetailScreen> createState() => _KeywordDetailScreenState();
 }
 
-class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTickerProviderStateMixin {
+class _KeywordDetailScreenState extends State<KeywordDetailScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   String? _errorMessage;
@@ -63,7 +64,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
         getIt<GetKeywordTrendsUseCase>().call(widget.keywordId),
         getIt<GetCitationTrendsUseCase>().call(widget.keywordId),
         getIt<GetJournalRankingUseCase>().call(widget.keywordId),
-        getIt<GetPublicationsUseCase>().call(GetPublicationsParams(conceptId: widget.keywordId, page: 1)),
+        getIt<GetPublicationsUseCase>().call(
+          GetPublicationsParams(conceptId: widget.keywordId, page: 1),
+        ),
       ]);
 
       if (mounted) {
@@ -72,18 +75,29 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
           list.sort((a, b) => b.worksCount.compareTo(a.worksCount));
           _topAuthors = list;
         });
-        results[1].fold((f) => null, (data) => _pubTrends = data as List<PublicationTrend>);
-        results[2].fold((f) => null, (data) => _citTrends = data as List<CitationTrend>);
+        results[1].fold(
+          (f) => null,
+          (data) => _pubTrends = data as List<PublicationTrend>,
+        );
+        results[2].fold(
+          (f) => null,
+          (data) => _citTrends = data as List<CitationTrend>,
+        );
         results[3].fold((f) => null, (data) {
           final list = List<Journal>.from(data as List<Journal>);
           list.sort((a, b) => b.worksCount.compareTo(a.worksCount));
           _relatedJournals = list;
         });
-        results[4].fold((f) => null, (data) => _relatedPapers = data as List<Paper>);
+        results[4].fold(
+          (f) => null,
+          (data) => _relatedPapers = data as List<Paper>,
+        );
 
         // Sort trends chronologically using modifiable copies of the lists
-        _pubTrends = List<PublicationTrend>.from(_pubTrends)..sort((a, b) => a.year.compareTo(b.year));
-        _citTrends = List<CitationTrend>.from(_citTrends)..sort((a, b) => a.year.compareTo(b.year));
+        _pubTrends = List<PublicationTrend>.from(_pubTrends)
+          ..sort((a, b) => a.year.compareTo(b.year));
+        _citTrends = List<CitationTrend>.from(_citTrends)
+          ..sort((a, b) => a.year.compareTo(b.year));
 
         setState(() {
           _isLoading = false;
@@ -135,7 +149,11 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: theme.colorScheme.error,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         _errorMessage!,
@@ -169,7 +187,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
 
   Widget _buildTrendsTab() {
     final theme = Theme.of(context);
-    final hasTrends = _showPublicationsChart ? _pubTrends.length >= 2 : _citTrends.length >= 2;
+    final hasTrends = _showPublicationsChart
+        ? _pubTrends.length >= 2
+        : _citTrends.length >= 2;
 
     List<FlSpot> spots = [];
     double minY = 0;
@@ -181,30 +201,58 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
       if (_showPublicationsChart) {
         final filteredTrends = _pubTrends.where((t) => t.year >= 2021).toList();
         if (filteredTrends.length >= 2) {
-          spots = filteredTrends.map((t) => FlSpot(t.year.toDouble(), t.count.toDouble())).toList();
+          spots = filteredTrends
+              .map((t) => FlSpot(t.year.toDouble(), t.count.toDouble()))
+              .toList();
           minY = 0;
-          maxY = filteredTrends.map((t) => t.count).reduce((a, b) => a > b ? a : b).toDouble() * 1.15;
+          maxY =
+              filteredTrends
+                  .map((t) => t.count)
+                  .reduce((a, b) => a > b ? a : b)
+                  .toDouble() *
+              1.15;
           minX = filteredTrends.first.year.toDouble();
           maxX = filteredTrends.last.year.toDouble();
         } else {
-          spots = _pubTrends.map((t) => FlSpot(t.year.toDouble(), t.count.toDouble())).toList();
+          spots = _pubTrends
+              .map((t) => FlSpot(t.year.toDouble(), t.count.toDouble()))
+              .toList();
           minY = 0;
-          maxY = _pubTrends.map((t) => t.count).reduce((a, b) => a > b ? a : b).toDouble() * 1.15;
+          maxY =
+              _pubTrends
+                  .map((t) => t.count)
+                  .reduce((a, b) => a > b ? a : b)
+                  .toDouble() *
+              1.15;
           minX = _pubTrends.first.year.toDouble();
           maxX = _pubTrends.last.year.toDouble();
         }
       } else {
         final filteredTrends = _citTrends.where((t) => t.year >= 2021).toList();
         if (filteredTrends.length >= 2) {
-          spots = filteredTrends.map((t) => FlSpot(t.year.toDouble(), t.count.toDouble())).toList();
+          spots = filteredTrends
+              .map((t) => FlSpot(t.year.toDouble(), t.count.toDouble()))
+              .toList();
           minY = 0;
-          maxY = filteredTrends.map((t) => t.count).reduce((a, b) => a > b ? a : b).toDouble() * 1.15;
+          maxY =
+              filteredTrends
+                  .map((t) => t.count)
+                  .reduce((a, b) => a > b ? a : b)
+                  .toDouble() *
+              1.15;
           minX = filteredTrends.first.year.toDouble();
           maxX = filteredTrends.last.year.toDouble();
         } else {
-          spots = _citTrends.map((t) => FlSpot(t.year.toDouble(), t.count.toDouble())).toList();
+          spots = _citTrends
+              .map((t) => FlSpot(t.year.toDouble(), t.count.toDouble()))
+              .toList();
           minY = 0;
-          maxY = _citTrends.map((t) => t.count).reduce((a, b) => a > b ? a : b).toDouble() * 1.15;
+          maxY =
+              _citTrends
+                  .map((t) => t.count)
+                  .reduce((a, b) => a > b ? a : b)
+                  .toDouble() *
+              1.15;
           minX = _citTrends.first.year.toDouble();
           maxX = _citTrends.last.year.toDouble();
         }
@@ -221,7 +269,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16.0),
-              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+              side: BorderSide(
+                color: theme.dividerColor.withValues(alpha: 0.1),
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -232,12 +282,22 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        _showPublicationsChart ? 'Publication Trend' : 'Citation Trend',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        _showPublicationsChart
+                            ? 'Publication Trend'
+                            : 'Citation Trend',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       IconButton(
-                        icon: Icon(_showPublicationsChart ? Icons.star_border : Icons.article_outlined),
-                        tooltip: _showPublicationsChart ? 'Show Citations' : 'Show Publications',
+                        icon: Icon(
+                          _showPublicationsChart
+                              ? Icons.star_border
+                              : Icons.article_outlined,
+                        ),
+                        tooltip: _showPublicationsChart
+                            ? 'Show Citations'
+                            : 'Show Publications',
                         onPressed: () {
                           setState(() {
                             _showPublicationsChart = !_showPublicationsChart;
@@ -251,7 +311,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                     const SizedBox(
                       height: 200,
                       child: Center(
-                        child: Text('Insufficient historical data to render trend line.'),
+                        child: Text(
+                          'Insufficient historical data to render trend line.',
+                        ),
                       ),
                     )
                   else
@@ -263,8 +325,16 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                           borderData: FlBorderData(
                             show: true,
                             border: Border(
-                              bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                              left: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                              bottom: BorderSide(
+                                color: theme.dividerColor.withValues(
+                                  alpha: 0.1,
+                                ),
+                              ),
+                              left: BorderSide(
+                                color: theme.dividerColor.withValues(
+                                  alpha: 0.1,
+                                ),
+                              ),
                             ),
                           ),
                           minX: minX,
@@ -272,8 +342,12 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                           minY: minY,
                           maxY: maxY,
                           titlesData: FlTitlesData(
-                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
@@ -281,7 +355,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                                 getTitlesWidget: (value, meta) {
                                   return Text(
                                     value.toInt().toString(),
-                                    style: theme.textTheme.bodySmall?.copyWith(fontSize: 9),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 9,
+                                    ),
                                   );
                                 },
                               ),
@@ -294,7 +370,8 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                                     padding: const EdgeInsets.only(top: 8.0),
                                     child: Text(
                                       value.round().toString(),
-                                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 9),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(fontSize: 9),
                                     ),
                                   );
                                 },
@@ -310,7 +387,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                               dotData: const FlDotData(show: true),
                               belowBarData: BarAreaData(
                                 show: true,
-                                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.12,
+                                ),
                               ),
                             ),
                           ],
@@ -329,7 +408,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
             padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
             child: Text(
               'journal.title'.tr(),
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
 
@@ -345,7 +426,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
-                  side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                  side: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.1),
+                  ),
                 ),
                 child: ListTile(
                   title: Text(
@@ -362,7 +445,11 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.format_quote, size: 14.0, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.format_quote,
+                        size: 14.0,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 4.0),
                       Text(paper.citationCount.toString()),
                     ],
@@ -414,7 +501,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
           child: Text(
             'All Top Authors',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         ...List.generate(_topAuthors.length, (index) {
@@ -426,17 +515,27 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
-              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+              side: BorderSide(
+                color: theme.dividerColor.withValues(alpha: 0.1),
+              ),
             ),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
                 child: Text(
                   '#$rank',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ),
-              title: Text(author.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(
+                author.displayName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text(
                 author.lastKnownInstitution ?? 'Independent Researcher',
                 maxLines: 1,
@@ -501,7 +600,9 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
           child: Text(
             'All Top Journals',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         ...List.generate(_relatedJournals.length, (index) {
@@ -511,10 +612,15 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
-              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+              side: BorderSide(
+                color: theme.dividerColor.withValues(alpha: 0.1),
+              ),
             ),
             child: ListTile(
-              title: Text(journal.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(
+                journal.displayName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text(
                 journal.publisher ?? 'Independent Publisher',
                 maxLines: 1,

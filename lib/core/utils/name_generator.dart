@@ -3,7 +3,7 @@ import 'dart:math';
 class NameGenerator {
   NameGenerator._();
 
-  static final List<String> _titles = [
+  static final List<String> _titles = <String>[
     'Dr.',
     'Prof.',
     'Assoc. Prof.',
@@ -11,7 +11,7 @@ class NameGenerator {
     'Fellow',
   ];
 
-  static final List<String> _firstNames = [
+  static final List<String> _firstNames = <String>[
     'Clara',
     'Eric',
     'Sophia',
@@ -29,7 +29,7 @@ class NameGenerator {
     'Margaret',
   ];
 
-  static final List<String> _lastNames = [
+  static final List<String> _lastNames = <String>[
     'Quantum',
     'Neural',
     'Vector',
@@ -48,10 +48,10 @@ class NameGenerator {
   ];
 
   static String generateRandomName() {
-    final random = Random();
-    final title = _titles[random.nextInt(_titles.length)];
-    final firstName = _firstNames[random.nextInt(_firstNames.length)];
-    final lastName = _lastNames[random.nextInt(_lastNames.length)];
+    final Random random = Random();
+    final String title = _titles[random.nextInt(_titles.length)];
+    final String firstName = _firstNames[random.nextInt(_firstNames.length)];
+    final String lastName = _lastNames[random.nextInt(_lastNames.length)];
     return '$title $firstName $lastName';
   }
 }

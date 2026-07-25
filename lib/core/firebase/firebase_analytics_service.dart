@@ -4,24 +4,24 @@ import 'package:injectable/injectable.dart';
 
 abstract class IFirebaseAnalyticsService {
   Future<void> logLogin();
-  Future<void> logSearchTopic(String keyword);
-  Future<void> logViewPublication(String title, int year);
-  Future<void> logViewJournal(String name);
-  Future<void> logViewKeyword(String keyword);
-  Future<void> logExportPdf(String topic);
+  Future<void> logSearchTopic(final String keyword);
+  Future<void> logViewPublication(final String title, final int year);
+  Future<void> logViewJournal(final String name);
+  Future<void> logViewKeyword(final String keyword);
+  Future<void> logExportPdf(final String topic);
   Future<void> logLogout();
 }
 
 @LazySingleton(as: IFirebaseAnalyticsService)
 class FirebaseAnalyticsService implements IFirebaseAnalyticsService {
-  final FirebaseAnalytics _analytics;
-
   FirebaseAnalyticsService() : _analytics = FirebaseAnalytics.instance;
 
-  Future<void> _safeLogEvent(Future<void> Function() action) async {
+  final FirebaseAnalytics _analytics;
+
+  Future<void> _safeLogEvent(final Future<void> Function() action) async {
     try {
       await action();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Firebase Analytics error (ignored): $e');
     }
   }
@@ -32,46 +32,46 @@ class FirebaseAnalyticsService implements IFirebaseAnalyticsService {
   }
 
   @override
-  Future<void> logSearchTopic(String keyword) async {
-    await _safeLogEvent(() => _analytics.logEvent(
-      name: 'search_topic',
-      parameters: {'keyword': keyword},
-    ));
+  Future<void> logSearchTopic(final String keyword) async {
+    final Map<String, Object> params = <String, Object>{'keyword': keyword};
+    await _safeLogEvent(
+      () => _analytics.logEvent(name: 'search_topic', parameters: params),
+    );
   }
 
   @override
-  Future<void> logViewPublication(String title, int year) async {
-    await _safeLogEvent(() => _analytics.logEvent(
-      name: 'view_publication',
-      parameters: {
-        'title': title,
-        'year': year,
-      },
-    ));
+  Future<void> logViewPublication(final String title, final int year) async {
+    final Map<String, Object> params = <String, Object>{
+      'title': title,
+      'year': year,
+    };
+    await _safeLogEvent(
+      () => _analytics.logEvent(name: 'view_publication', parameters: params),
+    );
   }
 
   @override
-  Future<void> logViewJournal(String name) async {
-    await _safeLogEvent(() => _analytics.logEvent(
-      name: 'view_journal',
-      parameters: {'name': name},
-    ));
+  Future<void> logViewJournal(final String name) async {
+    final Map<String, Object> params = <String, Object>{'name': name};
+    await _safeLogEvent(
+      () => _analytics.logEvent(name: 'view_journal', parameters: params),
+    );
   }
 
   @override
-  Future<void> logViewKeyword(String keyword) async {
-    await _safeLogEvent(() => _analytics.logEvent(
-      name: 'view_keyword',
-      parameters: {'keyword': keyword},
-    ));
+  Future<void> logViewKeyword(final String keyword) async {
+    final Map<String, Object> params = <String, Object>{'keyword': keyword};
+    await _safeLogEvent(
+      () => _analytics.logEvent(name: 'view_keyword', parameters: params),
+    );
   }
 
   @override
-  Future<void> logExportPdf(String topic) async {
-    await _safeLogEvent(() => _analytics.logEvent(
-      name: 'export_pdf',
-      parameters: {'topic': topic},
-    ));
+  Future<void> logExportPdf(final String topic) async {
+    final Map<String, Object> params = <String, Object>{'topic': topic};
+    await _safeLogEvent(
+      () => _analytics.logEvent(name: 'export_pdf', parameters: params),
+    );
   }
 
   @override

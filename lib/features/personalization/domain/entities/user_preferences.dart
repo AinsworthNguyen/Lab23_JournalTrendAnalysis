@@ -17,10 +17,10 @@ class UserPreferences extends Equatable {
 
   @override
   List<Object?> get props => [
-        fullName,
-        email,
-        photoUrl,
-        interestConceptId,
-        interestConceptName,
-      ];
+    fullName,
+    email,
+    photoUrl,
+    interestConceptId,
+    interestConceptName,
+  ];
 }

@@ -18,7 +18,8 @@ class GetPublicationsParams {
 }
 
 @lazySingleton
-class GetPublicationsUseCase implements UseCase<List<Paper>, GetPublicationsParams> {
+class GetPublicationsUseCase
+    implements UseCase<List<Paper>, GetPublicationsParams> {
   final PublicationRepository _repository;
 
   GetPublicationsUseCase(this._repository);

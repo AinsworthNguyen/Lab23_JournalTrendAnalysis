@@ -26,8 +26,11 @@ void main() {
       expect(reportCubit.state, equals(ReportInitial()));
     });
 
-    test('should emit [ReportGenerating, ReportUploading, ReportUploadSuccess] when report generation and upload is successful', () async {
-      when(() => mockReportRepository.generateAndUploadReport(
+    test(
+      'should emit [ReportGenerating, ReportUploading, ReportUploadSuccess] when report generation and upload is successful',
+      () async {
+        when(
+          () => mockReportRepository.generateAndUploadReport(
             conceptName: any(named: 'conceptName'),
             fullName: any(named: 'fullName'),
             totalPublications: any(named: 'totalPublications'),
@@ -36,33 +39,40 @@ void main() {
             activeYear: any(named: 'activeYear'),
             topJournal: any(named: 'topJournal'),
             topAuthor: any(named: 'topAuthor'),
-          )).thenAnswer((_) async => const Right('https://firebase.storage/report.pdf'));
+          ),
+        ).thenAnswer(
+          (_) async => const Right('https://firebase.storage/report.pdf'),
+        );
 
-      final expectation = expectLater(
-        reportCubit.stream,
-        emitsInOrder([
-          ReportGenerating(),
-          ReportUploading(),
-          const ReportUploadSuccess('https://firebase.storage/report.pdf'),
-        ]),
-      );
+        final expectation = expectLater(
+          reportCubit.stream,
+          emitsInOrder([
+            ReportGenerating(),
+            ReportUploading(),
+            const ReportUploadSuccess('https://firebase.storage/report.pdf'),
+          ]),
+        );
 
-      await reportCubit.exportReport(
-        conceptName: 'Quantum Physics',
-        fullName: 'John Doe',
-        totalPublications: 100,
-        avgCitations: 15.0,
-        totalCitations: 1500,
-        activeYear: 2023,
-        topJournal: 'PRL',
-        topAuthor: 'Einstein',
-      );
+        await reportCubit.exportReport(
+          conceptName: 'Quantum Physics',
+          fullName: 'John Doe',
+          totalPublications: 100,
+          avgCitations: 15.0,
+          totalCitations: 1500,
+          activeYear: 2023,
+          topJournal: 'PRL',
+          topAuthor: 'Einstein',
+        );
 
-      await expectation;
-    });
+        await expectation;
+      },
+    );
 
-    test('should emit [ReportGenerating, ReportUploading, ReportFailure] when report generation or upload fails', () async {
-      when(() => mockReportRepository.generateAndUploadReport(
+    test(
+      'should emit [ReportGenerating, ReportUploading, ReportFailure] when report generation or upload fails',
+      () async {
+        when(
+          () => mockReportRepository.generateAndUploadReport(
             conceptName: any(named: 'conceptName'),
             fullName: any(named: 'fullName'),
             totalPublications: any(named: 'totalPublications'),
@@ -71,29 +81,31 @@ void main() {
             activeYear: any(named: 'activeYear'),
             topJournal: any(named: 'topJournal'),
             topAuthor: any(named: 'topAuthor'),
-          )).thenAnswer((_) async => const Left(ServerFailure('Upload failed')));
+          ),
+        ).thenAnswer((_) async => const Left(ServerFailure('Upload failed')));
 
-      final expectation = expectLater(
-        reportCubit.stream,
-        emitsInOrder([
-          ReportGenerating(),
-          ReportUploading(),
-          const ReportFailure('Upload failed'),
-        ]),
-      );
+        final expectation = expectLater(
+          reportCubit.stream,
+          emitsInOrder([
+            ReportGenerating(),
+            ReportUploading(),
+            const ReportFailure('Upload failed'),
+          ]),
+        );
 
-      await reportCubit.exportReport(
-        conceptName: 'Quantum Physics',
-        fullName: 'John Doe',
-        totalPublications: 100,
-        avgCitations: 15.0,
-        totalCitations: 1500,
-        activeYear: 2023,
-        topJournal: 'PRL',
-        topAuthor: 'Einstein',
-      );
+        await reportCubit.exportReport(
+          conceptName: 'Quantum Physics',
+          fullName: 'John Doe',
+          totalPublications: 100,
+          avgCitations: 15.0,
+          totalCitations: 1500,
+          activeYear: 2023,
+          topJournal: 'PRL',
+          topAuthor: 'Einstein',
+        );
 
-      await expectation;
-    });
+        await expectation;
+      },
+    );
   });
 }

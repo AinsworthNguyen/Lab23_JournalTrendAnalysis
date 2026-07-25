@@ -1,40 +1,32 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+
 import '../../../../core/usecases/usecase.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../journal/domain/entities/paper.dart';
+import '../../../journal/domain/usecases/get_publications_usecase.dart';
+import '../../../keywords/domain/usecases/get_citation_trends_usecase.dart';
+import '../../../keywords/domain/usecases/get_keyword_trends_usecase.dart';
+import '../../../keywords/domain/usecases/get_top_authors_usecase.dart';
 import '../../../personalization/domain/entities/user_preferences.dart';
 import '../../../personalization/domain/usecases/get_user_preferences_usecase.dart';
 import '../../../personalization/domain/usecases/save_user_preferences_usecase.dart';
-import '../../../journal/domain/entities/paper.dart';
-import '../../../journal/domain/usecases/get_publications_usecase.dart';
-import '../../../keywords/domain/usecases/get_keyword_trends_usecase.dart';
-import '../../../keywords/domain/usecases/get_citation_trends_usecase.dart';
-import '../../../keywords/domain/usecases/get_top_authors_usecase.dart';
-import '../../domain/usecases/refresh_all_data_usecase.dart';
 import '../../domain/usecases/get_last_sync_date_usecase.dart';
+import '../../domain/usecases/refresh_all_data_usecase.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
 @injectable
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
-  final GetUserPreferencesUseCase _getUserPreferences;
-  final SaveUserPreferencesUseCase _saveUserPreferences;
-  final RefreshAllDataUseCase _refreshAllData;
-  final GetLastSyncDateUseCase _getLastSyncDate;
-  final GetPublicationsUseCase _getPublications;
-  final GetKeywordTrendsUseCase _getKeywordTrends;
-  final GetCitationTrendsUseCase _getCitationTrends;
-  final GetTopAuthorsUseCase _getTopAuthors;
-
   DashboardBloc({
-    required GetUserPreferencesUseCase getUserPreferences,
-    required SaveUserPreferencesUseCase saveUserPreferences,
-    required RefreshAllDataUseCase refreshAllData,
-    required GetLastSyncDateUseCase getLastSyncDate,
-    required GetPublicationsUseCase getPublications,
-    required GetKeywordTrendsUseCase getKeywordTrends,
-    required GetCitationTrendsUseCase getCitationTrends,
-    required GetTopAuthorsUseCase getTopAuthors,
+    required final GetUserPreferencesUseCase getUserPreferences,
+    required final SaveUserPreferencesUseCase saveUserPreferences,
+    required final RefreshAllDataUseCase refreshAllData,
+    required final GetLastSyncDateUseCase getLastSyncDate,
+    required final GetPublicationsUseCase getPublications,
+    required final GetKeywordTrendsUseCase getKeywordTrends,
+    required final GetCitationTrendsUseCase getCitationTrends,
+    required final GetTopAuthorsUseCase getTopAuthors,
   })  : _getUserPreferences = getUserPreferences,
         _saveUserPreferences = saveUserPreferences,
         _refreshAllData = refreshAllData,
@@ -49,9 +41,18 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<SelectConceptEvent>(_onSelectConcept);
   }
 
+  final GetUserPreferencesUseCase _getUserPreferences;
+  final SaveUserPreferencesUseCase _saveUserPreferences;
+  final RefreshAllDataUseCase _refreshAllData;
+  final GetLastSyncDateUseCase _getLastSyncDate;
+  final GetPublicationsUseCase _getPublications;
+  final GetKeywordTrendsUseCase _getKeywordTrends;
+  final GetCitationTrendsUseCase _getCitationTrends;
+  final GetTopAuthorsUseCase _getTopAuthors;
+
   Future<void> _onLoadDashboard(
-    LoadDashboard event,
-    Emitter<DashboardState> emit,
+    final LoadDashboard event,
+    final Emitter<DashboardState> emit,
   ) async {
     emit(DashboardLoading());
 
@@ -59,37 +60,38 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       // 1. Get user preferences
       final prefResult = await _getUserPreferences(const NoParams());
       UserPreferences? prefs;
-      prefResult.fold(
-        (failure) => null,
-        (p) => prefs = p,
-      );
+      prefResult.fold((final failure) => null, (final p) => prefs = p);
 
       if (prefs == null) {
-        emit(const DashboardFailure('User preferences not configured. Please complete setup.'));
+        emit(
+          const DashboardFailure(
+            'User preferences not configured. Please complete setup.',
+          ),
+        );
         return;
       }
 
-      final conceptId = prefs!.interestConceptId;
+      final String conceptId = prefs!.interestConceptId;
 
       // 2. Fetch last sync date
       DateTime? lastSync;
       final syncDateResult = await _getLastSyncDate(const NoParams());
-      syncDateResult.fold((_) => null, (date) => lastSync = date);
+      syncDateResult.fold((_) => null, (final date) => lastSync = date);
 
       // 3. Load papers (cache or remote)
-      List<Paper> papers = [];
+      List<Paper> papers = <Paper>[];
       final papersResult = await _getPublications(
         GetPublicationsParams(conceptId: conceptId, page: 1),
       );
-      papersResult.fold((_) => null, (list) => papers = List<Paper>.from(list));
+      papersResult.fold((_) => null, (final list) => papers = List<Paper>.from(list));
 
       // 4. Load trends and compute total publications across all time
       int totalPublications = 0;
       int activeYear = 0;
       final trendsResult = await _getKeywordTrends(conceptId);
-      trendsResult.fold((_) => null, (trends) {
+      trendsResult.fold((_) => null, (final trends) {
         if (trends.isNotEmpty) {
-          var maxCount = -1;
+          int maxCount = -1;
           for (final t in trends) {
             totalPublications += t.count;
             if (t.count > maxCount) {
@@ -103,7 +105,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       // 5. Load citation trends and compute total citations across all time
       int totalCitations = 0;
       final citationsResult = await _getCitationTrends(conceptId);
-      citationsResult.fold((_) => null, (citations) {
+      citationsResult.fold((_) => null, (final citations) {
         if (citations.isNotEmpty) {
           for (final c in citations) {
             totalCitations += c.count;
@@ -112,14 +114,14 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       });
 
       // Compute average citations over all time
-      final avgCitations = totalPublications == 0
+      final double avgCitations = totalPublications == 0
           ? 0.0
           : totalCitations / totalPublications;
 
       // 6. Load top authors
       String topAuthorName = 'N/A';
       final authorsResult = await _getTopAuthors(conceptId);
-      authorsResult.fold((_) => null, (authors) {
+      authorsResult.fold((_) => null, (final authors) {
         if (authors.isNotEmpty) {
           topAuthorName = authors.first.displayName;
         }
@@ -127,8 +129,10 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
       // Find most influential paper
       String mostInfluentialPaper = 'N/A';
-      final bestPaperResult = await _getPublications.getMostInfluentialPaper(conceptId);
-      bestPaperResult.fold((_) => null, (paper) {
+      final bestPaperResult = await _getPublications.getMostInfluentialPaper(
+        conceptId,
+      );
+      bestPaperResult.fold((_) => null, (final paper) {
         if (paper != null) {
           mostInfluentialPaper = paper.title;
         }
@@ -136,37 +140,41 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
       // Top Journal name
       String topJournal = 'N/A';
-      final topJournalResult = await _getPublications.getTopJournalName(conceptId);
-      topJournalResult.fold((_) => null, (name) {
+      final topJournalResult = await _getPublications.getTopJournalName(
+        conceptId,
+      );
+      topJournalResult.fold((_) => null, (final name) {
         topJournal = name;
       });
 
-      emit(DashboardLoaded(
-        name: prefs!.fullName,
-        interest: prefs!.interestConceptName,
-        conceptId: conceptId,
-        lastSync: lastSync,
-        totalPublications: totalPublications,
-        avgCitations: avgCitations,
-        totalCitations: totalCitations,
-        activeYear: activeYear,
-        topJournal: topJournal,
-        topAuthor: topAuthorName,
-        mostInfluentialPaper: mostInfluentialPaper,
-        papers: papers,
-        isSyncing: false,
-      ));
-    } catch (e, stack) {
+      emit(
+        DashboardLoaded(
+          name: prefs!.fullName,
+          interest: prefs!.interestConceptName,
+          conceptId: conceptId,
+          lastSync: lastSync,
+          totalPublications: totalPublications,
+          avgCitations: avgCitations,
+          totalCitations: totalCitations,
+          activeYear: activeYear,
+          topJournal: topJournal,
+          topAuthor: topAuthorName,
+          mostInfluentialPaper: mostInfluentialPaper,
+          papers: papers,
+          isSyncing: false,
+        ),
+      );
+    } on Exception catch (e, stack) {
       AppLogger.e('DashboardBloc Load Error', e, stack);
       emit(DashboardFailure('Failed to load dashboard: $e'));
     }
   }
 
   Future<void> _onSyncDashboard(
-    SyncDashboard event,
-    Emitter<DashboardState> emit,
+    final SyncDashboard event,
+    final Emitter<DashboardState> emit,
   ) async {
-    final currentState = state;
+    final DashboardState currentState = state;
     if (currentState is! DashboardLoaded) return;
 
     emit(currentState.copyWith(isSyncing: true));
@@ -175,16 +183,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       final syncResult = await _refreshAllData(currentState.conceptId);
 
       await syncResult.fold(
-        (failure) async {
+        (final failure) async {
           emit(DashboardFailure(failure.message));
-          // Recover to loaded state
           add(LoadDashboard());
         },
-        (_) async {
+        (final _) async {
           add(LoadDashboard());
         },
       );
-    } catch (e, stack) {
+    } on Exception catch (e, stack) {
       AppLogger.e('DashboardBloc Sync Error', e, stack);
       emit(DashboardFailure('Sync failed: $e'));
       add(LoadDashboard());
@@ -192,16 +199,16 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   Future<void> _onSelectConcept(
-    SelectConceptEvent event,
-    Emitter<DashboardState> emit,
+    final SelectConceptEvent event,
+    final Emitter<DashboardState> emit,
   ) async {
     try {
       final prefResult = await _getUserPreferences(const NoParams());
       UserPreferences? prefs;
-      prefResult.fold((_) => null, (p) => prefs = p);
+      prefResult.fold((_) => null, (final p) => prefs = p);
 
       if (prefs != null) {
-        final updatedPrefs = UserPreferences(
+        final UserPreferences updatedPrefs = UserPreferences(
           fullName: prefs!.fullName,
           email: prefs!.email,
           photoUrl: prefs!.photoUrl,
@@ -211,15 +218,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
         final saveResult = await _saveUserPreferences(updatedPrefs);
         await saveResult.fold(
-          (failure) async {
+          (final failure) async {
             emit(DashboardFailure(failure.message));
           },
-          (_) async {
+          (final _) async {
             add(LoadDashboard());
           },
         );
       }
-    } catch (e, stack) {
+    } on Exception catch (e, stack) {
       AppLogger.e('DashboardBloc SelectConcept Error', e, stack);
       emit(DashboardFailure('Failed to select concept: $e'));
     }

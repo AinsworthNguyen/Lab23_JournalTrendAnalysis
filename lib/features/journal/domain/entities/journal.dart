@@ -18,5 +18,12 @@ class Journal extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, displayName, worksCount, citedByCount, homepageUrl, publisher];
+  List<Object?> get props => [
+    id,
+    displayName,
+    worksCount,
+    citedByCount,
+    homepageUrl,
+    publisher,
+  ];
 }

@@ -16,9 +16,9 @@ class ReportRepositoryImpl implements ReportRepository {
     required PDFReportService pdfReportService,
     required IFirebaseStorageService storageService,
     required IFirebaseAnalyticsService analyticsService,
-  })  : _pdfReportService = pdfReportService,
-        _storageService = storageService,
-        _analyticsService = analyticsService;
+  }) : _pdfReportService = pdfReportService,
+       _storageService = storageService,
+       _analyticsService = analyticsService;
 
   @override
   Future<Either<Failure, String>> generateAndUploadReport({
@@ -44,7 +44,9 @@ class ReportRepositoryImpl implements ReportRepository {
       );
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final cleanName = fullName.replaceAll(RegExp(r'[^\w\s]+'), '').replaceAll(' ', '_');
+      final cleanName = fullName
+          .replaceAll(RegExp(r'[^\w\s]+'), '')
+          .replaceAll(' ', '_');
       final destinationPath = 'reports/${cleanName}_$timestamp.pdf';
 
       String downloadUrl;

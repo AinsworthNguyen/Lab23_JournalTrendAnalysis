@@ -3,40 +3,43 @@ import 'package:injectable/injectable.dart';
 
 abstract class IFirebaseRemoteConfigService {
   Future<void> initialize();
-  int getInt(String key);
-  String getString(String key);
+  int getInt(final String key);
+  String getString(final String key);
   Future<bool> fetchAndActivate();
 }
 
 @LazySingleton(as: IFirebaseRemoteConfigService)
 class FirebaseRemoteConfigService implements IFirebaseRemoteConfigService {
-  final FirebaseRemoteConfig _remoteConfig;
-
   FirebaseRemoteConfigService() : _remoteConfig = FirebaseRemoteConfig.instance;
+
+  final FirebaseRemoteConfig _remoteConfig;
 
   @override
   Future<void> initialize() async {
-    await _remoteConfig.setDefaults(const {
+    final Map<String, dynamic> defaults = const <String, dynamic>{
       'max_journals_limit': 10,
       'max_keywords_limit': 10,
-    });
-    await _remoteConfig.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(seconds: 40),
-      minimumFetchInterval: const Duration(minutes: 5),
-    ));
+    };
+    await _remoteConfig.setDefaults(defaults);
+    await _remoteConfig.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(seconds: 40),
+        minimumFetchInterval: const Duration(minutes: 5),
+      ),
+    );
   }
 
   @override
-  int getInt(String key) => _remoteConfig.getInt(key);
+  int getInt(final String key) => _remoteConfig.getInt(key);
 
   @override
-  String getString(String key) => _remoteConfig.getString(key);
+  String getString(final String key) => _remoteConfig.getString(key);
 
   @override
   Future<bool> fetchAndActivate() async {
     try {
       return await _remoteConfig.fetchAndActivate();
-    } catch (_) {
+    } on Exception catch (_) {
       return false;
     }
   }

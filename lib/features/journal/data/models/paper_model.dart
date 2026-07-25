@@ -16,7 +16,8 @@ class PaperModel extends Paper {
 
   factory PaperModel.fromJson(Map<String, dynamic> json) {
     // Reconstruct abstract from inverted index
-    final invertedIndex = json['abstract_inverted_index'] as Map<String, dynamic>?;
+    final invertedIndex =
+        json['abstract_inverted_index'] as Map<String, dynamic>?;
     final abstractText = _reconstructAbstract(invertedIndex);
 
     // Extract authors

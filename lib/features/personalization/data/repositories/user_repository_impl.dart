@@ -20,18 +20,24 @@ class UserRepositoryImpl implements UserRepository {
       final preferences = await _localDataSource.getUserPreferences();
       return Right(preferences);
     } on CacheException catch (e) {
-      return Left(CacheFailure(e.message ?? 'Failed to read user preferences.'));
+      return Left(
+        CacheFailure(e.message ?? 'Failed to read user preferences.'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> saveUserPreferences(UserPreferences preferences) async {
+  Future<Either<Failure, void>> saveUserPreferences(
+    UserPreferences preferences,
+  ) async {
     try {
       final model = UserPreferencesModel.fromEntity(preferences);
       await _localDataSource.saveUserPreferences(model);
       return const Right(null);
     } on CacheException catch (e) {
-      return Left(CacheFailure(e.message ?? 'Failed to save user preferences.'));
+      return Left(
+        CacheFailure(e.message ?? 'Failed to save user preferences.'),
+      );
     }
   }
 

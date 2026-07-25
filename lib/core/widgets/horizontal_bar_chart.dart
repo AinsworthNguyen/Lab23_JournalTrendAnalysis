@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 
 class HorizontalBarChart extends StatelessWidget {
-  final List<String> labels;
-  final List<double> values;
-  final String title;
-  final Color barColor;
-
   const HorizontalBarChart({
     super.key,
     required this.labels,
@@ -15,19 +10,28 @@ class HorizontalBarChart extends StatelessWidget {
     required this.barColor,
   });
 
+  final List<String> labels;
+  final List<double> values;
+  final String title;
+  final Color barColor;
+
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final maxValue = values.isEmpty ? 1.0 : values.reduce((a, b) => a > b ? a : b);
+  Widget build(final BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final double maxValue = values.isEmpty
+        ? 1.0
+        : values.reduce((final double a, final double b) => a > b ? a : b);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+      children: <Widget>[
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Text(
             title,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
         ),
@@ -36,15 +40,15 @@ class HorizontalBarChart extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: labels.length,
-          itemBuilder: (context, index) {
-            final label = labels[index];
-            final value = values[index];
-            final pct = maxValue == 0 ? 0.0 : value / maxValue;
+          itemBuilder: (final BuildContext context, final int index) {
+            final String label = labels[index];
+            final double value = values[index];
+            final double pct = maxValue == 0 ? 0.0 : value / maxValue;
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
-                children: [
+                children: <Widget>[
                   Expanded(
                     flex: 3,
                     child: Text(
@@ -65,21 +69,29 @@ class HorizontalBarChart extends StatelessWidget {
                         tween: Tween<double>(begin: 0, end: pct),
                         duration: const Duration(milliseconds: 1000),
                         curve: Curves.easeOutCubic,
-                        builder: (context, val, child) {
-                          return Container(
-                            height: 16,
-                            width: MediaQuery.of(context).size.width * 0.45 * val,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  barColor.withValues(alpha: 0.6),
-                                  barColor,
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          );
-                        },
+                        builder:
+                            (
+                              final BuildContext context,
+                              final double val,
+                              final Widget? child,
+                            ) {
+                              return Container(
+                                height: 16,
+                                width:
+                                    MediaQuery.of(context).size.width *
+                                    0.45 *
+                                    val,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: <Color>[
+                                      barColor.withValues(alpha: 0.6),
+                                      barColor,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              );
+                            },
                       ),
                     ),
                   ),

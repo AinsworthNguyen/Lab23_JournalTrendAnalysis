@@ -5,6 +5,9 @@ import '../../../../core/firebase/firebase_analytics_service.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
+import '../../../../injection_container.dart';
+import '../../../admin/data/datasources/user_activity_tracker.dart';
+
 @injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final IFirebaseAuthService _authService;
@@ -13,13 +16,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc({
     required IFirebaseAuthService authService,
     required IFirebaseAnalyticsService analyticsService,
-  })  : _authService = authService,
-        _analyticsService = analyticsService,
-        super(AuthInitial()) {
+  }) : _authService = authService,
+       _analyticsService = analyticsService,
+       super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<SignInRequested>(_onSignInRequested);
     on<SignOutRequested>(_onSignOutRequested);
     on<BypassSignInRequested>(_onBypassSignInRequested);
+    on<DirectEmailSignInRequested>(_onDirectEmailSignInRequested);
   }
 
   Future<void> _onAuthCheckRequested(
@@ -44,6 +48,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = userCredential.user;
       if (user != null) {
         await _analyticsService.logLogin();
+        try {
+          if (getIt.isRegistered<IUserActivityTracker>()) {
+            await getIt<IUserActivityTracker>().logLogin(user.email ?? 'google_user@gmail.com', user.displayName);
+          }
+        } catch (_) {}
         emit(Authenticated(user));
       } else {
         emit(const AuthError('Google Sign-In returned null user.'));
@@ -61,6 +70,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await _authService.signInBypass();
       await _analyticsService.logLogin();
+      try {
+        if (getIt.isRegistered<IUserActivityTracker>()) {
+          await getIt<IUserActivityTracker>().logLogin('guest@journal-trend.app', 'Guest User');
+        }
+      } catch (_) {}
+      emit(const Authenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> _onDirectEmailSignInRequested(
+    DirectEmailSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(Authenticating());
+    try {
+      await _authService.signInWithEmailDirect(event.email);
+      await _analyticsService.logLogin();
+      try {
+        if (getIt.isRegistered<IUserActivityTracker>()) {
+          await getIt<IUserActivityTracker>().logLogin(event.email);
+        }
+      } catch (_) {}
       emit(const Authenticated());
     } catch (e) {
       emit(AuthError(e.toString()));

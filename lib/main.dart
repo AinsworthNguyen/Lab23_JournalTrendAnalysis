@@ -17,9 +17,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase core services
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize easy localization
   await EasyLocalization.ensureInitialized();
@@ -28,6 +26,7 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox('analytics_cache');
   await Hive.openBox('search_history');
+  await Hive.openBox('user_activity_logs');
 
   // Configure GetIt locator registrations
   await configureDependencies();

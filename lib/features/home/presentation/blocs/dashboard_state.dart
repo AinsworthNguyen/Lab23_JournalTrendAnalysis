@@ -77,20 +77,20 @@ class DashboardLoaded extends DashboardState {
 
   @override
   List<Object?> get props => [
-        name,
-        interest,
-        conceptId,
-        lastSync,
-        totalPublications,
-        avgCitations,
-        totalCitations,
-        activeYear,
-        topJournal,
-        topAuthor,
-        mostInfluentialPaper,
-        papers,
-        isSyncing,
-      ];
+    name,
+    interest,
+    conceptId,
+    lastSync,
+    totalPublications,
+    avgCitations,
+    totalCitations,
+    activeYear,
+    topJournal,
+    topAuthor,
+    mostInfluentialPaper,
+    papers,
+    isSyncing,
+  ];
 }
 
 class DashboardFailure extends DashboardState {

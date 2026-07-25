@@ -66,7 +66,9 @@ class PublicationRepositoryImpl implements PublicationRepository {
         } catch (_) {}
         return const Right(MockData.mockPapers);
       }
-      return const Left(NetworkFailure('Internet connection is required to fetch more pages.'));
+      return const Left(
+        NetworkFailure('Internet connection is required to fetch more pages.'),
+      );
     }
   }
 
@@ -84,7 +86,11 @@ class PublicationRepositoryImpl implements PublicationRepository {
         return Left(ServerFailure(e.toString()));
       }
     } else {
-      return const Left(NetworkFailure('Internet connection is required to load publication details.'));
+      return const Left(
+        NetworkFailure(
+          'Internet connection is required to load publication details.',
+        ),
+      );
     }
   }
 
@@ -96,19 +102,27 @@ class PublicationRepositoryImpl implements PublicationRepository {
         final journal = await _remoteDataSource.getTopJournalName(conceptId);
         return Right(journal);
       } catch (e) {
-        return const Right('IEEE Transactions on Pattern Analysis and Machine Intelligence');
+        return const Right(
+          'IEEE Transactions on Pattern Analysis and Machine Intelligence',
+        );
       }
     } else {
-      return const Right('IEEE Transactions on Pattern Analysis and Machine Intelligence');
+      return const Right(
+        'IEEE Transactions on Pattern Analysis and Machine Intelligence',
+      );
     }
   }
 
   @override
-  Future<Either<Failure, Paper?>> getMostInfluentialPaper(String conceptId) async {
+  Future<Either<Failure, Paper?>> getMostInfluentialPaper(
+    String conceptId,
+  ) async {
     final hasConnection = await _networkInfo.isConnected;
     if (hasConnection) {
       try {
-        final paper = await _remoteDataSource.getMostInfluentialPaper(conceptId);
+        final paper = await _remoteDataSource.getMostInfluentialPaper(
+          conceptId,
+        );
         return Right(paper);
       } catch (e) {
         return Right(MockData.mockPapers[0]); // Returns the first mock paper

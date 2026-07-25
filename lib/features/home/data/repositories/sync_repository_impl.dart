@@ -30,7 +30,9 @@ class SyncRepositoryImpl implements SyncRepository {
   Future<Either<Failure, void>> refreshAllData(String conceptId) async {
     final isConnected = await _networkInfo.isConnected;
     if (!isConnected) {
-      return const Left(NetworkFailure('No internet connection. Cannot perform sync.'));
+      return const Left(
+        NetworkFailure('No internet connection. Cannot perform sync.'),
+      );
     }
 
     try {
@@ -59,7 +61,9 @@ class SyncRepositoryImpl implements SyncRepository {
 
       List<PublicationTrendModel> publicationTrends;
       try {
-        publicationTrends = await _keywordsRemote.getPublicationTrends(conceptId);
+        publicationTrends = await _keywordsRemote.getPublicationTrends(
+          conceptId,
+        );
       } catch (_) {
         publicationTrends = [];
       }
@@ -75,7 +79,10 @@ class SyncRepositoryImpl implements SyncRepository {
       await _keywordsLocal.cacheCitationTrends(conceptId, citationTrends);
 
       // 6. Update Sync Date in SharedPreferences
-      await _prefs.setString(PrefsKeys.lastSyncDate, DateTime.now().toIso8601String());
+      await _prefs.setString(
+        PrefsKeys.lastSyncDate,
+        DateTime.now().toIso8601String(),
+      );
 
       return const Right(null);
     } catch (e) {

@@ -27,15 +27,15 @@ class Paper extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        publicationYear,
-        citationCount,
-        doi,
-        authors,
-        concepts,
-        abstractText,
-        journalName,
-        isOpenAccess,
-      ];
+    id,
+    title,
+    publicationYear,
+    citationCount,
+    doi,
+    authors,
+    concepts,
+    abstractText,
+    journalName,
+    isOpenAccess,
+  ];
 }

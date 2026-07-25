@@ -6,13 +6,13 @@ class AppTheme {
   AppTheme._();
 
   static TextStyle _outfit({
-    required double fontSize,
-    required FontWeight fontWeight,
-    required Color color,
-    double? height,
-    double? letterSpacing,
+    required final double fontSize,
+    required final FontWeight fontWeight,
+    required final Color color,
+    final double? height,
+    final double? letterSpacing,
   }) {
-    final base = TextStyle(
+    final TextStyle base = TextStyle(
       fontFamily: 'Outfit',
       fontSize: fontSize,
       fontWeight: fontWeight,
@@ -28,19 +28,19 @@ class AppTheme {
         height: height,
         letterSpacing: letterSpacing,
       );
-    } catch (_) {
+    } on Exception catch (_) {
       return base;
     }
   }
 
   static TextStyle _inter({
-    required double fontSize,
-    required FontWeight fontWeight,
-    required Color color,
-    double? height,
-    double? letterSpacing,
+    required final double fontSize,
+    required final FontWeight fontWeight,
+    required final Color color,
+    final double? height,
+    final double? letterSpacing,
   }) {
-    final base = TextStyle(
+    final TextStyle base = TextStyle(
       fontFamily: 'Inter',
       fontSize: fontSize,
       fontWeight: fontWeight,
@@ -56,7 +56,7 @@ class AppTheme {
         height: height,
         letterSpacing: letterSpacing,
       );
-    } catch (_) {
+    } on Exception catch (_) {
       return base;
     }
   }
@@ -124,7 +124,10 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),
-          side: BorderSide(color: AppColors.border.withValues(alpha: 0.3), width: 1.0),
+          side: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.3),
+            width: 1.0,
+          ),
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -141,14 +144,20 @@ class AppTheme {
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,
-        selectedLabelStyle: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
+        selectedLabelStyle: TextStyle(
+          fontSize: 12.0,
+          fontWeight: FontWeight.bold,
+        ),
         unselectedLabelStyle: TextStyle(fontSize: 12.0),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
         hintStyle: const TextStyle(color: AppColors.textSecondary),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 14.0,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
           borderSide: const BorderSide(color: AppColors.border, width: 1.0),
@@ -225,7 +234,10 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),
-          side: BorderSide(color: AppColors.borderLight.withValues(alpha: 0.3), width: 1.0),
+          side: BorderSide(
+            color: AppColors.borderLight.withValues(alpha: 0.3),
+            width: 1.0,
+          ),
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -242,25 +254,40 @@ class AppTheme {
         backgroundColor: AppColors.surfaceLight,
         selectedItemColor: AppColors.primaryLight,
         unselectedItemColor: AppColors.textSecondaryLight,
-        selectedLabelStyle: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
+        selectedLabelStyle: TextStyle(
+          fontSize: 12.0,
+          fontWeight: FontWeight.bold,
+        ),
         unselectedLabelStyle: TextStyle(fontSize: 12.0),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceLight,
         hintStyle: const TextStyle(color: AppColors.textSecondaryLight),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 14.0,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: const BorderSide(color: AppColors.borderLight, width: 1.0),
+          borderSide: const BorderSide(
+            color: AppColors.borderLight,
+            width: 1.0,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: const BorderSide(color: AppColors.borderLight, width: 1.0),
+          borderSide: const BorderSide(
+            color: AppColors.borderLight,
+            width: 1.0,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: const BorderSide(color: AppColors.primaryLight, width: 1.5),
+          borderSide: const BorderSide(
+            color: AppColors.primaryLight,
+            width: 1.5,
+          ),
         ),
       ),
     );

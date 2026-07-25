@@ -13,23 +13,35 @@ import '../../features/keywords/presentation/screens/keywords_screen.dart';
 import '../../features/keywords/presentation/screens/keyword_detail_screen.dart';
 import '../../features/author/presentation/screens/author_detail_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/admin/presentation/screens/admin_web_screen.dart';
 import '../constants/prefs_keys.dart';
 import '../utils/app_logger.dart';
 
-final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
-final GlobalKey<NavigatorState> homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
-final GlobalKey<NavigatorState> journalNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'journal');
-final GlobalKey<NavigatorState> keywordsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'keywords');
-final GlobalKey<NavigatorState> profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'root',
+);
+final GlobalKey<NavigatorState> homeNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'home',
+);
+final GlobalKey<NavigatorState> journalNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'journal',
+);
+final GlobalKey<NavigatorState> keywordsNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'keywords');
+final GlobalKey<NavigatorState> profileNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'profile',
+);
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/home',
-  redirect: (context, state) {
+  redirect: (final BuildContext context, final GoRouterState state) {
     try {
-      final authService = getIt<IFirebaseAuthService>();
-      final isLoggedIn = authService.currentUser != null || authService.isBypassed;
-      final isGoingToLogin = state.matchedLocation == '/login';
+      final IFirebaseAuthService authService = getIt<IFirebaseAuthService>();
+      final bool isLoggedIn =
+          authService.currentUser != null || authService.isBypassed;
+      final bool isGoingToLogin = state.matchedLocation == '/login';
+      final bool isGoingToAdmin = state.matchedLocation == '/admin';
 
       if (!isLoggedIn) {
         if (!isGoingToLogin) {
@@ -38,11 +50,18 @@ final GoRouter appRouter = GoRouter(
         return null;
       }
 
+      if (isGoingToAdmin) {
+        if (!authService.isAdmin) {
+          return '/home';
+        }
+        return null;
+      }
+
       // Logged in: check onboarding/personalization
-      final prefs = getIt<SharedPreferences>();
-      final name = prefs.getString(PrefsKeys.fullName);
-      final isPersonalized = name != null && name.trim().isNotEmpty;
-      final isGoingToSetup = state.matchedLocation == '/setup';
+      final SharedPreferences prefs = getIt<SharedPreferences>();
+      final String? name = prefs.getString(PrefsKeys.fullName);
+      final bool isPersonalized = name != null && name.trim().isNotEmpty;
+      final bool isGoingToSetup = state.matchedLocation == '/setup';
 
       if (!isPersonalized) {
         if (!isGoingToSetup) {
@@ -53,59 +72,80 @@ final GoRouter appRouter = GoRouter(
 
       // Logged in & Personalized
       if (isGoingToLogin || isGoingToSetup) {
+        if (authService.isAdmin) {
+          return '/admin';
+        }
         return '/home';
       }
-    } catch (e, st) {
+    } on Exception catch (e, st) {
       AppLogger.e('Router redirect error', e, st);
       return '/login'; // Fail-safe: redirect to login
     }
     return null;
   },
-  routes: [
+  routes: <RouteBase>[
+    GoRoute(
+      path: '/admin',
+      builder: (final BuildContext context, final GoRouterState state) =>
+          const AdminWebScreen(),
+    ),
     GoRoute(
       path: '/login',
-      builder: (context, state) => const LoginScreen(),
+      builder: (final BuildContext context, final GoRouterState state) =>
+          const LoginScreen(),
     ),
     GoRoute(
       path: '/setup',
-      builder: (context, state) => const PersonalizationSetupScreen(),
+      builder: (final BuildContext context, final GoRouterState state) =>
+          const PersonalizationSetupScreen(),
     ),
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) {
-        return ScaffoldWithNavBar(navigationShell: navigationShell);
-      },
-      branches: [
+      builder:
+          (
+            final BuildContext context,
+            final GoRouterState state,
+            final StatefulNavigationShell navigationShell,
+          ) {
+            return ScaffoldWithNavBar(navigationShell: navigationShell);
+          },
+      branches: <StatefulShellBranch>[
         StatefulShellBranch(
           navigatorKey: homeNavigatorKey,
-          routes: [
+          routes: <RouteBase>[
             GoRoute(
               path: '/home',
-              builder: (context, state) => const HomeScreen(),
+              builder:
+                  (final BuildContext context, final GoRouterState state) =>
+                      const HomeScreen(),
             ),
           ],
         ),
         StatefulShellBranch(
           navigatorKey: journalNavigatorKey,
-          routes: [
+          routes: <RouteBase>[
             GoRoute(
               path: '/journal',
-              builder: (context, state) => const JournalScreen(),
-              routes: [
+              builder:
+                  (final BuildContext context, final GoRouterState state) =>
+                      const JournalScreen(),
+              routes: <RouteBase>[
                 GoRoute(
                   path: 'publication/:id',
                   parentNavigatorKey: rootNavigatorKey,
-                  builder: (context, state) {
-                    final id = state.pathParameters['id'] ?? '';
-                    return PublicationDetailScreen(paperId: id);
-                  },
+                  builder:
+                      (final BuildContext context, final GoRouterState state) {
+                        final String id = state.pathParameters['id'] ?? '';
+                        return PublicationDetailScreen(paperId: id);
+                      },
                 ),
                 GoRoute(
                   path: 'detail/:jid',
                   parentNavigatorKey: rootNavigatorKey,
-                  builder: (context, state) {
-                    final jid = state.pathParameters['jid'] ?? '';
-                    return JournalDetailScreen(journalId: jid);
-                  },
+                  builder:
+                      (final BuildContext context, final GoRouterState state) {
+                        final String jid = state.pathParameters['jid'] ?? '';
+                        return JournalDetailScreen(journalId: jid);
+                      },
                 ),
               ],
             ),
@@ -113,27 +153,35 @@ final GoRouter appRouter = GoRouter(
         ),
         StatefulShellBranch(
           navigatorKey: keywordsNavigatorKey,
-          routes: [
+          routes: <RouteBase>[
             GoRoute(
               path: '/keywords',
-              builder: (context, state) => const KeywordsScreen(),
-              routes: [
+              builder:
+                  (final BuildContext context, final GoRouterState state) =>
+                      const KeywordsScreen(),
+              routes: <RouteBase>[
                 GoRoute(
                   path: 'author/:aid',
                   parentNavigatorKey: rootNavigatorKey,
-                  builder: (context, state) {
-                    final aid = state.pathParameters['aid'] ?? '';
-                    return AuthorDetailScreen(authorId: aid);
-                  },
+                  builder:
+                      (final BuildContext context, final GoRouterState state) {
+                        final String aid = state.pathParameters['aid'] ?? '';
+                        return AuthorDetailScreen(authorId: aid);
+                      },
                 ),
                 GoRoute(
                   path: 'detail/:kid',
                   parentNavigatorKey: rootNavigatorKey,
-                  builder: (context, state) {
-                    final kid = state.pathParameters['kid'] ?? '';
-                    final name = state.uri.queryParameters['name'] ?? '';
-                    return KeywordDetailScreen(keywordId: kid, keywordName: name);
-                  },
+                  builder:
+                      (final BuildContext context, final GoRouterState state) {
+                        final String kid = state.pathParameters['kid'] ?? '';
+                        final String name =
+                            state.uri.queryParameters['name'] ?? '';
+                        return KeywordDetailScreen(
+                          keywordId: kid,
+                          keywordName: name,
+                        );
+                      },
                 ),
               ],
             ),
@@ -141,10 +189,12 @@ final GoRouter appRouter = GoRouter(
         ),
         StatefulShellBranch(
           navigatorKey: profileNavigatorKey,
-          routes: [
+          routes: <RouteBase>[
             GoRoute(
               path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
+              builder:
+                  (final BuildContext context, final GoRouterState state) =>
+                      const ProfileScreen(),
             ),
           ],
         ),
@@ -156,10 +206,7 @@ final GoRouter appRouter = GoRouter(
 class ScaffoldWithNavBar extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const ScaffoldWithNavBar({
-    super.key,
-    required this.navigationShell,
-  });
+  const ScaffoldWithNavBar({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
@@ -167,14 +214,14 @@ class ScaffoldWithNavBar extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) {
+        onTap: (final int index) {
           navigationShell.goBranch(
             index,
             initialLocation: index == navigationShell.currentIndex,
           );
         },
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
             activeIcon: Icon(Icons.dashboard),

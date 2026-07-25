@@ -8,7 +8,8 @@ import 'personalization_event.dart';
 import 'personalization_state.dart';
 
 @injectable
-class PersonalizationBloc extends Bloc<PersonalizationEvent, PersonalizationState> {
+class PersonalizationBloc
+    extends Bloc<PersonalizationEvent, PersonalizationState> {
   final GetUserPreferencesUseCase _getUserPreferences;
   final SaveUserPreferencesUseCase _saveUserPreferences;
   final GenerateRandomNameUseCase _generateRandomName;
@@ -17,10 +18,10 @@ class PersonalizationBloc extends Bloc<PersonalizationEvent, PersonalizationStat
     required GetUserPreferencesUseCase getUserPreferences,
     required SaveUserPreferencesUseCase saveUserPreferences,
     required GenerateRandomNameUseCase generateRandomName,
-  })  : _getUserPreferences = getUserPreferences,
-        _saveUserPreferences = saveUserPreferences,
-        _generateRandomName = generateRandomName,
-        super(PersonalizationInitial()) {
+  }) : _getUserPreferences = getUserPreferences,
+       _saveUserPreferences = saveUserPreferences,
+       _generateRandomName = generateRandomName,
+       super(PersonalizationInitial()) {
     on<LoadUserPreferences>(_onLoadUserPreferences);
     on<GenerateRandomNameEvent>(_onGenerateRandomName);
     on<SavePreferencesEvent>(_onSavePreferences);

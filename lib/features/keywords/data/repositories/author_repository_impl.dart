@@ -67,7 +67,11 @@ class AuthorRepositoryImpl implements AuthorRepository {
         return Left(ServerFailure(e.toString()));
       }
     } else {
-      return const Left(NetworkFailure('Internet connection is required to load author details.'));
+      return const Left(
+        NetworkFailure(
+          'Internet connection is required to load author details.',
+        ),
+      );
     }
   }
 }

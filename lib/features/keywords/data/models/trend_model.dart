@@ -1,10 +1,7 @@
 import '../../domain/entities/trend.dart';
 
 class PublicationTrendModel extends PublicationTrend {
-  const PublicationTrendModel({
-    required super.year,
-    required super.count,
-  });
+  const PublicationTrendModel({required super.year, required super.count});
 
   factory PublicationTrendModel.fromJson(Map<String, dynamic> json) {
     return PublicationTrendModel(
@@ -14,18 +11,12 @@ class PublicationTrendModel extends PublicationTrend {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'year': year,
-      'count': count,
-    };
+    return {'year': year, 'count': count};
   }
 }
 
 class CitationTrendModel extends CitationTrend {
-  const CitationTrendModel({
-    required super.year,
-    required super.count,
-  });
+  const CitationTrendModel({required super.year, required super.count});
 
   factory CitationTrendModel.fromJson(Map<String, dynamic> json) {
     return CitationTrendModel(
@@ -35,9 +26,6 @@ class CitationTrendModel extends CitationTrend {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'year': year,
-      'count': count,
-    };
+    return {'year': year, 'count': count};
   }
 }

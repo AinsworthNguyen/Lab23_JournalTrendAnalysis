@@ -8,6 +8,7 @@ import '../../domain/entities/user_preferences.dart';
 import '../blocs/personalization_bloc.dart';
 import '../blocs/personalization_event.dart';
 import '../blocs/personalization_state.dart';
+import '../../../admin/data/datasources/user_activity_tracker.dart';
 
 class Concept {
   final String id;
@@ -37,10 +38,12 @@ class PersonalizationSetupScreen extends StatefulWidget {
   const PersonalizationSetupScreen({super.key});
 
   @override
-  State<PersonalizationSetupScreen> createState() => _PersonalizationSetupScreenState();
+  State<PersonalizationSetupScreen> createState() =>
+      _PersonalizationSetupScreenState();
 }
 
-class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen> {
+class _PersonalizationSetupScreenState
+    extends State<PersonalizationSetupScreen> {
   final _nameController = TextEditingController();
   final _searchController = TextEditingController();
   Concept? _selectedConcept;
@@ -73,26 +76,30 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
     final theme = Theme.of(context);
 
     return BlocProvider<PersonalizationBloc>(
-      create: (context) => getIt<PersonalizationBloc>()..add(LoadUserPreferences()),
+      create: (context) =>
+          getIt<PersonalizationBloc>()..add(LoadUserPreferences()),
       child: Scaffold(
         body: BlocConsumer<PersonalizationBloc, PersonalizationState>(
           listener: (context, state) {
             if (state is PersonalizationSuccess) {
               context.go('/home');
-            } else if (state is PersonalizationLoaded && state.preferences != null) {
+            } else if (state is PersonalizationLoaded &&
+                state.preferences != null) {
               final prefs = state.preferences!;
               _nameController.text = prefs.fullName;
               _selectedConcept = _popularConcepts.firstWhere(
                 (c) => c.id == prefs.interestConceptId,
-                orElse: () => Concept(prefs.interestConceptId, prefs.interestConceptName),
+                orElse: () =>
+                    Concept(prefs.interestConceptId, prefs.interestConceptName),
               );
               setState(() {});
-            } else if (state is PersonalizationLoaded && state.generatedName != null) {
+            } else if (state is PersonalizationLoaded &&
+                state.generatedName != null) {
               _nameController.text = state.generatedName!;
             } else if (state is PersonalizationFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
           builder: (context, state) {
@@ -117,7 +124,9 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                     Text(
                       'setup.subtitle'.tr(),
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -144,7 +153,9 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                       onPressed: isLoading
                           ? null
                           : () {
-                              context.read<PersonalizationBloc>().add(GenerateRandomNameEvent());
+                              context.read<PersonalizationBloc>().add(
+                                GenerateRandomNameEvent(),
+                              );
                             },
                       icon: const Icon(Icons.auto_awesome_outlined),
                       label: Text('setup.button_generate'.tr()),
@@ -186,31 +197,38 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                           ),
                         ),
                         child: ListView.builder(
-                        itemCount: _filteredConcepts.length,
-                        itemBuilder: (context, index) {
-                          final concept = _filteredConcepts[index];
-                          final isSelected = _selectedConcept?.id == concept.id;
-                          return ListTile(
-                            leading: Icon(
-                              isSelected ? Icons.check_circle : Icons.science_outlined,
-                              color: isSelected ? theme.colorScheme.primary : null,
-                            ),
-                            title: Text(
-                              concept.name,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontWeight: isSelected ? FontWeight.bold : null,
+                          itemCount: _filteredConcepts.length,
+                          itemBuilder: (context, index) {
+                            final concept = _filteredConcepts[index];
+                            final isSelected =
+                                _selectedConcept?.id == concept.id;
+                            return ListTile(
+                              leading: Icon(
+                                isSelected
+                                    ? Icons.check_circle
+                                    : Icons.science_outlined,
+                                color: isSelected
+                                    ? theme.colorScheme.primary
+                                    : null,
                               ),
-                            ),
-                            selected: isSelected,
-                            onTap: () {
-                              setState(() {
-                                _selectedConcept = concept;
-                              });
-                            },
-                          );
-                        },
+                              title: Text(
+                                concept.name,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : null,
+                                ),
+                              ),
+                              selected: isSelected,
+                              onTap: () {
+                                setState(() {
+                                  _selectedConcept = concept;
+                                });
+                              },
+                            );
+                          },
+                        ),
                       ),
-                    ),
                     ),
                     const SizedBox(height: 48.0),
 
@@ -222,13 +240,17 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                               final name = _nameController.text.trim();
                               if (name.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('setup.name_error'.tr())),
+                                  SnackBar(
+                                    content: Text('setup.name_error'.tr()),
+                                  ),
                                 );
                                 return;
                               }
                               if (_selectedConcept == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('setup.interest_error'.tr())),
+                                  SnackBar(
+                                    content: Text('setup.interest_error'.tr()),
+                                  ),
                                 );
                                 return;
                               }
@@ -246,7 +268,17 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                                 interestConceptName: _selectedConcept!.name,
                               );
 
-                              context.read<PersonalizationBloc>().add(SavePreferencesEvent(prefs));
+                              try {
+                                if (getIt.isRegistered<IUserActivityTracker>()) {
+                                  getIt<IUserActivityTracker>().logPreferenceUpdate(
+                                    prefs.interestConceptName,
+                                    prefs.fullName,
+                                  );
+                                }
+                              } catch (_) {}
+                              context.read<PersonalizationBloc>().add(
+                                SavePreferencesEvent(prefs),
+                              );
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
@@ -289,11 +321,14 @@ class _PersonalizationSetupScreenState extends State<PersonalizationSetupScreen>
                                 fullName: 'Guest Researcher',
                                 email: email,
                                 photoUrl: photoUrl,
-                                interestConceptId: 'C41008148', // Computer Science
+                                interestConceptId:
+                                    'C41008148', // Computer Science
                                 interestConceptName: 'Computer Science',
                               );
 
-                              context.read<PersonalizationBloc>().add(SavePreferencesEvent(guestPrefs));
+                              context.read<PersonalizationBloc>().add(
+                                SavePreferencesEvent(guestPrefs),
+                              );
                             },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14.0),

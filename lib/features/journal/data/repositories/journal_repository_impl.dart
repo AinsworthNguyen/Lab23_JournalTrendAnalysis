@@ -22,12 +22,16 @@ class JournalRepositoryImpl implements JournalRepository {
   );
 
   @override
-  Future<Either<Failure, List<Journal>>> getTopJournals(String conceptId) async {
+  Future<Either<Failure, List<Journal>>> getTopJournals(
+    String conceptId,
+  ) async {
     final hasConnection = await _networkInfo.isConnected;
 
     if (hasConnection) {
       try {
-        final remoteJournals = await _remoteDataSource.getTopJournals(conceptId);
+        final remoteJournals = await _remoteDataSource.getTopJournals(
+          conceptId,
+        );
         if (remoteJournals.isNotEmpty) {
           await _localDataSource.cacheTopJournals(conceptId, remoteJournals);
           return Right(remoteJournals);
@@ -67,7 +71,11 @@ class JournalRepositoryImpl implements JournalRepository {
         return Left(ServerFailure(e.toString()));
       }
     } else {
-      return const Left(NetworkFailure('Internet connection is required to load journal details.'));
+      return const Left(
+        NetworkFailure(
+          'Internet connection is required to load journal details.',
+        ),
+      );
     }
   }
 }

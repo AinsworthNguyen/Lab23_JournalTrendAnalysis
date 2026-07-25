@@ -14,7 +14,8 @@ class AuthorModel extends Author {
     final cleanedId = fullId.split('/').last;
 
     String? institution;
-    final lastKnownInstitutionJson = json['last_known_institution'] as Map<String, dynamic>?;
+    final lastKnownInstitutionJson =
+        json['last_known_institution'] as Map<String, dynamic>?;
     if (lastKnownInstitutionJson != null) {
       institution = lastKnownInstitutionJson['display_name'] as String?;
     }

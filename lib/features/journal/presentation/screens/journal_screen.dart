@@ -38,9 +38,9 @@ class JournalScreenContent extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to open link: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to open link: $e')));
       }
     }
   }
@@ -70,7 +70,11 @@ class JournalScreenContent extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: theme.colorScheme.error,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         state.errorMessage!,
@@ -102,8 +106,14 @@ class JournalScreenContent extends StatelessWidget {
             }
 
             // Prep data for contribution chart
-            final chartLabels = state.journals.take(5).map((j) => j.displayName).toList();
-            final chartValues = state.journals.take(5).map((j) => j.worksCount.toDouble()).toList();
+            final chartLabels = state.journals
+                .take(5)
+                .map((j) => j.displayName)
+                .toList();
+            final chartValues = state.journals
+                .take(5)
+                .map((j) => j.worksCount.toDouble())
+                .toList();
 
             return RefreshIndicator(
               onRefresh: () async {
@@ -118,27 +128,37 @@ class JournalScreenContent extends StatelessWidget {
                     // Contribution Chart
                     if (chartLabels.isNotEmpty) ...[
                       Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
-                          side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: HorizontalBarChart(
-                            labels: chartLabels,
-                            values: chartValues,
-                            title: 'keywords.journal_ranking'.tr(),
-                            barColor: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.05, end: 0),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.0),
+                              side: BorderSide(
+                                color: theme.dividerColor.withValues(
+                                  alpha: 0.1,
+                                ),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: HorizontalBarChart(
+                                labels: chartLabels,
+                                values: chartValues,
+                                title: 'keywords.journal_ranking'.tr(),
+                                barColor: theme.colorScheme.primary,
+                              ),
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(duration: 500.ms)
+                          .slideY(begin: 0.05, end: 0),
                       const SizedBox(height: 20.0),
                     ],
 
                     // Ranked Journals Title
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4.0,
+                        vertical: 8.0,
+                      ),
                       child: Text(
                         'keywords.top_journals'.tr(),
                         style: theme.textTheme.titleMedium?.copyWith(
@@ -157,107 +177,155 @@ class JournalScreenContent extends StatelessWidget {
                         final rank = index + 1;
 
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 12.0),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14.0),
-                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                          ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(14.0),
-                            onTap: () {
-                              context.push('/journal/detail/${journal.id}');
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Row(
-                                children: [
-                                  // Rank Badge
-                                  Container(
-                                    padding: const EdgeInsets.all(12.0),
-                                    decoration: BoxDecoration(
-                                      color: rank <= 3
-                                          ? theme.colorScheme.primary.withValues(alpha: 0.12)
-                                          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Text(
-                                      '#$rank',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: rank <= 3 ? theme.colorScheme.primary : Colors.grey,
-                                      ),
-                                    ),
+                              margin: const EdgeInsets.only(bottom: 12.0),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14.0),
+                                side: BorderSide(
+                                  color: theme.dividerColor.withValues(
+                                    alpha: 0.1,
                                   ),
-                                  const SizedBox(width: 16.0),
-
-                                  // Details
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          journal.displayName,
-                                          style: theme.textTheme.titleMedium?.copyWith(
+                                ),
+                              ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14.0),
+                                onTap: () {
+                                  context.push('/journal/detail/${journal.id}');
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    children: [
+                                      // Rank Badge
+                                      Container(
+                                        padding: const EdgeInsets.all(12.0),
+                                        decoration: BoxDecoration(
+                                          color: rank <= 3
+                                              ? theme.colorScheme.primary
+                                                    .withValues(alpha: 0.12)
+                                              : theme
+                                                    .colorScheme
+                                                    .surfaceContainerHighest
+                                                    .withValues(alpha: 0.3),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Text(
+                                          '#$rank',
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
+                                            color: rank <= 3
+                                                ? theme.colorScheme.primary
+                                                : Colors.grey,
                                           ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 4.0),
-                                        Text(
-                                          journal.publisher ?? 'Independent Publisher',
-                                          style: theme.textTheme.bodyMedium?.copyWith(
-                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 8.0),
-                                        Wrap(
-                                          spacing: 16.0,
-                                          runSpacing: 4.0,
+                                      ),
+                                      const SizedBox(width: 16.0),
+
+                                      // Details
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.article_outlined, size: 14.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
-                                                const SizedBox(width: 4.0),
-                                                Text(
-                                                  'Works: ${NumberFormat.decimalPattern().format(journal.worksCount)}',
-                                                  style: theme.textTheme.bodySmall,
-                                                ),
-                                              ],
+                                            Text(
+                                              journal.displayName,
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
+                                            const SizedBox(height: 4.0),
+                                            Text(
+                                              journal.publisher ??
+                                                  'Independent Publisher',
+                                              style: theme.textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .onSurface
+                                                        .withValues(alpha: 0.6),
+                                                  ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 8.0),
+                                            Wrap(
+                                              spacing: 16.0,
+                                              runSpacing: 4.0,
                                               children: [
-                                                Icon(Icons.format_quote, size: 14.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
-                                                const SizedBox(width: 4.0),
-                                                Text(
-                                                  'Citations: ${NumberFormat.decimalPattern().format(journal.citedByCount)}',
-                                                  style: theme.textTheme.bodySmall,
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.article_outlined,
+                                                      size: 14.0,
+                                                      color: theme
+                                                          .colorScheme
+                                                          .onSurface
+                                                          .withValues(
+                                                            alpha: 0.4,
+                                                          ),
+                                                    ),
+                                                    const SizedBox(width: 4.0),
+                                                    Text(
+                                                      'Works: ${NumberFormat.decimalPattern().format(journal.worksCount)}',
+                                                      style: theme
+                                                          .textTheme
+                                                          .bodySmall,
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.format_quote,
+                                                      size: 14.0,
+                                                      color: theme
+                                                          .colorScheme
+                                                          .onSurface
+                                                          .withValues(
+                                                            alpha: 0.4,
+                                                          ),
+                                                    ),
+                                                    const SizedBox(width: 4.0),
+                                                    Text(
+                                                      'Citations: ${NumberFormat.decimalPattern().format(journal.citedByCount)}',
+                                                      style: theme
+                                                          .textTheme
+                                                          .bodySmall,
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
-                                  ),
+                                      ),
 
-                                  // Actions (Link / Navigate)
-                                  if (journal.homepageUrl != null && journal.homepageUrl!.isNotEmpty)
-                                    IconButton(
-                                      icon: const Icon(Icons.language),
-                                      tooltip: 'Visit homepage',
-                                      onPressed: () => _launchUrl(context, journal.homepageUrl!),
-                                    ),
-                                ],
+                                      // Actions (Link / Navigate)
+                                      if (journal.homepageUrl != null &&
+                                          journal.homepageUrl!.isNotEmpty)
+                                        IconButton(
+                                          icon: const Icon(Icons.language),
+                                          tooltip: 'Visit homepage',
+                                          onPressed: () => _launchUrl(
+                                            context,
+                                            journal.homepageUrl!,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ).animate(delay: (index * 40).ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0, curve: Curves.easeOut);
+                            )
+                            .animate(delay: (index * 40).ms)
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: 0.05, end: 0, curve: Curves.easeOut);
                       },
                     ),
                   ],

@@ -42,7 +42,9 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
     });
 
     try {
-      final prefResult = await getIt<GetUserPreferencesUseCase>().call(const NoParams());
+      final prefResult = await getIt<GetUserPreferencesUseCase>().call(
+        const NoParams(),
+      );
       prefResult.fold(
         (failure) => setState(() {
           _isLoading = false;
@@ -125,7 +127,11 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: theme.colorScheme.error,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         _errorMessage!,
@@ -144,8 +150,14 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
             }
 
             // Prep chart data for top keywords (top 5 only)
-            final chartLabels = _filteredTopKeywords.take(5).map((k) => k.displayName).toList();
-            final chartValues = _filteredTopKeywords.take(5).map((k) => k.worksCount.toDouble()).toList();
+            final chartLabels = _filteredTopKeywords
+                .take(5)
+                .map((k) => k.displayName)
+                .toList();
+            final chartValues = _filteredTopKeywords
+                .take(5)
+                .map((k) => k.worksCount.toDouble())
+                .toList();
 
             return RefreshIndicator(
               onRefresh: _loadData,
@@ -177,12 +189,15 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                     const SizedBox(height: 20.0),
 
                     // Top Keywords Chart (only shown when not searching or if search results are populated)
-                    if (chartLabels.isNotEmpty && _searchController.text.isEmpty) ...[
+                    if (chartLabels.isNotEmpty &&
+                        _searchController.text.isEmpty) ...[
                       Card(
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16.0),
-                          side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                          side: BorderSide(
+                            color: theme.dividerColor.withValues(alpha: 0.1),
+                          ),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
@@ -200,10 +215,15 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                     // Top Keywords List
                     if (_filteredTopKeywords.isNotEmpty) ...[
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4.0,
+                          vertical: 8.0,
+                        ),
                         child: Text(
                           'keywords.top_keywords'.tr(),
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       ListView.builder(
@@ -217,12 +237,18 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.0),
-                              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                              side: BorderSide(
+                                color: theme.dividerColor.withValues(
+                                  alpha: 0.1,
+                                ),
+                              ),
                             ),
                             child: ListTile(
                               title: Text(
                                 kw.displayName,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               subtitle: const Text('Research Topic'),
                               trailing: Column(
@@ -231,7 +257,9 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                                 children: [
                                   Text(
                                     '${NumberFormat.decimalPattern().format(kw.worksCount)} works',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   const Icon(Icons.chevron_right, size: 16),
                                 ],
@@ -251,10 +279,15 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                     // Emerging Keywords List
                     if (_filteredEmergingKeywords.isNotEmpty) ...[
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4.0,
+                          vertical: 8.0,
+                        ),
                         child: Text(
                           'keywords.emerging_keywords'.tr(),
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       ListView.builder(
@@ -268,19 +301,34 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.0),
-                              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                              side: BorderSide(
+                                color: theme.dividerColor.withValues(
+                                  alpha: 0.1,
+                                ),
+                              ),
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: Colors.green.withValues(alpha: 0.1),
-                                child: const Icon(Icons.trending_up, color: Colors.green, size: 18),
+                                backgroundColor: Colors.green.withValues(
+                                  alpha: 0.1,
+                                ),
+                                child: const Icon(
+                                  Icons.trending_up,
+                                  color: Colors.green,
+                                  size: 18,
+                                ),
                               ),
                               title: Text(
                                 kw.displayName,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               subtitle: const Text('Emerging Topic'),
-                              trailing: const Icon(Icons.chevron_right, size: 16),
+                              trailing: const Icon(
+                                Icons.chevron_right,
+                                size: 16,
+                              ),
                               onTap: () {
                                 context.push(
                                   '/keywords/detail/${kw.id}?name=${Uri.encodeComponent(kw.displayName)}',

@@ -6,6 +6,10 @@ import '../entities/trend.dart';
 abstract class KeywordRepository {
   Future<Either<Failure, List<Keyword>>> getTopKeywords(String conceptId);
   Future<Either<Failure, List<Keyword>>> getEmergingKeywords(String conceptId);
-  Future<Either<Failure, List<PublicationTrend>>> getPublicationTrends(String conceptId);
-  Future<Either<Failure, List<CitationTrend>>> getCitationTrends(String conceptId);
+  Future<Either<Failure, List<PublicationTrend>>> getPublicationTrends(
+    String conceptId,
+  );
+  Future<Either<Failure, List<CitationTrend>>> getCitationTrends(
+    String conceptId,
+  );
 }

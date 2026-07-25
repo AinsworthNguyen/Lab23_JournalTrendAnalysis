@@ -39,11 +39,13 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
 
     try {
       // 1. Log analytics event
-      getIt<IFirebaseAnalyticsService>().logViewJournal(widget.journalId);
+      await getIt<IFirebaseAnalyticsService>().logViewJournal(widget.journalId);
 
       // 2. Fetch journal details
-      final detailsResult = await getIt<GetJournalDetailsUseCase>().call(widget.journalId);
-      
+      final detailsResult = await getIt<GetJournalDetailsUseCase>().call(
+        widget.journalId,
+      );
+
       Journal? journalDetail;
       detailsResult.fold(
         (failure) => throw failure.message,
@@ -53,10 +55,14 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
       // 3. Fetch publications in this journal
       List<Paper> journalPapers = [];
       try {
-        final response = await getIt<ApiClient>().get('/works', queryParameters: {
-          'filter': 'primary_location.source.id:${widget.journalId},publication_year:<2026',
-          'per_page': 10,
-        });
+        final response = await getIt<ApiClient>().get(
+          '/works',
+          queryParameters: {
+            'filter':
+                'primary_location.source.id:${widget.journalId},publication_year:<2026',
+            'per_page': 10,
+          },
+        );
         final results = response['results'] as List<dynamic>? ?? [];
         journalPapers = results
             .map((json) => PaperModel.fromJson(json as Map<String, dynamic>))
@@ -93,9 +99,9 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to open link: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to open link: $e')));
       }
     }
   }
@@ -106,11 +112,12 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Journal Detail', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Journal Detail',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
-      body: SafeArea(
-        child: _buildBody(theme),
-      ),
+      body: SafeArea(child: _buildBody(theme)),
     );
   }
 
@@ -126,7 +133,11 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
@@ -134,10 +145,7 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadData,
-                child: const Text('Retry'),
-              ),
+              ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
             ],
           ),
         ),
@@ -163,7 +171,9 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
-                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                side: BorderSide(
+                  color: theme.dividerColor.withValues(alpha: 0.1),
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -180,10 +190,13 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                     Text(
                       journal.publisher ?? 'Independent Publisher',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
-                    if (journal.homepageUrl != null && journal.homepageUrl!.isNotEmpty) ...[
+                    if (journal.homepageUrl != null &&
+                        journal.homepageUrl!.isNotEmpty) ...[
                       const SizedBox(height: 16.0),
                       ElevatedButton.icon(
                         onPressed: () => _launchUrl(journal.homepageUrl!),
@@ -205,70 +218,97 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
 
             // Statistics Grid (Works & Citations)
             Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                      side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.article_outlined, color: theme.colorScheme.primary, size: 24.0),
-                          const SizedBox(height: 12.0),
-                          Text(
-                            NumberFormat.compact().format(journal.worksCount),
-                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  children: [
+                    Expanded(
+                      child: Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.0),
+                          side: BorderSide(
+                            color: theme.dividerColor.withValues(alpha: 0.1),
                           ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            'Total Works',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                            ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.article_outlined,
+                                color: theme.colorScheme.primary,
+                                size: 24.0,
+                              ),
+                              const SizedBox(height: 12.0),
+                              Text(
+                                NumberFormat.compact().format(
+                                  journal.worksCount,
+                                ),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4.0),
+                              Text(
+                                'Total Works',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                      side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.format_quote, color: Colors.green, size: 24.0),
-                          const SizedBox(height: 12.0),
-                          Text(
-                            NumberFormat.compact().format(journal.citedByCount),
-                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    const SizedBox(width: 12.0),
+                    Expanded(
+                      child: Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.0),
+                          side: BorderSide(
+                            color: theme.dividerColor.withValues(alpha: 0.1),
                           ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            'Total Citations',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                            ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.format_quote,
+                                color: Colors.green,
+                                size: 24.0,
+                              ),
+                              const SizedBox(height: 12.0),
+                              Text(
+                                NumberFormat.compact().format(
+                                  journal.citedByCount,
+                                ),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4.0),
+                              Text(
+                                'Total Citations',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ],
-            ).animate(delay: 150.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0),
+                  ],
+                )
+                .animate(delay: 150.ms)
+                .fadeIn(duration: 400.ms)
+                .slideY(begin: 0.05, end: 0),
             const SizedBox(height: 24.0),
 
             // Top Publications Title
@@ -276,7 +316,9 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: Text(
                 'Top Publications',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 12.0),
@@ -287,12 +329,16 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
-                  side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                  side: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.1),
+                  ),
                 ),
                 child: const Padding(
                   padding: EdgeInsets.all(24.0),
                   child: Center(
-                    child: Text('No publication data available for this journal.'),
+                    child: Text(
+                      'No publication data available for this journal.',
+                    ),
                   ),
                 ),
               )
@@ -304,63 +350,88 @@ class _JournalDetailScreenState extends State<JournalDetailScreen> {
                 itemBuilder: (context, index) {
                   final paper = _papers[index];
                   return Card(
-                    margin: const EdgeInsets.only(bottom: 12.0),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      title: Text(
-                        paper.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Row(
-                          children: [
-                            if (paper.isOpenAccess) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(4.0),
-                                ),
-                                child: const Text(
-                                  'OA',
-                                  style: TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                        margin: const EdgeInsets.only(bottom: 12.0),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          side: BorderSide(
+                            color: theme.dividerColor.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 8.0,
+                          ),
+                          title: Text(
+                            paper.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Row(
+                              children: [
+                                if (paper.isOpenAccess) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6.0,
+                                      vertical: 2.0,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(4.0),
+                                    ),
+                                    child: const Text(
+                                      'OA',
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                ],
+                                Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 12.0,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8.0),
-                            ],
-                            Icon(Icons.calendar_today_outlined, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-                            const SizedBox(width: 4.0),
-                            Text(
-                              paper.publicationYear.toString(),
-                              style: theme.textTheme.bodySmall,
+                                const SizedBox(width: 4.0),
+                                Text(
+                                  paper.publicationYear.toString(),
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                                const SizedBox(width: 16.0),
+                                Icon(
+                                  Icons.format_quote,
+                                  size: 12.0,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 4.0),
+                                Text(
+                                  '${paper.citationCount}',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 16.0),
-                            Icon(Icons.format_quote, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-                            const SizedBox(width: 4.0),
-                            Text(
-                              '${paper.citationCount}',
-                              style: theme.textTheme.bodySmall,
-                            ),
-                          ],
+                          ),
+                          onTap: () {
+                            context.push('/journal/publication/${paper.id}');
+                          },
                         ),
-                      ),
-                      onTap: () {
-                        context.push('/journal/publication/${paper.id}');
-                      },
-                    ),
-                  ).animate(delay: (200 + index * 40).ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
+                      )
+                      .animate(delay: (200 + index * 40).ms)
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: 0.05, end: 0);
                 },
               ),
             const SizedBox(height: 40.0),

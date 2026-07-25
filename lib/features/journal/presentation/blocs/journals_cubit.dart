@@ -17,10 +17,7 @@ class JournalsState {
   });
 
   factory JournalsState.initial() {
-    return const JournalsState(
-      journals: [],
-      isLoading: false,
-    );
+    return const JournalsState(journals: [], isLoading: false);
   }
 
   JournalsState copyWith({
@@ -44,25 +41,25 @@ class JournalsCubit extends Cubit<JournalsState> {
   JournalsCubit({
     required GetJournalRankingUseCase getJournalRanking,
     required GetUserPreferencesUseCase getUserPreferences,
-  })  : _getJournalRanking = getJournalRanking,
-        _getUserPreferences = getUserPreferences,
-        super(JournalsState.initial());
+  }) : _getJournalRanking = getJournalRanking,
+       _getUserPreferences = getUserPreferences,
+       super(JournalsState.initial());
 
   void loadJournals() async {
     emit(state.copyWith(isLoading: true, errorMessage: null));
 
     final prefResult = await _getUserPreferences(const NoParams());
     prefResult.fold(
-      (failure) => emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
+      (failure) =>
+          emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
       (prefs) async {
         final result = await _getJournalRanking(prefs.interestConceptId);
         result.fold(
-          (failure) => emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
+          (failure) => emit(
+            state.copyWith(isLoading: false, errorMessage: failure.message),
+          ),
           (journalsList) {
-            emit(state.copyWith(
-              journals: journalsList,
-              isLoading: false,
-            ));
+            emit(state.copyWith(journals: journalsList, isLoading: false));
           },
         );
       },

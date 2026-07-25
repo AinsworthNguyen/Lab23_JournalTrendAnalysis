@@ -9,7 +9,7 @@ class AppColors {
   static const Color primary = Color(0xFF6366F1); // Indigo Violet
   static const Color secondary = Color(0xFF10B981); // Emerald Green
   static const Color highlight = Color(0xFFF43F5E); // Rose Accent
-  
+
   static const Color textMain = Color(0xFFF8FAFC);
   static const Color textSecondary = Color(0xFF94A3B8);
   static const Color border = Color(0xFF334155);
@@ -20,7 +20,7 @@ class AppColors {
   static const Color primaryLight = Color(0xFF4F46E5);
   static const Color secondaryLight = Color(0xFF059669);
   static const Color highlightLight = Color(0xFFE11D48);
-  
+
   static const Color textMainLight = Color(0xFF0F172A);
   static const Color textSecondaryLight = Color(0xFF475569);
   static const Color borderLight = Color(0xFFE2E8F0);

@@ -2,18 +2,21 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class IFirebaseCrashlyticsService {
-  Future<void> recordError(dynamic exception, StackTrace? stack);
+  Future<void> recordError(final dynamic exception, final StackTrace? stack);
   Future<void> forceCrash();
 }
 
 @LazySingleton(as: IFirebaseCrashlyticsService)
 class FirebaseCrashlyticsService implements IFirebaseCrashlyticsService {
-  final FirebaseCrashlytics _crashlytics;
-
   FirebaseCrashlyticsService() : _crashlytics = FirebaseCrashlytics.instance;
 
+  final FirebaseCrashlytics _crashlytics;
+
   @override
-  Future<void> recordError(dynamic exception, StackTrace? stack) async {
+  Future<void> recordError(
+    final dynamic exception,
+    final StackTrace? stack,
+  ) async {
     await _crashlytics.recordError(exception, stack);
   }
 

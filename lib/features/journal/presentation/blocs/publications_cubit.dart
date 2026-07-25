@@ -59,16 +59,17 @@ class PublicationsCubit extends Cubit<PublicationsState> {
   PublicationsCubit({
     required GetPublicationsUseCase getPublications,
     required GetUserPreferencesUseCase getUserPreferences,
-  })  : _getPublications = getPublications,
-        _getUserPreferences = getUserPreferences,
-        super(PublicationsState.initial());
+  }) : _getPublications = getPublications,
+       _getUserPreferences = getUserPreferences,
+       super(PublicationsState.initial());
 
   void loadInitialPapers() async {
     emit(state.copyWith(isLoading: true, errorMessage: null));
 
     final prefResult = await _getUserPreferences(const NoParams());
     prefResult.fold(
-      (failure) => emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
+      (failure) =>
+          emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
       (prefs) async {
         final params = GetPublicationsParams(
           conceptId: prefs.interestConceptId,
@@ -77,14 +78,18 @@ class PublicationsCubit extends Cubit<PublicationsState> {
         );
         final result = await _getPublications(params);
         result.fold(
-          (failure) => emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
+          (failure) => emit(
+            state.copyWith(isLoading: false, errorMessage: failure.message),
+          ),
           (papersList) {
-            emit(state.copyWith(
-              papers: papersList,
-              page: 1,
-              hasReachedMax: papersList.length < 20,
-              isLoading: false,
-            ));
+            emit(
+              state.copyWith(
+                papers: papersList,
+                page: 1,
+                hasReachedMax: papersList.length < 20,
+                isLoading: false,
+              ),
+            );
           },
         );
       },
@@ -98,7 +103,8 @@ class PublicationsCubit extends Cubit<PublicationsState> {
 
     final prefResult = await _getUserPreferences(const NoParams());
     prefResult.fold(
-      (failure) => emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
+      (failure) =>
+          emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
       (prefs) async {
         final nextPage = state.page + 1;
         final params = GetPublicationsParams(
@@ -108,14 +114,18 @@ class PublicationsCubit extends Cubit<PublicationsState> {
         );
         final result = await _getPublications(params);
         result.fold(
-          (failure) => emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
+          (failure) => emit(
+            state.copyWith(isLoading: false, errorMessage: failure.message),
+          ),
           (papersList) {
-            emit(state.copyWith(
-              papers: List.from(state.papers)..addAll(papersList),
-              page: nextPage,
-              hasReachedMax: papersList.length < 20,
-              isLoading: false,
-            ));
+            emit(
+              state.copyWith(
+                papers: List.from(state.papers)..addAll(papersList),
+                page: nextPage,
+                hasReachedMax: papersList.length < 20,
+                isLoading: false,
+              ),
+            );
           },
         );
       },
@@ -123,7 +133,14 @@ class PublicationsCubit extends Cubit<PublicationsState> {
   }
 
   void search(String query) {
-    emit(state.copyWith(searchQuery: query, papers: [], page: 1, hasReachedMax: false));
+    emit(
+      state.copyWith(
+        searchQuery: query,
+        papers: [],
+        page: 1,
+        hasReachedMax: false,
+      ),
+    );
     loadInitialPapers();
   }
 }

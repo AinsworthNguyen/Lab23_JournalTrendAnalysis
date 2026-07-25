@@ -4,6 +4,8 @@ import '../entities/user_preferences.dart';
 
 abstract class UserRepository {
   Future<Either<Failure, UserPreferences>> getUserPreferences();
-  Future<Either<Failure, void>> saveUserPreferences(UserPreferences preferences);
+  Future<Either<Failure, void>> saveUserPreferences(
+    UserPreferences preferences,
+  );
   Future<Either<Failure, String>> generateRandomName();
 }

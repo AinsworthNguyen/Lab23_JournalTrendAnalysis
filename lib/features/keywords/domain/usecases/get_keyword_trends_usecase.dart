@@ -6,7 +6,8 @@ import '../entities/trend.dart';
 import '../repositories/keyword_repository.dart';
 
 @lazySingleton
-class GetKeywordTrendsUseCase implements UseCase<List<PublicationTrend>, String> {
+class GetKeywordTrendsUseCase
+    implements UseCase<List<PublicationTrend>, String> {
   final KeywordRepository _repository;
 
   GetKeywordTrendsUseCase(this._repository);

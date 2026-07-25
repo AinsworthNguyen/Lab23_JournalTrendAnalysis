@@ -13,7 +13,8 @@ class PublicationDetailScreen extends StatefulWidget {
   const PublicationDetailScreen({super.key, required this.paperId});
 
   @override
-  State<PublicationDetailScreen> createState() => _PublicationDetailScreenState();
+  State<PublicationDetailScreen> createState() =>
+      _PublicationDetailScreenState();
 }
 
 class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
@@ -64,7 +65,10 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
           _errorMessage = failure.message;
         }),
         (paper) {
-          getIt<IFirebaseAnalyticsService>().logViewPublication(paper.title, paper.publicationYear);
+          getIt<IFirebaseAnalyticsService>().logViewPublication(
+            paper.title,
+            paper.publicationYear,
+          );
           setState(() {
             _isLoading = false;
             _paper = paper;
@@ -84,9 +88,9 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to open link: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to open link: $e')));
       }
     }
   }
@@ -97,9 +101,7 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
     final isVi = EasyLocalization.of(context)?.locale.languageCode == 'vi';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('journal.details_title'.tr()),
-      ),
+      appBar: AppBar(title: Text('journal.details_title'.tr())),
       body: SafeArea(
         child: Builder(
           builder: (context) {
@@ -114,7 +116,11 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: theme.colorScheme.error,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         _errorMessage!,
@@ -133,7 +139,9 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
             }
 
             if (_paper == null) {
-              return const Center(child: Text('Publication details not found.'));
+              return const Center(
+                child: Text('Publication details not found.'),
+              );
             }
 
             final paper = _paper!;
@@ -147,7 +155,10 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0,
+                          vertical: 5.0,
+                        ),
                         decoration: BoxDecoration(
                           color: paper.isOpenAccess
                               ? Colors.green.withValues(alpha: 0.12)
@@ -159,7 +170,9 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                             Icon(
                               paper.isOpenAccess ? Icons.lock_open : Icons.lock,
                               size: 14.0,
-                              color: paper.isOpenAccess ? Colors.green : Colors.grey,
+                              color: paper.isOpenAccess
+                                  ? Colors.green
+                                  : Colors.grey,
                             ),
                             const SizedBox(width: 4.0),
                             Text(
@@ -169,14 +182,20 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                               style: TextStyle(
                                 fontSize: 11.0,
                                 fontWeight: FontWeight.bold,
-                                color: paper.isOpenAccess ? Colors.green : Colors.grey,
+                                color: paper.isOpenAccess
+                                    ? Colors.green
+                                    : Colors.grey,
                               ),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(width: 12.0),
-                      Icon(Icons.format_quote, size: 16.0, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.format_quote,
+                        size: 16.0,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 4.0),
                       Text(
                         '${'journal.citations'.tr()}: ${NumberFormat.decimalPattern().format(paper.citationCount)}',
@@ -201,10 +220,14 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                   // Journal name & Year info
                   Card(
                     elevation: 0,
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
-                      side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.05)),
+                      side: BorderSide(
+                        color: theme.dividerColor.withValues(alpha: 0.05),
+                      ),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -212,11 +235,18 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.menu_book, size: 20.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                              Icon(
+                                Icons.menu_book,
+                                size: 20.0,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
                               const SizedBox(width: 12.0),
                               Expanded(
                                 child: Text(
-                                  paper.journalName ?? 'No journal info available',
+                                  paper.journalName ??
+                                      'No journal info available',
                                   style: theme.textTheme.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -227,10 +257,20 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                           const Divider(height: 24.0),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today, size: 20.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                              Icon(
+                                Icons.calendar_today,
+                                size: 20.0,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
                               const SizedBox(width: 12.0),
                               Text(
-                                'journal.published_in'.tr(namedArgs: {'year': paper.publicationYear.toString()}),
+                                'journal.published_in'.tr(
+                                  namedArgs: {
+                                    'year': paper.publicationYear.toString(),
+                                  },
+                                ),
                                 style: theme.textTheme.bodyLarge,
                               ),
                             ],
@@ -253,7 +293,9 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                     Text(
                       'No authors listed.',
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.8,
+                        ),
                         height: 1.4,
                       ),
                     )
@@ -261,13 +303,17 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                     Builder(
                       builder: (context) {
                         final hasMore = paper.authors.length > 3;
-                        final isVi = EasyLocalization.of(context)?.locale.languageCode == 'vi';
+                        final isVi =
+                            EasyLocalization.of(context)?.locale.languageCode ==
+                            'vi';
 
                         if (!hasMore) {
                           return Text(
                             paper.authors.join(', '),
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.8,
+                              ),
                               height: 1.4,
                             ),
                           );
@@ -280,7 +326,8 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                 TextSpan(
                                   text: paper.authors.join(', '),
                                   style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.8),
                                     height: 1.4,
                                   ),
                                 ),
@@ -316,7 +363,8 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                 TextSpan(
                                   text: paper.authors.take(3).join(', '),
                                   style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.8),
                                     height: 1.4,
                                   ),
                                 ),
@@ -366,7 +414,8 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                       height: 1.5,
                     ),
                   ),
-                  if (paper.abstractText != null && paper.abstractText!.isNotEmpty) ...[
+                  if (paper.abstractText != null &&
+                      paper.abstractText!.isNotEmpty) ...[
                     const SizedBox(height: 24.0),
                     Card(
                       elevation: 0,
@@ -385,7 +434,8 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                           gradient: LinearGradient(
                             colors: [
                               theme.colorScheme.surface,
-                              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                              theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.2),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -406,17 +456,23 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                   const SizedBox(width: 8.0),
                                   Expanded(
                                     child: Text(
-                                      isVi ? 'Tóm tắt & Dịch thuật AI (Gemini)' : 'AI Summary & Translation (Gemini)',
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.primary,
-                                      ),
+                                      isVi
+                                          ? 'Tóm tắt & Dịch thuật AI (Gemini)'
+                                          : 'AI Summary & Translation (Gemini)',
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: theme.colorScheme.primary,
+                                          ),
                                     ),
                                   ),
                                   if (_aiResponse != null && !_isAiLoading) ...[
                                     const Spacer(),
                                     IconButton(
-                                      icon: const Icon(Icons.refresh, size: 18.0),
+                                      icon: const Icon(
+                                        Icons.refresh,
+                                        size: 18.0,
+                                      ),
                                       onPressed: _getAiInsights,
                                       tooltip: isVi ? 'Tải lại' : 'Refresh',
                                     ),
@@ -430,18 +486,26 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                       ? 'Sử dụng mô hình AI Gemini để dịch thuật và tóm tắt nhanh bài báo khoa học này thành các ý chính tiếng Việt.'
                                       : 'Use Gemini AI model to quickly summarize and translate this scientific abstract into key Vietnamese insights.',
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
                                   ),
                                 ),
                                 const SizedBox(height: 16.0),
                                 ElevatedButton.icon(
                                   onPressed: _getAiInsights,
                                   icon: const Icon(Icons.bolt),
-                                  label: Text(isVi ? 'Tạo tóm tắt AI' : 'Generate AI Summary'),
+                                  label: Text(
+                                    isVi
+                                        ? 'Tạo tóm tắt AI'
+                                        : 'Generate AI Summary',
+                                  ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: theme.colorScheme.primary,
-                                    foregroundColor: theme.colorScheme.onPrimary,
-                                    padding: const EdgeInsets.symmetric(vertical: 14.0),
+                                    foregroundColor:
+                                        theme.colorScheme.onPrimary,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14.0,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12.0),
                                     ),
@@ -452,12 +516,18 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                   children: [
                                     const SizedBox(height: 16.0),
                                     CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        theme.colorScheme.primary,
+                                      ),
                                     ),
                                     const SizedBox(height: 16.0),
                                     Text(
-                                      isVi ? 'AI đang phân tích tóm tắt bài viết...' : 'AI is generating academic insights...',
-                                      style: const TextStyle(fontStyle: FontStyle.italic),
+                                      isVi
+                                          ? 'AI đang phân tích tóm tắt bài viết...'
+                                          : 'AI is generating academic insights...',
+                                      style: const TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                      ),
                                     ),
                                     const SizedBox(height: 8.0),
                                   ],
@@ -471,31 +541,45 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 10.0),
-                                ...(_aiResponse!['bullets'] as List<dynamic>? ?? []).map((bullet) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(left: 4.0, bottom: 10.0),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Icon(
-                                          Icons.check_circle_outline,
-                                          size: 18.0,
-                                          color: theme.colorScheme.primary,
+                                ...(_aiResponse!['bullets'] as List<dynamic>? ??
+                                        [])
+                                    .map((bullet) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          left: 4.0,
+                                          bottom: 10.0,
                                         ),
-                                        const SizedBox(width: 10.0),
-                                        Expanded(
-                                          child: Text(
-                                            bullet.toString(),
-                                            style: theme.textTheme.bodyMedium?.copyWith(
-                                              height: 1.4,
-                                              color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Icon(
+                                              Icons.check_circle_outline,
+                                              size: 18.0,
+                                              color: theme.colorScheme.primary,
                                             ),
-                                          ),
+                                            const SizedBox(width: 10.0),
+                                            Expanded(
+                                              child: Text(
+                                                bullet.toString(),
+                                                style: theme
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      height: 1.4,
+                                                      color: theme
+                                                          .colorScheme
+                                                          .onSurface
+                                                          .withValues(
+                                                            alpha: 0.9,
+                                                          ),
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                  );
-                                }),
+                                      );
+                                    }),
                                 const SizedBox(height: 8.0),
                                 if (_aiResponse!['contribution'] != null) ...[
                                   const Text(
@@ -509,19 +593,23 @@ class _PublicationDetailScreenState extends State<PublicationDetailScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(12.0),
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.05),
                                       borderRadius: BorderRadius.circular(8.0),
                                       border: Border.all(
-                                        color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.15),
                                       ),
                                     ),
                                     child: Text(
                                       _aiResponse!['contribution'].toString(),
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        fontStyle: FontStyle.italic,
-                                        height: 1.4,
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontStyle: FontStyle.italic,
+                                            height: 1.4,
+                                            color: theme.colorScheme.onSurface
+                                                .withValues(alpha: 0.9),
+                                          ),
                                     ),
                                   ),
                                 ],

@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/api_client.dart';
 import 'injection_container.config.dart';
 
+import 'features/admin/data/datasources/user_activity_tracker.dart';
+
 final GetIt getIt = GetIt.instance;
 
 @InjectableInit(
@@ -13,7 +15,14 @@ final GetIt getIt = GetIt.instance;
   preferRelativeImports: true,
   asExtension: true,
 )
-Future<void> configureDependencies() async => getIt.init();
+Future<void> configureDependencies() async {
+  await getIt.init();
+  if (!getIt.isRegistered<IUserActivityTracker>()) {
+    getIt.registerLazySingleton<IUserActivityTracker>(
+      () => UserActivityTracker(Hive.box('user_activity_logs')),
+    );
+  }
+}
 
 @module
 abstract class RegisterModule {
@@ -33,4 +42,8 @@ abstract class RegisterModule {
   @lazySingleton
   @Named('searchBox')
   Box get searchBox => Hive.box('search_history');
+
+  @lazySingleton
+  @Named('activityBox')
+  Box get activityBox => Hive.box('user_activity_logs');
 }

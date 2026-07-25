@@ -15,7 +15,10 @@ class SelectConceptEvent extends DashboardEvent {
   final String conceptId;
   final String conceptName;
 
-  const SelectConceptEvent({required this.conceptId, required this.conceptName});
+  const SelectConceptEvent({
+    required this.conceptId,
+    required this.conceptName,
+  });
 
   @override
   List<Object?> get props => [conceptId, conceptName];

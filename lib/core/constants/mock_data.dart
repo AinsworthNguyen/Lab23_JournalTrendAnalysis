@@ -58,19 +58,49 @@ class MockData {
   ];
 
   static const List<Keyword> mockTopKeywords = [
-    Keyword(id: 'k1', displayName: 'Machine Learning', level: 2, worksCount: 150),
+    Keyword(
+      id: 'k1',
+      displayName: 'Machine Learning',
+      level: 2,
+      worksCount: 150,
+    ),
     Keyword(id: 'k2', displayName: 'Deep Learning', level: 2, worksCount: 120),
-    Keyword(id: 'k3', displayName: 'Artificial Intelligence', level: 2, worksCount: 95),
+    Keyword(
+      id: 'k3',
+      displayName: 'Artificial Intelligence',
+      level: 2,
+      worksCount: 95,
+    ),
     Keyword(id: 'k4', displayName: 'Neural Networks', level: 2, worksCount: 80),
     Keyword(id: 'k5', displayName: 'Computer Vision', level: 2, worksCount: 70),
-    Keyword(id: 'k6', displayName: 'Natural Language Processing', level: 2, worksCount: 65),
+    Keyword(
+      id: 'k6',
+      displayName: 'Natural Language Processing',
+      level: 2,
+      worksCount: 65,
+    ),
   ];
 
   static const List<Keyword> mockEmergingKeywords = [
-    Keyword(id: 'e1', displayName: 'Transformer Models', level: 3, worksCount: 45),
+    Keyword(
+      id: 'e1',
+      displayName: 'Transformer Models',
+      level: 3,
+      worksCount: 45,
+    ),
     Keyword(id: 'e2', displayName: 'Generative AI', level: 3, worksCount: 40),
-    Keyword(id: 'e3', displayName: 'Reinforcement Learning', level: 3, worksCount: 35),
-    Keyword(id: 'e4', displayName: 'Federated Learning', level: 3, worksCount: 30),
+    Keyword(
+      id: 'e3',
+      displayName: 'Reinforcement Learning',
+      level: 3,
+      worksCount: 35,
+    ),
+    Keyword(
+      id: 'e4',
+      displayName: 'Federated Learning',
+      level: 3,
+      worksCount: 30,
+    ),
     Keyword(id: 'e5', displayName: 'Explainable AI', level: 3, worksCount: 25),
   ];
 
@@ -97,7 +127,8 @@ class MockData {
   static const List<Journal> mockJournals = [
     Journal(
       id: 'J1',
-      displayName: 'IEEE Transactions on Pattern Analysis and Machine Intelligence',
+      displayName:
+          'IEEE Transactions on Pattern Analysis and Machine Intelligence',
       worksCount: 85,
       citedByCount: 3200,
       publisher: 'IEEE',
@@ -147,7 +178,8 @@ class MockData {
       citationCount: 120,
       authors: ['J. Smith', 'M. Johnson'],
       doi: '10.1000/1',
-      journalName: 'IEEE Transactions on Pattern Analysis and Machine Intelligence',
+      journalName:
+          'IEEE Transactions on Pattern Analysis and Machine Intelligence',
       concepts: ['Machine Learning', 'Deep Learning'],
       isOpenAccess: true,
     ),

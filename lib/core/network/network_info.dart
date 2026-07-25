@@ -7,18 +7,18 @@ abstract class NetworkInfo {
 
 @LazySingleton(as: NetworkInfo)
 class NetworkInfoImpl implements NetworkInfo {
-  final Connectivity _connectivity;
-
   NetworkInfoImpl(this._connectivity);
+
+  final Connectivity _connectivity;
 
   @override
   Future<bool> get isConnected async {
     try {
-      final result = await _connectivity.checkConnectivity().timeout(
-        const Duration(seconds: 2),
-      );
+      final ConnectivityResult result = await _connectivity
+          .checkConnectivity()
+          .timeout(const Duration(seconds: 2));
       return result != ConnectivityResult.none;
-    } catch (_) {
+    } on Exception catch (_) {
       return false;
     }
   }

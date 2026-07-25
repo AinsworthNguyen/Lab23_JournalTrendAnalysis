@@ -24,12 +24,16 @@ class KeywordRepositoryImpl implements KeywordRepository {
   );
 
   @override
-  Future<Either<Failure, List<Keyword>>> getTopKeywords(String conceptId) async {
+  Future<Either<Failure, List<Keyword>>> getTopKeywords(
+    String conceptId,
+  ) async {
     final hasConnection = await _networkInfo.isConnected;
 
     if (hasConnection) {
       try {
-        final remoteKeywords = await _remoteDataSource.getTopKeywords(conceptId);
+        final remoteKeywords = await _remoteDataSource.getTopKeywords(
+          conceptId,
+        );
         if (remoteKeywords.isNotEmpty) {
           await _localDataSource.cacheTopKeywords(conceptId, remoteKeywords);
           return Right(remoteKeywords);
@@ -43,7 +47,10 @@ class KeywordRepositoryImpl implements KeywordRepository {
         return Right(localKeywords);
       }
 
-      final extracted = await _extractKeywordsFromCache(conceptId, isEmerging: false);
+      final extracted = await _extractKeywordsFromCache(
+        conceptId,
+        isEmerging: false,
+      );
       if (extracted.isNotEmpty) {
         await _localDataSource.cacheTopKeywords(conceptId, extracted);
         return Right(extracted);
@@ -54,26 +61,38 @@ class KeywordRepositoryImpl implements KeywordRepository {
   }
 
   @override
-  Future<Either<Failure, List<Keyword>>> getEmergingKeywords(String conceptId) async {
+  Future<Either<Failure, List<Keyword>>> getEmergingKeywords(
+    String conceptId,
+  ) async {
     final hasConnection = await _networkInfo.isConnected;
 
     if (hasConnection) {
       try {
-        final remoteKeywords = await _remoteDataSource.getEmergingKeywords(conceptId);
+        final remoteKeywords = await _remoteDataSource.getEmergingKeywords(
+          conceptId,
+        );
         if (remoteKeywords.isNotEmpty) {
-          await _localDataSource.cacheEmergingKeywords(conceptId, remoteKeywords);
+          await _localDataSource.cacheEmergingKeywords(
+            conceptId,
+            remoteKeywords,
+          );
           return Right(remoteKeywords);
         }
       } catch (_) {}
     }
 
     try {
-      final localKeywords = await _localDataSource.getEmergingKeywords(conceptId);
+      final localKeywords = await _localDataSource.getEmergingKeywords(
+        conceptId,
+      );
       if (localKeywords.isNotEmpty) {
         return Right(localKeywords);
       }
 
-      final extracted = await _extractKeywordsFromCache(conceptId, isEmerging: true);
+      final extracted = await _extractKeywordsFromCache(
+        conceptId,
+        isEmerging: true,
+      );
       if (extracted.isNotEmpty) {
         await _localDataSource.cacheEmergingKeywords(conceptId, extracted);
         return Right(extracted);
@@ -84,22 +103,31 @@ class KeywordRepositoryImpl implements KeywordRepository {
   }
 
   @override
-  Future<Either<Failure, List<PublicationTrend>>> getPublicationTrends(String conceptId) async {
+  Future<Either<Failure, List<PublicationTrend>>> getPublicationTrends(
+    String conceptId,
+  ) async {
     final hasConnection = await _networkInfo.isConnected;
 
     if (hasConnection) {
       try {
-        final publicationTrends = await _remoteDataSource.getPublicationTrends(conceptId);
-        
+        final publicationTrends = await _remoteDataSource.getPublicationTrends(
+          conceptId,
+        );
+
         if (publicationTrends.isNotEmpty) {
-          await _localDataSource.cachePublicationTrends(conceptId, publicationTrends);
+          await _localDataSource.cachePublicationTrends(
+            conceptId,
+            publicationTrends,
+          );
           return Right(publicationTrends);
         }
       } catch (_) {}
     }
 
     try {
-      final localTrends = await _localDataSource.getPublicationTrends(conceptId);
+      final localTrends = await _localDataSource.getPublicationTrends(
+        conceptId,
+      );
       if (localTrends.isNotEmpty) {
         return Right(localTrends);
       }
@@ -115,13 +143,16 @@ class KeywordRepositoryImpl implements KeywordRepository {
   }
 
   @override
-  Future<Either<Failure, List<CitationTrend>>> getCitationTrends(String conceptId) async {
+  Future<Either<Failure, List<CitationTrend>>> getCitationTrends(
+    String conceptId,
+  ) async {
     final hasConnection = await _networkInfo.isConnected;
 
     if (hasConnection) {
       try {
         final conceptData = await _remoteDataSource.getConceptTrends(conceptId);
-        final countsByYear = conceptData['counts_by_year'] as List<dynamic>? ?? [];
+        final countsByYear =
+            conceptData['counts_by_year'] as List<dynamic>? ?? [];
 
         if (countsByYear.isNotEmpty) {
           final citationTrends = countsByYear.map((item) {
@@ -155,7 +186,10 @@ class KeywordRepositoryImpl implements KeywordRepository {
   }
 
   // Helper extraction methods
-  Future<List<KeywordModel>> _extractKeywordsFromCache(String conceptId, {required bool isEmerging}) async {
+  Future<List<KeywordModel>> _extractKeywordsFromCache(
+    String conceptId, {
+    required bool isEmerging,
+  }) async {
     try {
       final papers = await _localDataSource.getPapers(conceptId);
       if (papers.isEmpty) return [];
@@ -193,7 +227,9 @@ class KeywordRepositoryImpl implements KeywordRepository {
     }
   }
 
-  Future<List<PublicationTrendModel>> _extractPubTrendsFromCache(String conceptId) async {
+  Future<List<PublicationTrendModel>> _extractPubTrendsFromCache(
+    String conceptId,
+  ) async {
     try {
       final papers = await _localDataSource.getPapers(conceptId);
       if (papers.isEmpty) return [];
@@ -201,7 +237,8 @@ class KeywordRepositoryImpl implements KeywordRepository {
       final yearCounts = <int, int>{};
       for (final p in papers) {
         if (p.publicationYear > 0) {
-          yearCounts[p.publicationYear] = (yearCounts[p.publicationYear] ?? 0) + 1;
+          yearCounts[p.publicationYear] =
+              (yearCounts[p.publicationYear] ?? 0) + 1;
         }
       }
 
@@ -216,7 +253,9 @@ class KeywordRepositoryImpl implements KeywordRepository {
     }
   }
 
-  Future<List<CitationTrendModel>> _extractCitTrendsFromCache(String conceptId) async {
+  Future<List<CitationTrendModel>> _extractCitTrendsFromCache(
+    String conceptId,
+  ) async {
     try {
       final papers = await _localDataSource.getPapers(conceptId);
       if (papers.isEmpty) return [];
@@ -224,7 +263,8 @@ class KeywordRepositoryImpl implements KeywordRepository {
       final yearCounts = <int, int>{};
       for (final p in papers) {
         if (p.publicationYear > 0) {
-          yearCounts[p.publicationYear] = (yearCounts[p.publicationYear] ?? 0) + p.citationCount;
+          yearCounts[p.publicationYear] =
+              (yearCounts[p.publicationYear] ?? 0) + p.citationCount;
         }
       }
 

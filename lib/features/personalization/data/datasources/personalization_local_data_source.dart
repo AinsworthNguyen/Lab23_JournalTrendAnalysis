@@ -11,7 +11,8 @@ abstract class PersonalizationLocalDataSource {
 }
 
 @LazySingleton(as: PersonalizationLocalDataSource)
-class PersonalizationLocalDataSourceImpl implements PersonalizationLocalDataSource {
+class PersonalizationLocalDataSourceImpl
+    implements PersonalizationLocalDataSource {
   final SharedPreferences _sharedPreferences;
 
   PersonalizationLocalDataSourceImpl(this._sharedPreferences);
@@ -22,16 +23,18 @@ class PersonalizationLocalDataSourceImpl implements PersonalizationLocalDataSour
     final email = _sharedPreferences.getString(PrefsKeys.email) ?? '';
     final photoUrl = _sharedPreferences.getString(PrefsKeys.photoUrl) ?? '';
     var conceptId = _sharedPreferences.getString(PrefsKeys.interestConceptId);
-    final conceptName = _sharedPreferences.getString(PrefsKeys.interestConceptName);
+    final conceptName = _sharedPreferences.getString(
+      PrefsKeys.interestConceptName,
+    );
 
     if (name != null && conceptId != null && conceptName != null) {
       // Migrating legacy/invalid OpenAlex concept IDs to new verified ones
       const migrations = {
-        'C111900269': 'C41008148',    // Computer Science
-        'C94389079': 'C2522767166',   // Data Science
-        'C157449867': 'C15744967',    // Psychology
-        'C19165224': 'C138885662',    // Philosophy
-        'C142362112': 'C192562407',   // Materials Science
+        'C111900269': 'C41008148', // Computer Science
+        'C94389079': 'C2522767166', // Data Science
+        'C157449867': 'C15744967', // Psychology
+        'C19165224': 'C138885662', // Philosophy
+        'C142362112': 'C192562407', // Materials Science
       };
 
       if (migrations.containsKey(conceptId)) {
@@ -55,11 +58,23 @@ class PersonalizationLocalDataSourceImpl implements PersonalizationLocalDataSour
   @override
   Future<void> saveUserPreferences(UserPreferencesModel preferences) async {
     try {
-      await _sharedPreferences.setString(PrefsKeys.fullName, preferences.fullName);
+      await _sharedPreferences.setString(
+        PrefsKeys.fullName,
+        preferences.fullName,
+      );
       await _sharedPreferences.setString(PrefsKeys.email, preferences.email);
-      await _sharedPreferences.setString(PrefsKeys.photoUrl, preferences.photoUrl);
-      await _sharedPreferences.setString(PrefsKeys.interestConceptId, preferences.interestConceptId);
-      await _sharedPreferences.setString(PrefsKeys.interestConceptName, preferences.interestConceptName);
+      await _sharedPreferences.setString(
+        PrefsKeys.photoUrl,
+        preferences.photoUrl,
+      );
+      await _sharedPreferences.setString(
+        PrefsKeys.interestConceptId,
+        preferences.interestConceptId,
+      );
+      await _sharedPreferences.setString(
+        PrefsKeys.interestConceptName,
+        preferences.interestConceptName,
+      );
     } catch (e) {
       throw CacheException('Failed to save user preferences: $e');
     }

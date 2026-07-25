@@ -14,39 +14,34 @@ abstract class IFirebaseMessagingService {
 
 @LazySingleton(as: IFirebaseMessagingService)
 class FirebaseMessagingService implements IFirebaseMessagingService {
-  final FirebaseMessaging _fcm;
-  final StreamController<RemoteMessage> _messageStreamController = StreamController<RemoteMessage>.broadcast();
-
   FirebaseMessagingService() : _fcm = FirebaseMessaging.instance;
+
+  final FirebaseMessaging _fcm;
+  final StreamController<RemoteMessage> _messageStreamController =
+      StreamController<RemoteMessage>.broadcast();
 
   @override
   Future<void> initialize() async {
     try {
-      await _fcm.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-    } catch (e) {
+      await _fcm.requestPermission(alert: true, badge: true, sound: true);
+    } on Exception catch (e) {
       debugPrint('[WARNING] FCM requestPermission failed: $e');
     }
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      _messageStreamController.add(message);
-    });
+    FirebaseMessaging.onMessage.listen(_messageStreamController.add);
 
-    _fcm.onTokenRefresh.listen((newToken) {
-      _saveTokenToFirestore(newToken);
+    _fcm.onTokenRefresh.listen((final String newToken) async {
+      await _saveTokenToFirestore(newToken);
     });
 
     // Listen to authentication state changes to dynamically save token under the active user
-    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
+    FirebaseAuth.instance.authStateChanges().listen((final User? user) async {
       try {
-        final token = await _fcm.getToken();
+        final String? token = await _fcm.getToken();
         if (token != null) {
           await _saveTokenToFirestore(token);
         }
-      } catch (e) {
+      } on Exception catch (e) {
         debugPrint('[WARNING] FCM getToken failed: $e');
       }
     });
@@ -55,37 +50,42 @@ class FirebaseMessagingService implements IFirebaseMessagingService {
   @override
   Future<String?> getFcmToken() async {
     try {
-      final token = await _fcm.getToken();
+      final String? token = await _fcm.getToken();
       if (token != null) {
-        _saveTokenToFirestore(token);
+        await _saveTokenToFirestore(token);
       }
       return token;
-    } catch (_) {
+    } on Exception catch (_) {
       return null;
     }
   }
 
-  Future<void> _saveTokenToFirestore(String token) async {
+  Future<void> _saveTokenToFirestore(final String token) async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      final userId = user?.uid ?? 'anonymous_guest';
-      
+      final User? user = FirebaseAuth.instance.currentUser;
+      final String userId = user?.uid ?? 'anonymous_guest';
+
+      final Map<String, dynamic> tokenData = <String, dynamic>{
+        'token': token,
+        'platform': kIsWeb ? 'web' : Platform.operatingSystem,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      };
+
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .collection('tokens')
           .doc(token)
-          .set({
-        'token': token,
-        'platform': kIsWeb ? 'web' : Platform.operatingSystem,
-        'lastUpdated': FieldValue.serverTimestamp(),
-      });
-      debugPrint('[INFO] FCM Token successfully saved to Firestore for user: $userId');
-    } catch (e) {
+          .set(tokenData);
+      debugPrint(
+        '[INFO] FCM Token successfully saved to Firestore for user: $userId',
+      );
+    } on Exception catch (e) {
       debugPrint('[WARNING] Failed to save FCM Token to Firestore: $e');
     }
   }
 
   @override
-  Stream<RemoteMessage> get onMessageReceived => _messageStreamController.stream;
+  Stream<RemoteMessage> get onMessageReceived =>
+      _messageStreamController.stream;
 }

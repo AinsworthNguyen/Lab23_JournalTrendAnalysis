@@ -15,8 +15,12 @@ class NotificationCubit extends Cubit<List<RemoteMessage>> {
   }
 
   void _init() {
-    _subscription = _messagingService.onMessageReceived.listen((RemoteMessage message) {
-      AppLogger.i('New push notification received: ${message.notification?.title}');
+    _subscription = _messagingService.onMessageReceived.listen((
+      RemoteMessage message,
+    ) {
+      AppLogger.i(
+        'New push notification received: ${message.notification?.title}',
+      );
       final updatedList = List<RemoteMessage>.from(state)..insert(0, message);
       emit(updatedList);
     });
