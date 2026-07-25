@@ -72,18 +72,27 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
           list.sort((a, b) => b.worksCount.compareTo(a.worksCount));
           _topAuthors = list;
         });
-        results[1].fold((f) => null, (data) => _pubTrends = data as List<PublicationTrend>);
-        results[2].fold((f) => null, (data) => _citTrends = data as List<CitationTrend>);
+        // Consolidate trends chronologically by year to prevent duplicate year entries
+        Map<int, int> pubMap = {};
+        for (var t in (results[1].fold((f) => <PublicationTrend>[], (data) => data as List<PublicationTrend>))) {
+          pubMap[t.year] = (pubMap[t.year] ?? 0) + t.count;
+        }
+        _pubTrends = pubMap.entries.map((e) => PublicationTrend(year: e.key, count: e.value)).toList()
+          ..sort((a, b) => a.year.compareTo(b.year));
+
+        Map<int, int> citMap = {};
+        for (var t in (results[2].fold((f) => <CitationTrend>[], (data) => data as List<CitationTrend>))) {
+          citMap[t.year] = (citMap[t.year] ?? 0) + t.count;
+        }
+        _citTrends = citMap.entries.map((e) => CitationTrend(year: e.key, count: e.value)).toList()
+          ..sort((a, b) => a.year.compareTo(b.year));
+
         results[3].fold((f) => null, (data) {
           final list = List<Journal>.from(data as List<Journal>);
           list.sort((a, b) => b.worksCount.compareTo(a.worksCount));
           _relatedJournals = list;
         });
         results[4].fold((f) => null, (data) => _relatedPapers = data as List<Paper>);
-
-        // Sort trends chronologically using modifiable copies of the lists
-        _pubTrends = List<PublicationTrend>.from(_pubTrends)..sort((a, b) => a.year.compareTo(b.year));
-        _citTrends = List<CitationTrend>.from(_citTrends)..sort((a, b) => a.year.compareTo(b.year));
 
         setState(() {
           _isLoading = false;
@@ -322,23 +331,29 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
-                                reservedSize: 40,
+                                reservedSize: 45,
+                                interval: (maxY / 4) > 0 ? (maxY / 4) : 1,
                                 getTitlesWidget: (value, meta) {
-                                  return Text(
-                                    value.toInt().toString(),
-                                    style: theme.textTheme.bodySmall?.copyWith(fontSize: 9),
-                                  );
+                                  if (value < 0) return const SizedBox.shrink();
+                                  if (value >= 1000000) {
+                                    return Text('${(value / 1000000).toStringAsFixed(1)}M', style: theme.textTheme.bodySmall?.copyWith(fontSize: 9));
+                                  } else if (value >= 1000) {
+                                    return Text('${(value / 1000).toStringAsFixed(0)}k', style: theme.textTheme.bodySmall?.copyWith(fontSize: 9));
+                                  }
+                                  return Text(value.toInt().toString(), style: theme.textTheme.bodySmall?.copyWith(fontSize: 9));
                                 },
                               ),
                             ),
                             bottomTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
+                                interval: 1.0,
                                 getTitlesWidget: (value, meta) {
+                                  if (value % 1 != 0) return const SizedBox.shrink();
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
                                     child: Text(
-                                      value.round().toString(),
+                                      value.toInt().toString(),
                                       style: theme.textTheme.bodySmall?.copyWith(fontSize: 9),
                                     ),
                                   );
