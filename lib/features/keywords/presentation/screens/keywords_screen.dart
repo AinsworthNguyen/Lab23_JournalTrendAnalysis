@@ -246,11 +246,11 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                                       size: 18,
                                       color: _activeTabIndex == 0 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 6),
                                     Text(
-                                      'Top Topics',
+                                      'Top Topics (${_filteredTopKeywords.length})',
                                       style: TextStyle(
-                                        fontSize: 13,
+                                        fontSize: 12,
                                         fontWeight: _activeTabIndex == 0 ? FontWeight.bold : FontWeight.w500,
                                         color: _activeTabIndex == 0 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                       ),
@@ -280,11 +280,11 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                                       size: 18,
                                       color: _activeTabIndex == 1 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 6),
                                     Text(
-                                      'Emerging Topics',
+                                      'Emerging (${_filteredEmergingKeywords.length})',
                                       style: TextStyle(
-                                        fontSize: 13,
+                                        fontSize: 12,
                                         fontWeight: _activeTabIndex == 1 ? FontWeight.bold : FontWeight.w500,
                                         color: _activeTabIndex == 1 ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                       ),
@@ -301,27 +301,58 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
 
                     // TAB 0: TOP TOPICS
                     if (_activeTabIndex == 0) ...[
-                      if (topChartLabels.isNotEmpty) ...[
-                        Card(
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16.0),
-                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                      if (top5List.isEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search_off_rounded, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No Top Topics found',
+                                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _searchController.text.isNotEmpty
+                                    ? 'No top topic matches "${_searchController.text}".'
+                                    : 'No top topics available.',
+                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                                textAlign: TextAlign.center,
+                              ),
+                              if (_searchController.text.isNotEmpty && _filteredEmergingKeywords.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                OutlinedButton.icon(
+                                  onPressed: () => setState(() => _activeTabIndex = 1),
+                                  icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                                  label: Text('Check Emerging Topics (${_filteredEmergingKeywords.length} found)'),
+                                ),
+                              ],
+                            ],
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: HorizontalBarChart(
-                              labels: topChartLabels,
-                              values: topChartValues,
-                              title: 'Top 5 Topics Overview',
-                              barColor: theme.colorScheme.secondary,
+                        ),
+                      ] else ...[
+                        if (topChartLabels.isNotEmpty) ...[
+                          Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.0),
+                              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                             ),
-                          ),
-                        ).animate().fadeIn(duration: 400.ms),
-                        const SizedBox(height: 16.0),
-                      ],
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: HorizontalBarChart(
+                                labels: topChartLabels,
+                                values: topChartValues,
+                                title: 'Top 5 Topics Overview',
+                                barColor: theme.colorScheme.secondary,
+                              ),
+                            ),
+                          ).animate().fadeIn(duration: 400.ms),
+                          const SizedBox(height: 16.0),
+                        ],
 
-                      if (top5List.isNotEmpty) ...[
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
                           child: Text(
@@ -389,27 +420,58 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
 
                     // TAB 1: EMERGING TOPICS
                     if (_activeTabIndex == 1) ...[
-                      if (emergingChartLabels.isNotEmpty) ...[
-                        Card(
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16.0),
-                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                      if (emerging5List.isEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search_off_rounded, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No Emerging Topics found',
+                                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _searchController.text.isNotEmpty
+                                    ? 'No emerging topic matches "${_searchController.text}".'
+                                    : 'No emerging topics available.',
+                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                                textAlign: TextAlign.center,
+                              ),
+                              if (_searchController.text.isNotEmpty && _filteredTopKeywords.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  onPressed: () => setState(() => _activeTabIndex = 0),
+                                  icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                                  label: Text('Switch to Top Topics (${_filteredTopKeywords.length} found)'),
+                                ),
+                              ],
+                            ],
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: HorizontalBarChart(
-                              labels: emergingChartLabels,
-                              values: emergingChartValues,
-                              title: 'Top 5 Emerging Topics Growth',
-                              barColor: Colors.teal,
+                        ),
+                      ] else ...[
+                        if (emergingChartLabels.isNotEmpty) ...[
+                          Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.0),
+                              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                             ),
-                          ),
-                        ).animate().fadeIn(duration: 400.ms),
-                        const SizedBox(height: 16.0),
-                      ],
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: HorizontalBarChart(
+                                labels: emergingChartLabels,
+                                values: emergingChartValues,
+                                title: 'Top 5 Emerging Topics Growth',
+                                barColor: Colors.teal,
+                              ),
+                            ),
+                          ).animate().fadeIn(duration: 400.ms),
+                          const SizedBox(height: 16.0),
+                        ],
 
-                      if (emerging5List.isNotEmpty) ...[
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
                           child: Text(
