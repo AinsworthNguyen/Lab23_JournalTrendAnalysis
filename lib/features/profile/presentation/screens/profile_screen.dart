@@ -10,7 +10,6 @@ import 'package:hive/hive.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../injection_container.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
-import '../../../../core/firebase/firebase_remote_config_service.dart';
 import '../../../../core/firebase/firebase_crashlytics_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../personalization/domain/entities/user_preferences.dart';
@@ -211,7 +210,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
-                                    children: [
                                       Row(
                                         children: [
                                           Text(
@@ -394,9 +392,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                             'dashboard_report.pdf',
                                                       );
                                                     } else {
+<<<<<<< HEAD
                                                       if (!context.mounted) {
                                                         return;
                                                       }
+=======
+                                                      if (!context.mounted)
+                                                        return;
+>>>>>>> origin/main
                                                       ScaffoldMessenger.of(
                                                         context,
                                                       ).showSnackBar(
@@ -607,6 +610,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 24.0),
 
+<<<<<<< HEAD
                         // Remote Config Constraints Preview
                         _buildSectionHeader(theme, 'Remote Configurations'),
                         const SizedBox(height: 8.0),
@@ -652,6 +656,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                         ),
                         const SizedBox(height: 24.0),
+=======
+
+>>>>>>> origin/main
 
                         // Crashlytics Testing Hooks
                         _buildSectionHeader(
@@ -744,16 +751,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               side: const BorderSide(color: Color(0xFF1E293B)),
                             ),
                             child: ListTile(
-                              leading: const Icon(Icons.space_dashboard_rounded, color: Color(0xFF38BDF8)),
+                              leading: const Icon(
+                                Icons.space_dashboard_rounded,
+                                color: Color(0xFF38BDF8),
+                              ),
                               title: const Text(
                                 'Admin Dashboard',
-                                style: TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: Color(0xFF38BDF8),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               subtitle: const Text(
                                 'User management, system statistics & Remote Config',
-                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
                               ),
-                              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF38BDF8)),
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: Color(0xFF38BDF8),
+                              ),
                               onTap: () => context.go('/admin/dashboard'),
                             ),
                           ),
@@ -946,6 +966,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+<<<<<<< HEAD
   Widget _buildConfigItem(String title, String value, String desc) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -979,6 +1000,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
+=======
+
+>>>>>>> origin/main
 
   Widget _buildSettingItem(
     BuildContext context, {
