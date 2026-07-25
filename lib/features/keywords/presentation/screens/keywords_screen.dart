@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../../../../injection_container.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../personalization/domain/usecases/get_user_preferences_usecase.dart';
@@ -32,6 +33,40 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounceTimer;
+
+  List<String> _getRecentSearches() {
+    try {
+      final box = Hive.box('search_history');
+      final list = box.get('topic_search_history') as List<dynamic>?;
+      return list?.cast<String>() ?? [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  void _saveSearch(String query) {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    try {
+      final box = Hive.box('search_history');
+      final current = _getRecentSearches();
+      current.remove(q);
+      current.insert(0, q);
+      if (current.length > 5) {
+        current.removeLast();
+      }
+      box.put('topic_search_history', current);
+      setState(() {});
+    } catch (_) {}
+  }
+
+  void _clearHistory() {
+    try {
+      final box = Hive.box('search_history');
+      box.delete('topic_search_history');
+      setState(() {});
+    } catch (_) {}
+  }
 
   @override
   void initState() {
@@ -120,6 +155,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
         }).toList();
 
         if (mounted && _searchController.text.trim() == query) {
+          _saveSearch(query);
           setState(() {
             _isSearchingTopics = false;
             _filteredTopKeywords = searchResults.take(5).toList();
@@ -236,36 +272,97 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                       ),
                     ),
 
-                    // Suggested Quick Search Chips when search is empty
+                    // Recent Search History Chips & Suggested Chips
                     if (_searchController.text.isEmpty) ...[
-                      const SizedBox(height: 10.0),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            Text(
-                              'Try searching:',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(width: 8.0),
-                            ...['Physics', 'Geology', 'Data Science', 'Python', 'AI', 'Computing'].map((tag) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 6.0),
-                                child: ActionChip(
-                                  visualDensity: VisualDensity.compact,
-                                  avatar: Icon(Icons.auto_awesome, size: 12, color: theme.colorScheme.primary),
-                                  label: Text(tag, style: const TextStyle(fontSize: 11)),
-                                  onPressed: () {
-                                    _searchController.text = tag;
-                                  },
+                      Builder(
+                        builder: (context) {
+                          final recentSearches = _getRecentSearches();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (recentSearches.isNotEmpty) ...[
+                                const SizedBox(height: 10.0),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.history_rounded, size: 14, color: theme.colorScheme.primary),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Recent Searches:',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    GestureDetector(
+                                      onTap: _clearHistory,
+                                      child: Text(
+                                        'Clear All',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              );
-                            }),
-                          ],
-                        ),
+                                const SizedBox(height: 6.0),
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: recentSearches.map((item) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 6.0),
+                                        child: ActionChip(
+                                          visualDensity: VisualDensity.compact,
+                                          avatar: const Icon(Icons.history, size: 12),
+                                          label: Text(item, style: const TextStyle(fontSize: 11)),
+                                          onPressed: () {
+                                            _searchController.text = item;
+                                          },
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 10.0),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      'Try searching:',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8.0),
+                                    ...['Physics', 'Geology', 'Data Science', 'Python', 'AI', 'Computing'].map((tag) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 6.0),
+                                        child: ActionChip(
+                                          visualDensity: VisualDensity.compact,
+                                          avatar: Icon(Icons.auto_awesome, size: 12, color: theme.colorScheme.primary),
+                                          label: Text(tag, style: const TextStyle(fontSize: 11)),
+                                          onPressed: () {
+                                            _searchController.text = tag;
+                                          },
+                                        ),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                     const SizedBox(height: 16.0),
