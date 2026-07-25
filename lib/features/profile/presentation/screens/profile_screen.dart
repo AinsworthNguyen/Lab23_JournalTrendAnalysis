@@ -10,7 +10,6 @@ import 'package:hive/hive.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../injection_container.dart';
 import '../../../../core/firebase/firebase_auth_service.dart';
-import '../../../../core/firebase/firebase_remote_config_service.dart';
 import '../../../../core/firebase/firebase_crashlytics_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../personalization/domain/entities/user_preferences.dart';
@@ -428,43 +427,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 24.0),
 
-                        // Remote Config Constraints Preview
-                        _buildSectionHeader(theme, 'Remote Configurations'),
-                        const SizedBox(height: 8.0),
-                        Builder(
-                          builder: (context) {
-                            final remoteConfig = getIt<IFirebaseRemoteConfigService>();
-                            final maxJournals = remoteConfig.getInt('max_journals_limit');
-                            final maxKeywords = remoteConfig.getInt('max_keywords_limit');
 
-                            return Card(
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.0),
-                                side: const BorderSide(color: AppColors.border, width: 1.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  children: [
-                                    _buildConfigItem(
-                                      'Max Journals List Limit',
-                                      '$maxJournals items',
-                                      'Restricts pagination metrics dynamically',
-                                    ),
-                                    const Divider(height: 16.0),
-                                    _buildConfigItem(
-                                      'Max Keywords List Limit',
-                                      '$maxKeywords items',
-                                      'Controls active keyword tracking list limits',
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 24.0),
 
                         // Crashlytics Testing Hooks
                         _buildSectionHeader(theme, 'Developer Logs & Diagnostics'),
@@ -705,27 +668,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildConfigItem(String title, String value, String desc) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.0)),
-              const SizedBox(height: 2.0),
-              Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 11.0)),
-            ],
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent),
-        ),
-      ],
-    );
-  }
 
   Widget _buildSettingItem(
     BuildContext context, {
