@@ -9,6 +9,7 @@ import '../../../../injection_container.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/firebase/firebase_analytics_service.dart';
 import '../../../keywords/domain/entities/author.dart';
+import '../../../keywords/domain/entities/trend.dart';
 import '../../../keywords/domain/usecases/get_author_details_usecase.dart';
 import '../../../journal/domain/entities/paper.dart';
 import '../../../journal/data/models/paper_model.dart';
@@ -25,6 +26,9 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
   bool _isLoading = true;
   String? _errorMessage;
   Author? _author;
+
+  List<PublicationTrend> _pubTrends = [];
+  List<CitationTrend> _citTrends = [];
 
   List<Paper> _topPapers = [];
   List<Paper> _recentPapers = [];
@@ -44,7 +48,9 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() => setState(() {}));
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
     _searchFocusNode.addListener(() => setState(() {}));
@@ -100,9 +106,42 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
     });
 
     try {
-      // Fetch Author Details, Top Publications (by citations), and Recent Publications (by year) in parallel
-      final results = await Future.wait([
-        getIt<GetAuthorDetailsUseCase>().call(widget.authorId),
+      // 1. Fetch Author Details & Real Yearly Counts from OpenAlex Author object
+      final detailsResult = await getIt<GetAuthorDetailsUseCase>().call(widget.authorId);
+      
+      Author? authorDetail;
+      detailsResult.fold(
+        (failure) => throw failure.message,
+        (author) => authorDetail = author,
+      );
+
+      if (authorDetail != null) {
+        getIt<IFirebaseAnalyticsService>().logViewKeyword(authorDetail!.displayName);
+      }
+
+      // 2. Fetch Author Object directly for counts_by_year
+      List<PublicationTrend> pubTrends = [];
+      List<CitationTrend> citTrends = [];
+      try {
+        final authorResponse = await getIt<ApiClient>().get('/authors/${widget.authorId}');
+        final rawCounts = authorResponse['counts_by_year'] as List<dynamic>? ?? [];
+        for (var item in rawCounts) {
+          final y = item['year'] as int? ?? 0;
+          final w = item['works_count'] as int? ?? 0;
+          final c = item['cited_by_count'] as int? ?? 0;
+          if (y >= 2020 && y <= 2025) {
+            pubTrends.add(PublicationTrend(year: y, count: w));
+            citTrends.add(CitationTrend(year: y, count: c));
+          }
+        }
+        pubTrends.sort((a, b) => a.year.compareTo(b.year));
+        citTrends.sort((a, b) => a.year.compareTo(b.year));
+      } catch (e) {
+        debugPrint('Failed to fetch counts_by_year for author: $e');
+      }
+
+      // 3. Fetch Top Publications (by citations) & Recent Publications (by year)
+      final worksResults = await Future.wait([
         getIt<ApiClient>().get('/works', queryParameters: {
           'filter': 'authorships.author.id:${widget.authorId},primary_location.source.type:journal|conference,publication_year:<2026',
           'sort': 'cited_by_count:desc',
@@ -115,29 +154,37 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
         }),
       ]);
 
-      Author? authorDetail;
-      results[0].fold(
-        (failure) => throw failure.message,
-        (author) => authorDetail = author as Author,
-      );
-
-      if (authorDetail != null) {
-        getIt<IFirebaseAnalyticsService>().logViewKeyword(authorDetail!.displayName);
-      }
-
-      final topJsonList = (results[1] as Map<String, dynamic>)['results'] as List<dynamic>? ?? [];
+      final topJsonList = (worksResults[0] as Map<String, dynamic>)['results'] as List<dynamic>? ?? [];
       final topPapers = topJsonList
           .map((json) => PaperModel.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      final recentJsonList = (results[2] as Map<String, dynamic>)['results'] as List<dynamic>? ?? [];
+      final recentJsonList = (worksResults[1] as Map<String, dynamic>)['results'] as List<dynamic>? ?? [];
       final recentPapers = recentJsonList
           .map((json) => PaperModel.fromJson(json as Map<String, dynamic>))
           .toList();
 
+      // Fallback trend calculation if counts_by_year was empty
+      if (pubTrends.isEmpty || citTrends.isEmpty) {
+        Map<int, int> pubMap = {};
+        Map<int, int> citMap = {};
+        final sourcePapers = topPapers.isNotEmpty ? topPapers : recentPapers;
+        for (var p in sourcePapers) {
+          final y = p.publicationYear;
+          if (y >= 2020 && y <= 2025) {
+            pubMap[y] = (pubMap[y] ?? 0) + 1;
+            citMap[y] = (citMap[y] ?? 0) + p.citationCount;
+          }
+        }
+        pubTrends = pubMap.entries.map((e) => PublicationTrend(year: e.key, count: e.value)).toList()..sort((a, b) => a.year.compareTo(b.year));
+        citTrends = citMap.entries.map((e) => CitationTrend(year: e.key, count: e.value)).toList()..sort((a, b) => a.year.compareTo(b.year));
+      }
+
       if (mounted) {
         setState(() {
           _author = authorDetail;
+          _pubTrends = pubTrends;
+          _citTrends = citTrends;
           _topPapers = topPapers;
           _recentPapers = recentPapers;
           _isLoading = false;
@@ -197,13 +244,6 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
     return Scaffold(
       appBar: AppBar(
         title: const Text('Author Detail', style: TextStyle(fontWeight: FontWeight.bold)),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Top Publications'),
-            Tab(text: 'Recent Publications'),
-          ],
-        ),
       ),
       body: SafeArea(
         child: _buildBody(theme),
@@ -248,6 +288,33 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
     final author = _author!;
     final history = _getRecentSearches();
 
+    // Prepare chart spots from real API counts_by_year
+    List<FlSpot> spots = [];
+    double minY = 0;
+    double maxY = 10;
+    double minX = 2021;
+    double maxX = 2025;
+
+    if (_showPublicationsChart) {
+      if (_pubTrends.length >= 2) {
+        spots = _pubTrends.map((t) => FlSpot(t.year.toDouble(), t.count.toDouble())).toList();
+        minY = 0;
+        final maxCount = _pubTrends.map((t) => t.count).reduce((a, b) => a > b ? a : b).toDouble();
+        maxY = maxCount > 0 ? maxCount * 1.15 : 10;
+        minX = _pubTrends.first.year.toDouble();
+        maxX = _pubTrends.last.year.toDouble();
+      }
+    } else {
+      if (_citTrends.length >= 2) {
+        spots = _citTrends.map((t) => FlSpot(t.year.toDouble(), t.count.toDouble())).toList();
+        minY = 0;
+        final maxCount = _citTrends.map((t) => t.count).reduce((a, b) => a > b ? a : b).toDouble();
+        maxY = maxCount > 0 ? maxCount * 1.15 : 10;
+        minX = _citTrends.first.year.toDouble();
+        maxX = _citTrends.last.year.toDouble();
+      }
+    }
+
     // Select active paper set based on tab index (Top vs Recent)
     final basePapers = _searchedPapers ?? (_tabController.index == 0 ? _topPapers : _recentPapers);
 
@@ -257,22 +324,6 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
       if (_selectedFilter == 'closed') return !paper.isOpenAccess;
       return true;
     }).toList();
-
-    // Calculate trend data spots by year (2021-2025)
-    final trendSourcePapers = _topPapers.isNotEmpty ? _topPapers : _recentPapers;
-    Map<int, int> yearMap = {2021: 0, 2022: 0, 2023: 0, 2024: 0, 2025: 0};
-    for (var p in trendSourcePapers) {
-      final y = p.publicationYear;
-      if (yearMap.containsKey(y)) {
-        final addVal = _showPublicationsChart ? 1 : p.citationCount;
-        yearMap[y] = (yearMap[y] ?? 0) + addVal;
-      }
-    }
-
-    final sortedYears = yearMap.keys.toList()..sort();
-    final spots = sortedYears.map((y) => FlSpot(y.toDouble(), yearMap[y]!.toDouble())).toList();
-    final maxVal = yearMap.values.isEmpty ? 10.0 : yearMap.values.reduce((a, b) => a > b ? a : b).toDouble();
-    final maxY = maxVal > 0 ? maxVal * 1.15 : 10.0;
 
     final isTopTab = _tabController.index == 0;
     final sectionTitle = isTopTab ? 'Top Publications (By Citations)' : 'Recent Publications (By Year)';
@@ -401,9 +452,140 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
                 ),
               ],
             ).animate(delay: 150.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0),
+            const SizedBox(height: 16.0),
+
+            // 3. Author Activity & Citation Trend Chart Card (Real OpenAlex Data!)
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _showPublicationsChart ? 'Publication Trend' : 'Citation Trend',
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        IconButton(
+                          icon: Icon(_showPublicationsChart ? Icons.star_border : Icons.article_outlined),
+                          tooltip: _showPublicationsChart ? 'Show Citations' : 'Show Publications',
+                          onPressed: () {
+                            setState(() {
+                              _showPublicationsChart = !_showPublicationsChart;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16.0),
+                    if (spots.isEmpty)
+                      const SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Text('Insufficient historical trend data available.'),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 220,
+                        child: LineChart(
+                          LineChartData(
+                            gridData: const FlGridData(show: false),
+                            borderData: FlBorderData(
+                              show: true,
+                              border: Border(
+                                bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                                left: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+                              ),
+                            ),
+                            minX: minX,
+                            maxX: maxX,
+                            minY: minY,
+                            maxY: maxY,
+                            titlesData: FlTitlesData(
+                              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 45,
+                                  interval: (maxY / 4) > 0 ? (maxY / 4) : 1,
+                                  getTitlesWidget: (value, meta) {
+                                    if (value < 0) return const SizedBox.shrink();
+                                    if (value >= 1000000) {
+                                      return Text('${(value / 1000000).toStringAsFixed(1)}M', style: theme.textTheme.bodySmall?.copyWith(fontSize: 9));
+                                    } else if (value >= 1000) {
+                                      return Text('${(value / 1000).toStringAsFixed(0)}k', style: theme.textTheme.bodySmall?.copyWith(fontSize: 9));
+                                    }
+                                    return Text(value.toInt().toString(), style: theme.textTheme.bodySmall?.copyWith(fontSize: 9));
+                                  },
+                                ),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  interval: 1.0,
+                                  getTitlesWidget: (value, meta) {
+                                    if (value % 1 != 0) return const SizedBox.shrink();
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: Text(
+                                        value.toInt().toString(),
+                                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 9),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            lineBarsData: [
+                              LineChartBarData(
+                                spots: spots,
+                                isCurved: true,
+                                barWidth: 4,
+                                color: theme.colorScheme.primary,
+                                dotData: const FlDotData(show: true),
+                                belowBarData: BarAreaData(
+                                  show: true,
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ).animate().fadeIn(duration: 400.ms),
+
             const SizedBox(height: 20.0),
 
-            // 3. Search Bar
+            // 4. TabBar Navigation Header for Publications
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicatorSize: TabBarIndicatorSize.tab,
+                tabs: const [
+                  Tab(text: 'Top Publications'),
+                  Tab(text: 'Recent Publications'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // 5. Search Bar
             TextField(
               controller: _searchController,
               focusNode: _searchFocusNode,
@@ -499,7 +681,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
             ],
             const SizedBox(height: 16.0),
 
-            // 4. Filter Chips: All / Open Access / Subscription
+            // 6. Filter Chips: All / Open Access / Subscription
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -532,113 +714,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
             ),
             const SizedBox(height: 20.0),
 
-            // 5. Author Activity & Citation Trend Chart Card
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
-                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _showPublicationsChart ? 'Publication Trend' : 'Citation Trend',
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        IconButton(
-                          icon: Icon(_showPublicationsChart ? Icons.star_border : Icons.article_outlined),
-                          tooltip: _showPublicationsChart ? 'Show Citations' : 'Show Publications',
-                          onPressed: () {
-                            setState(() {
-                              _showPublicationsChart = !_showPublicationsChart;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16.0),
-                    SizedBox(
-                      height: 220,
-                      child: LineChart(
-                        LineChartData(
-                          gridData: const FlGridData(show: false),
-                          borderData: FlBorderData(
-                            show: true,
-                            border: Border(
-                              bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                              left: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-                            ),
-                          ),
-                          minX: 2021,
-                          maxX: 2025,
-                          minY: 0,
-                          maxY: maxY,
-                          titlesData: FlTitlesData(
-                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            leftTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 45,
-                                interval: (maxY / 4) > 0 ? (maxY / 4) : 1,
-                                getTitlesWidget: (value, meta) {
-                                  if (value < 0) return const SizedBox.shrink();
-                                  if (value >= 1000000) {
-                                    return Text('${(value / 1000000).toStringAsFixed(1)}M', style: theme.textTheme.bodySmall?.copyWith(fontSize: 9));
-                                  } else if (value >= 1000) {
-                                    return Text('${(value / 1000).toStringAsFixed(0)}k', style: theme.textTheme.bodySmall?.copyWith(fontSize: 9));
-                                  }
-                                  return Text(value.toInt().toString(), style: theme.textTheme.bodySmall?.copyWith(fontSize: 9));
-                                },
-                              ),
-                            ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                interval: 1.0,
-                                getTitlesWidget: (value, meta) {
-                                  if (value % 1 != 0) return const SizedBox.shrink();
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 8.0),
-                                    child: Text(
-                                      value.toInt().toString(),
-                                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 9),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          lineBarsData: [
-                            LineChartBarData(
-                              spots: spots,
-                              isCurved: true,
-                              barWidth: 4,
-                              color: theme.colorScheme.primary,
-                              dotData: const FlDotData(show: true),
-                              belowBarData: BarAreaData(
-                                show: true,
-                                color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ).animate().fadeIn(duration: 400.ms),
-
-            const SizedBox(height: 24.0),
-
-            // 6. Section Title with Results Count
+            // 7. Section Title with Results Count
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: Row(
@@ -659,7 +735,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTick
             ),
             const SizedBox(height: 12.0),
 
-            // 7. Publications List
+            // 8. Publications List
             if (filteredPapers.isEmpty)
               Card(
                 elevation: 0,
