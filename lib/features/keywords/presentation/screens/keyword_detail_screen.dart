@@ -127,13 +127,22 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
     }
   }
 
-  final TextEditingController _searchController = TextEditingController();
-  final FocusNode _searchFocusNode = FocusNode();
+  final TextEditingController _evolutionSearchController = TextEditingController();
+  final TextEditingController _authorsSearchController = TextEditingController();
+  final TextEditingController _journalsSearchController = TextEditingController();
+
+  final FocusNode _evolutionSearchFocusNode = FocusNode();
+  final FocusNode _authorsSearchFocusNode = FocusNode();
+  final FocusNode _journalsSearchFocusNode = FocusNode();
 
   @override
   void dispose() {
-    _searchController.dispose();
-    _searchFocusNode.dispose();
+    _evolutionSearchController.dispose();
+    _authorsSearchController.dispose();
+    _journalsSearchController.dispose();
+    _evolutionSearchFocusNode.dispose();
+    _authorsSearchFocusNode.dispose();
+    _journalsSearchFocusNode.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -186,45 +195,12 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
               );
             }
 
-            return Column(
+            return TabBarView(
+              controller: _tabController,
               children: [
-                // Top Search Bar for all 3 tabs
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 4.0),
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    decoration: InputDecoration(
-                      hintText: 'Search publications, authors, or journals...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 20),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {});
-                              },
-                            )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      isDense: true,
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildTrendsTab(),
-                      _buildAuthorsTab(),
-                      _buildJournalsTab(),
-                    ],
-                  ),
-                ),
+                _buildTrendsTab(),
+                _buildAuthorsTab(),
+                _buildJournalsTab(),
               ],
             );
           },
@@ -277,7 +253,7 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
       }
     }
 
-    final query = _searchController.text.trim().toLowerCase();
+    final query = _evolutionSearchController.text.trim().toLowerCase();
     final filteredPapers = query.isEmpty
         ? _relatedPapers
         : _relatedPapers.where((p) =>
@@ -289,6 +265,34 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Separate Search Bar for Evolution (Publications)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: TextField(
+              controller: _evolutionSearchController,
+              focusNode: _evolutionSearchFocusNode,
+              decoration: InputDecoration(
+                hintText: 'Search publications by title or journal...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _evolutionSearchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          _evolutionSearchController.clear();
+                          setState(() {});
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                isDense: true,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+
           // Trend Chart Card
           Card(
             elevation: 0,
@@ -474,24 +478,12 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
 
   Widget _buildAuthorsTab() {
     final theme = Theme.of(context);
-    final query = _searchController.text.trim().toLowerCase();
+    final query = _authorsSearchController.text.trim().toLowerCase();
     final filteredAuthors = query.isEmpty
         ? _topAuthors
         : _topAuthors.where((a) =>
             a.displayName.toLowerCase().contains(query) ||
             (a.lastKnownInstitution?.toLowerCase().contains(query) ?? false)).toList();
-
-    if (filteredAuthors.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Text(
-            query.isEmpty ? 'No authors found.' : 'No matching authors found.',
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
-      );
-    }
 
     final top5Authors = filteredAuthors.take(5).toList();
     final labels = top5Authors.map((a) => a.displayName).toList();
@@ -500,99 +492,134 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        Card(
-          elevation: 0,
-          margin: const EdgeInsets.only(bottom: 20.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: HorizontalBarChart(
-              title: 'Works by Top Authors',
-              labels: labels,
-              values: values,
-              barColor: theme.colorScheme.primary,
-            ),
-          ),
-        ),
+        // Separate Search Bar for Authors
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-          child: Text(
-            'All Top Authors',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: TextField(
+            controller: _authorsSearchController,
+            focusNode: _authorsSearchFocusNode,
+            decoration: InputDecoration(
+              hintText: 'Search top authors by name or institution...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: _authorsSearchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      onPressed: () {
+                        _authorsSearchController.clear();
+                        setState(() {});
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              isDense: true,
+            ),
+            onChanged: (_) => setState(() {}),
           ),
         ),
-        ...List.generate(filteredAuthors.length, (index) {
-          final author = filteredAuthors[index];
-          final rank = index + 1;
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12.0),
+        if (filteredAuthors.isEmpty)
+          Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
               side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
                 child: Text(
-                  '#$rank',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                  _topAuthors.isEmpty ? 'No authors found.' : 'No matching authors found.',
+                  style: theme.textTheme.bodyMedium,
                 ),
               ),
-              title: Text(author.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(
-                author.lastKnownInstitution ?? 'Independent Researcher',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${author.worksCount} Works',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${author.citedByCount} Citations',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-              onTap: () {
-                context.push('/keywords/author/${author.id}');
-              },
             ),
-          );
-        }),
+          )
+        else ...[
+          Card(
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: 20.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: HorizontalBarChart(
+                title: 'Works by Top Authors',
+                labels: labels,
+                values: values,
+                barColor: theme.colorScheme.primary,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+            child: Text(
+              'All Top Authors',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
+          ...List.generate(filteredAuthors.length, (index) {
+            final author = filteredAuthors[index];
+            final rank = index + 1;
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12.0),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+              ),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  child: Text(
+                    '#$rank',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                  ),
+                ),
+                title: Text(author.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(
+                  author.lastKnownInstitution ?? 'Independent Researcher',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${author.worksCount} Works',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${author.citedByCount} Citations',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  context.push('/keywords/author/${author.id}');
+                },
+              ),
+            );
+          }),
+        ],
       ],
     );
   }
 
   Widget _buildJournalsTab() {
     final theme = Theme.of(context);
-    final query = _searchController.text.trim().toLowerCase();
+    final query = _journalsSearchController.text.trim().toLowerCase();
     final filteredJournals = query.isEmpty
         ? _relatedJournals
         : _relatedJournals.where((j) =>
             j.displayName.toLowerCase().contains(query) ||
             (j.publisher?.toLowerCase().contains(query) ?? false)).toList();
-
-    if (filteredJournals.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Text(
-            query.isEmpty ? 'No related journals found.' : 'No matching journals found.',
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
-      );
-    }
 
     final top5Journals = filteredJournals.take(5).toList();
     final labels = top5Journals.map((j) => j.displayName).toList();
@@ -601,66 +628,113 @@ class _KeywordDetailScreenState extends State<KeywordDetailScreen> with SingleTi
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        Card(
-          elevation: 0,
-          margin: const EdgeInsets.only(bottom: 20.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: HorizontalBarChart(
-              title: 'Works by Top Journals',
-              labels: labels,
-              values: values,
-              barColor: Colors.deepPurple,
-            ),
-          ),
-        ),
+        // Separate Search Bar for Journals
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-          child: Text(
-            'All Top Journals',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: TextField(
+            controller: _journalsSearchController,
+            focusNode: _journalsSearchFocusNode,
+            decoration: InputDecoration(
+              hintText: 'Search related journals by name or publisher...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: _journalsSearchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      onPressed: () {
+                        _journalsSearchController.clear();
+                        setState(() {});
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              isDense: true,
+            ),
+            onChanged: (_) => setState(() {}),
           ),
         ),
-        ...List.generate(filteredJournals.length, (index) {
-          final journal = filteredJournals[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12.0),
+
+        if (filteredJournals.isEmpty)
+          Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
               side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
-            child: ListTile(
-              title: Text(journal.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(
-                journal.publisher ?? 'Independent Publisher',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Text(
+                  _relatedJournals.isEmpty ? 'No related journals found.' : 'No matching journals found.',
+                  style: theme.textTheme.bodyMedium,
+                ),
               ),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${journal.worksCount} Works',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${journal.citedByCount} Citations',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-              onTap: () {
-                context.push('/journal/detail/${journal.id}');
-              },
             ),
-          );
-        }),
+          )
+        else ...[
+          Card(
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: 20.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: HorizontalBarChart(
+                title: 'Works by Top Journals',
+                labels: labels,
+                values: values,
+                barColor: Colors.deepPurple,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+            child: Text(
+              'All Top Journals',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
+          ...List.generate(filteredJournals.length, (index) {
+            final journal = filteredJournals[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12.0),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+              ),
+              child: ListTile(
+                title: Text(journal.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(
+                  journal.publisher ?? 'Independent Publisher',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${journal.worksCount} Works',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${journal.citedByCount} Citations',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  context.push('/journal/detail/${journal.id}');
+                },
+              ),
+            );
+          }),
+        ],
       ],
     );
   }
