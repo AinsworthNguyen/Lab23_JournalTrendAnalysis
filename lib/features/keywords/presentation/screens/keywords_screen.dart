@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../injection_container.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../personalization/domain/usecases/get_user_preferences_usecase.dart';
 import '../../domain/entities/keyword.dart';
 import '../../domain/usecases/get_emerging_keywords_usecase.dart';
@@ -19,6 +21,7 @@ class KeywordsScreen extends StatefulWidget {
 
 class _KeywordsScreenState extends State<KeywordsScreen> {
   bool _isLoading = true;
+  bool _isSearchingTopics = false;
   String? _errorMessage;
   int _activeTabIndex = 0; // 0: Top Topics, 1: Emerging Topics
 
@@ -28,6 +31,7 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
   List<Keyword> _filteredEmergingKeywords = [];
 
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -79,24 +83,65 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.trim().toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
+      _debounceTimer?.cancel();
+      setState(() {
+        _isSearchingTopics = false;
         _filteredTopKeywords = List.from(_topKeywords);
         _filteredEmergingKeywords = List.from(_emergingKeywords);
-      } else {
-        _filteredTopKeywords = _topKeywords.where((kw) {
-          return kw.displayName.toLowerCase().contains(query);
+      });
+      return;
+    }
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 350), () async {
+      if (!mounted) return;
+      setState(() {
+        _isSearchingTopics = true;
+      });
+
+      try {
+        final response = await getIt<ApiClient>().get('/topics', queryParameters: {
+          'search': query,
+          'per_page': 20,
+        });
+        final results = response['results'] as List<dynamic>? ?? [];
+        final searchResults = results.map((json) {
+          final map = json as Map<String, dynamic>;
+          final fullId = map['id'] as String? ?? '';
+          final cleanedId = fullId.split('/').last;
+          return Keyword(
+            id: cleanedId,
+            displayName: map['display_name'] as String? ?? 'Unknown Topic',
+            level: 2,
+            worksCount: map['works_count'] as int? ?? 0,
+          );
         }).toList();
-        _filteredEmergingKeywords = _emergingKeywords.where((kw) {
-          return kw.displayName.toLowerCase().contains(query);
-        }).toList();
+
+        if (mounted && _searchController.text.trim() == query) {
+          setState(() {
+            _isSearchingTopics = false;
+            _filteredTopKeywords = searchResults.take(5).toList();
+            _filteredEmergingKeywords = searchResults.skip(5).take(5).toList();
+            if (_filteredEmergingKeywords.isEmpty && searchResults.isNotEmpty) {
+              _filteredEmergingKeywords = List.from(_filteredTopKeywords);
+            }
+          });
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _isSearchingTopics = false;
+          });
+        }
       }
     });
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -168,14 +213,23 @@ class _KeywordsScreenState extends State<KeywordsScreen> {
                       decoration: InputDecoration(
                         hintText: 'Search research topics (e.g. AI, Physics, Data)...',
                         prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchController.clear();
-                                },
+                        suffixIcon: _isSearchingTopics
+                            ? const Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2.0),
+                                ),
                               )
-                            : null,
+                            : (_searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                    },
+                                  )
+                                : null),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
