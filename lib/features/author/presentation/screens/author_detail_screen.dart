@@ -21,12 +21,16 @@ class AuthorDetailScreen extends StatefulWidget {
   State<AuthorDetailScreen> createState() => _AuthorDetailScreenState();
 }
 
-class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
+class _AuthorDetailScreenState extends State<AuthorDetailScreen> with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   String? _errorMessage;
   Author? _author;
-  List<Paper> _papers = [];
 
+  List<Paper> _topPapers = [];
+  List<Paper> _recentPapers = [];
+  List<Paper>? _searchedPapers;
+
+  late final TabController _tabController;
   late final TextEditingController _searchController;
   late final FocusNode _searchFocusNode;
 
@@ -39,6 +43,8 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() => setState(() {}));
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
     _searchFocusNode.addListener(() => setState(() {}));
@@ -47,6 +53,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -89,43 +96,50 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _searchedPapers = null;
     });
 
     try {
-      // 1. Fetch author details
-      final detailsResult = await getIt<GetAuthorDetailsUseCase>().call(widget.authorId);
-      
+      // Fetch Author Details, Top Publications (by citations), and Recent Publications (by year) in parallel
+      final results = await Future.wait([
+        getIt<GetAuthorDetailsUseCase>().call(widget.authorId),
+        getIt<ApiClient>().get('/works', queryParameters: {
+          'filter': 'authorships.author.id:${widget.authorId},primary_location.source.type:journal|conference,publication_year:<2026',
+          'sort': 'cited_by_count:desc',
+          'per_page': 20,
+        }),
+        getIt<ApiClient>().get('/works', queryParameters: {
+          'filter': 'authorships.author.id:${widget.authorId},primary_location.source.type:journal|conference,publication_year:<2026',
+          'sort': 'publication_year:desc',
+          'per_page': 20,
+        }),
+      ]);
+
       Author? authorDetail;
-      detailsResult.fold(
+      results[0].fold(
         (failure) => throw failure.message,
-        (author) => authorDetail = author,
+        (author) => authorDetail = author as Author,
       );
 
-      // Log analytics
       if (authorDetail != null) {
         getIt<IFirebaseAnalyticsService>().logViewKeyword(authorDetail!.displayName);
       }
 
-      // 2. Fetch publications by this author
-      List<Paper> authorPapers = [];
-      try {
-        final response = await getIt<ApiClient>().get('/works', queryParameters: {
-          'filter': 'authorships.author.id:${widget.authorId},primary_location.source.type:journal|conference,publication_year:<2026',
-          'sort': 'publication_year:desc',
-          'per_page': 20,
-        });
-        final results = response['results'] as List<dynamic>? ?? [];
-        authorPapers = results
-            .map((json) => PaperModel.fromJson(json as Map<String, dynamic>))
-            .toList();
-      } catch (e) {
-        debugPrint('Failed to load papers for author: $e');
-      }
+      final topJsonList = (results[1] as Map<String, dynamic>)['results'] as List<dynamic>? ?? [];
+      final topPapers = topJsonList
+          .map((json) => PaperModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      final recentJsonList = (results[2] as Map<String, dynamic>)['results'] as List<dynamic>? ?? [];
+      final recentPapers = recentJsonList
+          .map((json) => PaperModel.fromJson(json as Map<String, dynamic>))
+          .toList();
 
       if (mounted) {
         setState(() {
           _author = authorDetail;
-          _papers = authorPapers;
+          _topPapers = topPapers;
+          _recentPapers = recentPapers;
           _isLoading = false;
         });
       }
@@ -143,26 +157,30 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
     _searchDebounce?.cancel();
     final trimmed = query.trim();
     if (trimmed.isEmpty) {
-      _loadData();
+      setState(() {
+        _isSearching = false;
+        _searchedPapers = null;
+      });
       return;
     }
 
     setState(() => _isSearching = true);
     _searchDebounce = Timer(const Duration(milliseconds: 500), () async {
       try {
+        final sortParam = _tabController.index == 0 ? 'cited_by_count:desc' : 'publication_year:desc';
         final response = await getIt<ApiClient>().get('/works', queryParameters: {
           'filter': 'authorships.author.id:${widget.authorId},primary_location.source.type:journal|conference,publication_year:<2026',
           'search': trimmed,
-          'sort': 'publication_year:desc',
+          'sort': sortParam,
           'per_page': 20,
         });
         final results = response['results'] as List<dynamic>? ?? [];
-        final authorPapers = results
+        final searched = results
             .map((json) => PaperModel.fromJson(json as Map<String, dynamic>))
             .toList();
         if (mounted) {
           setState(() {
-            _papers = authorPapers;
+            _searchedPapers = searched;
             _isSearching = false;
           });
         }
@@ -179,6 +197,13 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Author Detail', style: TextStyle(fontWeight: FontWeight.bold)),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Top Publications'),
+            Tab(text: 'Recent Publications'),
+          ],
+        ),
       ),
       body: SafeArea(
         child: _buildBody(theme),
@@ -223,16 +248,20 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
     final author = _author!;
     final history = _getRecentSearches();
 
-    // Filter papers based on Open Access selection
-    final filteredPapers = _papers.where((paper) {
+    // Select active paper set based on tab index (Top vs Recent)
+    final basePapers = _searchedPapers ?? (_tabController.index == 0 ? _topPapers : _recentPapers);
+
+    // Apply Open Access filter
+    final filteredPapers = basePapers.where((paper) {
       if (_selectedFilter == 'oa') return paper.isOpenAccess;
       if (_selectedFilter == 'closed') return !paper.isOpenAccess;
       return true;
     }).toList();
 
-    // Calculate trend data spots by year (2020-2025)
+    // Calculate trend data spots by year (2021-2025)
+    final trendSourcePapers = _topPapers.isNotEmpty ? _topPapers : _recentPapers;
     Map<int, int> yearMap = {2021: 0, 2022: 0, 2023: 0, 2024: 0, 2025: 0};
-    for (var p in _papers) {
+    for (var p in trendSourcePapers) {
       final y = p.publicationYear;
       if (yearMap.containsKey(y)) {
         final addVal = _showPublicationsChart ? 1 : p.citationCount;
@@ -244,6 +273,9 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
     final spots = sortedYears.map((y) => FlSpot(y.toDouble(), yearMap[y]!.toDouble())).toList();
     final maxVal = yearMap.values.isEmpty ? 10.0 : yearMap.values.reduce((a, b) => a > b ? a : b).toDouble();
     final maxY = maxVal > 0 ? maxVal * 1.15 : 10.0;
+
+    final isTopTab = _tabController.index == 0;
+    final sectionTitle = isTopTab ? 'Top Publications (By Citations)' : 'Recent Publications (By Year)';
 
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -381,7 +413,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
                 if (val.trim().isNotEmpty) _saveSearch(val.trim());
               },
               decoration: InputDecoration(
-                hintText: 'Search publications by title or keyword...',
+                hintText: isTopTab ? 'Search top publications by title or topic...' : 'Search recent publications by title or topic...',
                 prefixIcon: const Icon(Icons.search, size: 20),
                 suffixIcon: _isSearching
                     ? UnconstrainedBox(
@@ -500,7 +532,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
             ),
             const SizedBox(height: 20.0),
 
-            // 5. Author Activity & Citation Trend Chart
+            // 5. Author Activity & Citation Trend Chart Card
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -606,14 +638,14 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
 
             const SizedBox(height: 24.0),
 
-            // 6. Recent Publications Title with Results Count
+            // 6. Section Title with Results Count
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Recent Publications',
+                    sectionTitle,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -693,11 +725,13 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
                               style: theme.textTheme.bodySmall,
                             ),
                             const SizedBox(width: 16.0),
-                            Icon(Icons.format_quote, size: 12.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                            Icon(isTopTab ? Icons.star_rounded : Icons.format_quote, size: 14.0, color: isTopTab ? Colors.amber : theme.colorScheme.primary),
                             const SizedBox(width: 4.0),
                             Text(
                               '${paper.citationCount}',
-                              style: theme.textTheme.bodySmall,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: isTopTab ? FontWeight.bold : FontWeight.normal,
+                              ),
                             ),
                           ],
                         ),
@@ -706,7 +740,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
                         context.push('/journal/publication/${paper.id}');
                       },
                     ),
-                  ).animate(delay: (200 + index * 40).ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
+                  ).animate(delay: (100 + index * 30).ms).fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0);
                 },
               ),
             const SizedBox(height: 40.0),
