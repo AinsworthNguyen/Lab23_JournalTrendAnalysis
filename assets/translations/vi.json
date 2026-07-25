@@ -53,9 +53,13 @@
     "topic_evolution": "Sự phát triển chủ đề",
     "author_productivity": "Năng suất & Ảnh hưởng tác giả",
     "author_collaboration": "Mạng lưới hợp tác tác giả",
-    "journal_ranking": "Xếp hạng tạp chí",
+    "journal_ranking": "Xếp hạng Tạp chí",
+    "conference_ranking": "Xếp hạng Hội thảo",
+    "publication_ranking": "Xếp hạng Nguồn xuất bản",
     "emerging_journals": "Tạp chí mới nổi",
     "top_journals": "Tạp chí hàng đầu",
+    "top_conferences": "Hội thảo hàng đầu",
+    "top_publications": "Nguồn xuất bản hàng đầu",
     "growth": "Tăng trưởng"
   },
   "profile": {

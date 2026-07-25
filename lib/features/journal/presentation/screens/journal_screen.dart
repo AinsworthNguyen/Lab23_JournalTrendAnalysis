@@ -94,6 +94,30 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
     }
   }
 
+  String _getChartTitle(String filter) {
+    switch (filter) {
+      case 'journal':
+        return 'keywords.journal_ranking'.tr();
+      case 'conference':
+        return 'keywords.conference_ranking'.tr();
+      case 'all':
+      default:
+        return 'keywords.publication_ranking'.tr();
+    }
+  }
+
+  String _getSectionTitle(String filter) {
+    switch (filter) {
+      case 'journal':
+        return 'keywords.top_journals'.tr();
+      case 'conference':
+        return 'keywords.top_conferences'.tr();
+      case 'all':
+      default:
+        return 'keywords.top_publications'.tr();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -362,7 +386,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                           child: HorizontalBarChart(
                             labels: chartLabels,
                             values: chartValues,
-                            title: 'keywords.journal_ranking'.tr(),
+                            title: _getChartTitle(state.selectedTypeFilter),
                             barColor: theme.colorScheme.primary,
                           ),
                         ),
@@ -377,7 +401,7 @@ class _JournalScreenContentState extends State<JournalScreenContent> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'keywords.top_journals'.tr(),
+                            _getSectionTitle(state.selectedTypeFilter),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),

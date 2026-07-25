@@ -54,8 +54,12 @@
     "author_productivity": "Author Productivity vs Impact",
     "author_collaboration": "Author Collaboration Network",
     "journal_ranking": "Journal Ranking",
+    "conference_ranking": "Conference Ranking",
+    "publication_ranking": "Source Ranking",
     "emerging_journals": "Emerging Journals",
     "top_journals": "Top Journals",
+    "top_conferences": "Top Conferences",
+    "top_publications": "Top Sources",
     "growth": "Growth"
   },
   "profile": {
